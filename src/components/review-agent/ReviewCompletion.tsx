@@ -118,16 +118,8 @@ export const ReviewCompletion = ({ reviewData }: ReviewCompletionProps) => {
           className="flex-1 gradient-primary shadow-glow"
           onClick={() => navigate("/dashboard")}
         >
-          View Analytics Dashboard
+          Go to Dashboard
           <ArrowRight className="ml-2 h-5 w-5" />
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="flex-1"
-          onClick={() => navigate("/")}
-        >
-          Back to Home
         </Button>
       </div>
     </div>

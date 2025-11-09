@@ -219,13 +219,23 @@ After Question 5, warmly conclude:
           reviewData: newReviewData,
         });
 
-        // Update review data
-        setReviewData(newReviewData);
+        // Accumulate review data instead of replacing
+        setReviewData(prev => ({
+          ...prev,
+          ...newReviewData,
+          positivePoints: newReviewData.positivePoints || prev.positivePoints,
+          negativePoints: newReviewData.negativePoints || prev.negativePoints,
+          improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
+        }));
         setCurrentQuestion(questionNumber);
 
         // Check if all questions are complete (5 questions completed)
-        if (questionNumber >= 5 && newReviewData.overallRating) {
+        if (questionNumber >= 5) {
           setIsComplete(true);
+          // Disconnect the call after finishing interview
+          setTimeout(() => {
+            client.disconnect();
+          }, 2000);
         }
 
         // Send Tool Response
