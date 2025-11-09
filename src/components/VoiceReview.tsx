@@ -79,6 +79,7 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const { toast } = useToast();
   const { client, connected, connect, disconnect, setConfig, setModel } = useLiveAPIContext();
   const [isRecording, setIsRecording] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
@@ -209,8 +210,15 @@ Guidelines:
   }, [client, connected]);
 
   const handleStartRecording = async () => {
+    // Prevent multiple clicks during connection
+    if (isConnecting || isRecording) {
+      console.log("⚠️ Already connecting or recording, ignoring click");
+      return;
+    }
+
     try {
       console.log("🎬 Starting voice review session...");
+      setIsConnecting(true);
       setSessionStarted(true);
       setMessages([]);
 
@@ -234,6 +242,7 @@ Guidelines:
       setTimeout(async () => {
         console.log("🎤 Starting audio recording...");
         setIsRecording(true);
+        setIsConnecting(false);
         
         audioRecorderRef.current = new AudioRecorder(16000);
         
@@ -260,6 +269,7 @@ Guidelines:
     } catch (error) {
       console.error("❌ Error starting recording:", error);
       setIsRecording(false);
+      setIsConnecting(false);
       setSessionStarted(false);
       toast({
         title: "연결 실패",
@@ -270,6 +280,7 @@ Guidelines:
   };
 
   const handleStopRecording = async () => {
+    console.log("🛑 Stopping recording...");
     setIsRecording(false);
     setIsProcessing(true);
 
@@ -308,19 +319,21 @@ Guidelines:
             <h2 className="text-3xl font-bold mb-2">VOIX Voice Review</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "Press the call button to start your voice review"
-                : !isRecording
-                  ? "🎧 Connecting... Please wait for the AI to greet you"
-                  : "🎤 Connected - Feel free to speak naturally"}
+                ? "통화 버튼을 눌러 음성 리뷰를 시작하세요"
+                : isConnecting
+                  ? "🎧 연결 중... 잠시만 기다려주세요"
+                  : !isRecording
+                    ? "🎧 AI가 인사하고 있습니다... 기다려주세요"
+                    : "🎤 연결됨 - 자유롭게 말씀하세요"}
             </p>
             {sessionStarted && isRecording && (
               <p className="text-sm text-muted-foreground mt-2">
-                💬 Our AI will ask questions and listen to your feedback
+                💬 AI가 질문을 하며 피드백을 듣고 있습니다
               </p>
             )}
-            {sessionStarted && !isRecording && (
+            {sessionStarted && (isConnecting || !isRecording) && (
               <p className="text-sm text-primary mt-2 font-medium animate-pulse">
-                ⏳ Wait for the greeting before speaking...
+                ⏳ AI 인사를 기다려주세요...
               </p>
             )}
           </div>
@@ -340,18 +353,19 @@ Guidelines:
               >
                 <Phone className="h-10 w-10 text-primary-foreground" />
               </Button>
-            ) : isProcessing ? (
+            ) : (isProcessing || isConnecting) ? (
               <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </div>
             ) : (
               <Button
                 size="lg"
-                onClick={isRecording ? handleStopRecording : handleStartRecording}
+                onClick={handleStopRecording}
+                disabled={!isRecording}
                 className={`w-24 h-24 rounded-full shadow-glow ${
                   isRecording
                     ? "bg-accent hover:bg-accent/90"
-                    : "gradient-primary"
+                    : "gradient-primary opacity-50 cursor-not-allowed"
                 }`}
               >
                 {isRecording ? (
