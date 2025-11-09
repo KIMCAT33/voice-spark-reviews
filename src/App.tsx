@@ -23,13 +23,28 @@ import ControlTray from "./components/control-tray/ControlTray";
 import cn from "classnames";
 import { LiveClientOptions } from "./types";
 
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY as string;
-if (typeof API_KEY !== "string") {
-  throw new Error("set REACT_APP_GEMINI_API_KEY in .env");
+// Support both VITE_ and REACT_APP_ prefixes for compatibility
+// Vite uses import.meta.env, but we also check process.env for compatibility
+const API_KEY = (
+  import.meta.env.VITE_GEMINI_API_KEY || 
+  import.meta.env.REACT_APP_GEMINI_API_KEY ||
+  (typeof process !== "undefined" && process.env?.VITE_GEMINI_API_KEY) ||
+  (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY)
+) as string;
+if (!API_KEY || typeof API_KEY !== "string" || API_KEY.trim() === "") {
+  console.error("API Key not found. Available env vars:", {
+    "import.meta.env.VITE_GEMINI_API_KEY": import.meta.env.VITE_GEMINI_API_KEY,
+    "import.meta.env.REACT_APP_GEMINI_API_KEY": import.meta.env.REACT_APP_GEMINI_API_KEY,
+    "process.env.VITE_GEMINI_API_KEY": typeof process !== "undefined" ? process.env?.VITE_GEMINI_API_KEY : "N/A",
+    "process.env.REACT_APP_GEMINI_API_KEY": typeof process !== "undefined" ? process.env?.REACT_APP_GEMINI_API_KEY : "N/A",
+  });
+  throw new Error("set VITE_GEMINI_API_KEY or REACT_APP_GEMINI_API_KEY in .env");
 }
+const trimmedAPIKey = API_KEY.trim();
+console.log("API Key loaded:", trimmedAPIKey.substring(0, 10) + "...");
 
 const apiOptions: LiveClientOptions = {
-  apiKey: API_KEY,
+  apiKey: trimmedAPIKey,
 };
 
 function App() {

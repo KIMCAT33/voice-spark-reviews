@@ -76,7 +76,7 @@ function ControlTray({
   const renderCanvasRef = useRef<HTMLCanvasElement>(null);
   const connectButtonRef = useRef<HTMLButtonElement>(null);
 
-  const { client, connected, connect, disconnect, volume } =
+  const { client, connected, setupComplete, connect, disconnect, volume } =
     useLiveAPIContext();
 
   useEffect(() => {
@@ -93,14 +93,17 @@ function ControlTray({
 
   useEffect(() => {
     const onData = (base64: string) => {
-      client.sendRealtimeInput([
-        {
-          mimeType: "audio/pcm;rate=16000",
-          data: base64,
-        },
-      ]);
+      // Only send audio if setup is complete and session exists
+      if (setupComplete && client.session) {
+        client.sendRealtimeInput([
+          {
+            mimeType: "audio/pcm;rate=16000",
+            data: base64,
+          },
+        ]);
+      }
     };
-    if (connected && !muted && audioRecorder) {
+    if (connected && setupComplete && !muted && audioRecorder) {
       setIsRecording(true);
       audioRecorder
         .on("data", onData)
@@ -125,7 +128,7 @@ function ControlTray({
       audioRecorder.off("data", onData).off("volume", setInVolume);
       setIsRecording(false);
     };
-  }, [connected, client, muted, audioRecorder]);
+  }, [connected, setupComplete, client, muted, audioRecorder]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -145,23 +148,23 @@ function ControlTray({
       const ctx = canvas.getContext("2d")!;
       canvas.width = video.videoWidth * 0.25;
       canvas.height = video.videoHeight * 0.25;
-      if (canvas.width + canvas.height > 0) {
+      if (canvas.width + canvas.height > 0 && setupComplete && client.session) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const base64 = canvas.toDataURL("image/jpeg", 1.0);
         const data = base64.slice(base64.indexOf(",") + 1, Infinity);
         client.sendRealtimeInput([{ mimeType: "image/jpeg", data }]);
       }
-      if (connected) {
+      if (connected && setupComplete) {
         timeoutId = window.setTimeout(sendVideoFrame, 1000 / 0.5);
       }
     }
-    if (connected && activeVideoStream !== null) {
+    if (connected && setupComplete && activeVideoStream !== null) {
       requestAnimationFrame(sendVideoFrame);
     }
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [connected, activeVideoStream, client, videoRef]);
+  }, [connected, setupComplete, activeVideoStream, client, videoRef]);
 
   //handler for swapping from one video-stream to the next
   const changeStreams = (next?: UseMediaStreamResult) => async () => {

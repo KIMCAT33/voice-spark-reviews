@@ -60,7 +60,12 @@
   "scripts": {
     "start-https": "HTTPS=true react-scripts start",
     "start": "react-scripts start",
+    "dev": "vite",
+    "dev:https": "vite --https",
     "build": "react-scripts build",
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -92,8 +97,11 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react-swc": "^3.11.0",
+    "dotenv": "^17.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vite": "^6.4.1"
   },
   "overrides": {
     "typescript": "^5.6.3"

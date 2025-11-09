@@ -29,6 +29,7 @@ export type UseLiveAPIResults = {
   model: string;
   setModel: (model: string) => void;
   connected: boolean;
+  setupComplete: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   volume: number;
@@ -41,6 +42,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
   const [model, setModel] = useState<string>("models/gemini-2.0-flash-exp");
   const [config, setConfig] = useState<LiveConnectConfig>({});
   const [connected, setConnected] = useState(false);
+  const [setupComplete, setSetupComplete] = useState(false);
   const [volume, setVolume] = useState(0);
 
   // register audio for streaming server -> speakers
@@ -62,10 +64,16 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
   useEffect(() => {
     const onOpen = () => {
       setConnected(true);
+      setSetupComplete(false);
     };
 
     const onClose = () => {
       setConnected(false);
+      setSetupComplete(false);
+    };
+
+    const onSetupComplete = () => {
+      setSetupComplete(true);
     };
 
     const onError = (error: ErrorEvent) => {
@@ -81,6 +89,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
       .on("error", onError)
       .on("open", onOpen)
       .on("close", onClose)
+      .on("setupcomplete", onSetupComplete)
       .on("interrupted", stopAudioStreamer)
       .on("audio", onAudio);
 
@@ -89,6 +98,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
         .off("error", onError)
         .off("open", onOpen)
         .off("close", onClose)
+        .off("setupcomplete", onSetupComplete)
         .off("interrupted", stopAudioStreamer)
         .off("audio", onAudio)
         .disconnect();
@@ -115,6 +125,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     model,
     setModel,
     connected,
+    setupComplete,
     connect,
     disconnect,
     volume,

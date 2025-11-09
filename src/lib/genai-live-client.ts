@@ -244,18 +244,26 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send realtimeInput, this is base64 chunks of "audio/pcm" and/or "image/jpg"
    */
   sendRealtimeInput(chunks: Array<{ mimeType: string; data: string }>) {
+    if (!this.session) {
+      console.warn("Cannot send realtime input: session not available");
+      return;
+    }
     let hasAudio = false;
     let hasVideo = false;
     for (const ch of chunks) {
-      this.session?.sendRealtimeInput({ media: ch });
-      if (ch.mimeType.includes("audio")) {
-        hasAudio = true;
-      }
-      if (ch.mimeType.includes("image")) {
-        hasVideo = true;
-      }
-      if (hasAudio && hasVideo) {
-        break;
+      try {
+        this.session.sendRealtimeInput({ media: ch });
+        if (ch.mimeType.includes("audio")) {
+          hasAudio = true;
+        }
+        if (ch.mimeType.includes("image")) {
+          hasVideo = true;
+        }
+        if (hasAudio && hasVideo) {
+          break;
+        }
+      } catch (error) {
+        console.error("Error sending realtime input:", error);
       }
     }
     const message =
