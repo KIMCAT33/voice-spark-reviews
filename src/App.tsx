@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import GeminiLiveChat from "./pages/GeminiLiveChat";
 import ProductPurchase from "./pages/ProductPurchase";
 import Dashboard from "./pages/Dashboard";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +19,8 @@ function App() {
         <Toaster />
         <Sonner />
         <Routes>
-          <Route path="/" element={<ProductPurchase />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/purchase" element={<ProductPurchase />} />
           <Route path="/home" element={<Index />} />
           <Route path="/gemini-live" element={<GeminiLiveChat />} />
           <Route path="/voice-review" element={<Index />} />
