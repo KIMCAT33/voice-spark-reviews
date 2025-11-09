@@ -242,7 +242,7 @@ function ControlTray({
             className={cn("action-button connect-toggle", { connected })}
             onClick={connected ? disconnect : connect}
           >
-            {connected ? <Pause size={20} /> : <Play size={20} />}
+            {connected ? <Pause size={24} /> : <Play size={28} fill="white" />}
           </button>
         </div>
         <span className="text-indicator">Streaming</span>

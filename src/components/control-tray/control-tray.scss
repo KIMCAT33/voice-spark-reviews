@@ -142,12 +142,30 @@
   &:not(.connected) {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     color: white;
-    box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+    box-shadow: 0 8px 24px hsl(var(--primary) / 0.4);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    animation: pulse-button 2s ease-in-out infinite;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px hsl(var(--primary) / 0.4);
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 32px hsl(var(--primary) / 0.5);
     }
+  }
+
+  &.connected {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@keyframes pulse-button {
+  0%, 100% {
+    box-shadow: 0 8px 24px hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 24px hsl(var(--primary) / 0.6), 0 0 0 8px hsl(var(--primary) / 0.2);
   }
 }
 
@@ -178,20 +196,21 @@
     gap: 6px;
 
     .connection-button-container {
-      border-radius: 16px;
-      border: 1px solid hsl(var(--border) / 0.5);
-      background: hsl(var(--card));
-      padding: 8px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 12px hsl(var(--primary) / 0.1);
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      padding: 0;
+      backdrop-filter: none;
+      box-shadow: none;
     }
 
     .text-indicator {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
       color: hsl(var(--primary));
       user-select: none;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
     }
 
     &:not(.connected) {
