@@ -288,11 +288,9 @@ After Question 5, warmly conclude:
             <h2>
               <span className="gradient-text">Share Your Voice, Get Rewarded</span>
             </h2>
-            <p className="subtitle">2 minutes for exclusive rewards & priority support</p>
+            <p className="subtitle">2-minute voice review to unlock 10% discount & priority support</p>
             
             <div className="divider"></div>
-            
-            <p className="guide-description">Quick voice review to unlock 10% discount & priority support</p>
             
             <div className="guide-steps">
               <div className="step">
