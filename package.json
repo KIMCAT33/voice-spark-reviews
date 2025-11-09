@@ -69,7 +69,7 @@
     "start": "react-scripts start",
     "dev": "vite",
     "dev:https": "vite --https",
-    "build": "react-scripts build",
+    "build": "vite build --mode production",
     "build:dev": "vite build --mode development",
     "build:prod": "vite build --mode production",
     "preview": "vite preview",

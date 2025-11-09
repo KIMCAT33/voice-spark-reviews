@@ -1,15 +1,25 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+// Get __dirname equivalent for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Try to import lovable-tagger, but make it optional
-let componentTagger: any = null;
-try {
-  const tagger = require("lovable-tagger");
-  componentTagger = tagger.componentTagger;
-} catch (e) {
-  // lovable-tagger is optional
+// Use createRequire for ESM compatibility
+function getComponentTagger() {
+  try {
+    const require = createRequire(import.meta.url);
+    const tagger = require("lovable-tagger");
+    return tagger?.componentTagger || null;
+  } catch (e) {
+    // lovable-tagger is optional - not available in all environments
+    return null;
+  }
 }
 
 // https://vitejs.dev/config/
@@ -19,19 +29,21 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   const plugins = [
-    react(), 
+    react(),
     tsconfigPaths({
       projects: ['./tsconfig.app.json']
     })
   ];
+  const componentTagger = getComponentTagger();
   if (mode === "development" && componentTagger) {
     plugins.push(componentTagger());
   }
 
   return {
     server: {
-      host: "::",
-      port: 8080,
+      // Lovable manages host/port, so use defaults unless specified
+      host: process.env.VITE_HOST || "::",
+      port: process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 8080,
       https: mode === "development" ? false : undefined,
     },
     // Expose both VITE_ and REACT_APP_ prefixed env vars to client
