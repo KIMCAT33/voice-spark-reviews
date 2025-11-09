@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Package, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import lipstickImage from "@/assets/red-lipstick.jpg";
+import VoiceReview from "@/components/VoiceReview";
+import { LiveAPIProvider } from "@/contexts/LiveAPIContext";
 
 const ProductPurchase = () => {
   const navigate = useNavigate();
+  const [showVoiceReview, setShowVoiceReview] = useState(false);
 
   // Mock product data - Beauty product
   const mockPurchase = {
@@ -16,6 +20,23 @@ const ProductPurchase = () => {
     productColor: "Cherry Red #05",
     orderNumber: "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
   };
+
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.REACT_APP_GEMINI_API_KEY;
+
+  // Show voice review interface
+  if (showVoiceReview) {
+    return (
+      <LiveAPIProvider
+        options={{
+          apiKey: apiKey?.trim() || "",
+        }}
+      >
+        <VoiceReview onBack={() => {
+          setShowVoiceReview(false);
+        }} />
+      </LiveAPIProvider>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
@@ -69,7 +90,7 @@ const ProductPurchase = () => {
           <Button
             size="lg"
             className="w-full text-lg py-6 gradient-primary shadow-glow hover:opacity-90 transition-all"
-            onClick={() => navigate(`/voice-review?product=${mockPurchase.productId}&customer=${encodeURIComponent(mockPurchase.customerName)}`)}
+            onClick={() => setShowVoiceReview(true)}
           >
             <Phone className="mr-2 h-6 w-6" />
             Start Review Call (2 min)
