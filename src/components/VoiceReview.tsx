@@ -5,6 +5,7 @@ import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
 import VoiceWaveform from "./VoiceWaveform";
 import TranscriptionDisplay from "./TranscriptionDisplay";
 import ReviewSummary from "./ReviewSummary";
+import { useNavigate } from "react-router-dom";
 
 interface VoiceReviewProps {
   onBack: () => void;
@@ -26,6 +27,7 @@ interface ReviewData {
 }
 
 const VoiceReview = ({ onBack }: VoiceReviewProps) => {
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -35,11 +37,11 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const handleStartRecording = () => {
     setIsRecording(true);
     setSessionStarted(true);
-    // Add initial greeting
+    // Add initial greeting with more context
     setMessages([
       {
         role: "assistant",
-        content: "Hi! Thanks for taking the time to share your feedback. I'd love to hear about your recent experience. What did you think of the product?",
+        content: "Hi! Thanks for taking the time to share your feedback. I'm here to learn about your experience with the product. Let's start - what product did you purchase and what did you think of it?",
       },
     ]);
   };
@@ -48,32 +50,63 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
     setIsRecording(false);
     setIsProcessing(true);
     
-    // Simulate processing and generating review data
+    // Simulate AI conversation - add user response
     setTimeout(() => {
+      setMessages(prev => [...prev, {
+        role: "user",
+        content: "I bought the Premium Wireless Headphones. The sound quality is excellent and they're really comfortable!",
+      }]);
+    }, 1000);
+
+    // Simulate AI follow-up
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "That's great to hear! Could you tell me more about the comfort and if there was anything you didn't like?",
+      }]);
       setIsProcessing(false);
-      setReviewData({
-        product_name: "Sample Product",
-        customer_emotion: "satisfied",
-        key_positive_points: [
-          "Fast delivery",
-          "High quality packaging",
-          "Product met expectations",
-        ],
-        key_negative_points: [
-          "Instructions could be clearer",
-        ],
-        improvement_suggestions: [
-          "Include quick start guide",
-          "Add video tutorials",
-        ],
-        review_summary: "Customer is generally satisfied with the product quality and delivery speed. Main area for improvement is documentation.",
-        recommendation_score: 4,
-      });
-    }, 2000);
+    }, 2500);
+    
+    // Simulate processing and generating review data after conversation
+    setTimeout(() => {
+      setIsProcessing(true);
+      setTimeout(() => {
+        setIsProcessing(false);
+        setReviewData({
+          product_name: "Premium Wireless Headphones",
+          customer_emotion: "satisfied",
+          key_positive_points: [
+            "Excellent sound quality",
+            "Very comfortable for long use",
+            "Fast delivery",
+            "High quality packaging",
+          ],
+          key_negative_points: [
+            "Size was smaller than expected",
+            "Instructions could be clearer",
+          ],
+          improvement_suggestions: [
+            "Include detailed size chart",
+            "Add quick start guide with visuals",
+            "Provide video tutorials online",
+          ],
+          review_summary: "Customer is very satisfied with the product quality and comfort. Main feedback focuses on improving documentation and size expectations.",
+          recommendation_score: 4,
+        });
+      }, 2000);
+    }, 5000);
   };
 
   if (reviewData) {
-    return <ReviewSummary data={reviewData} onNewReview={() => setReviewData(null)} onBack={onBack} />;
+    return <ReviewSummary 
+      data={reviewData} 
+      onNewReview={() => {
+        setReviewData(null);
+        setMessages([]);
+        setSessionStarted(false);
+      }} 
+      onBack={() => navigate("/dashboard")} 
+    />;
   }
 
   return (
@@ -90,14 +123,19 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
 
         <Card className="p-8 md:p-12 shadow-card">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Voice Review Session</h2>
+            <h2 className="text-3xl font-bold mb-2">AI Voice Review Assistant</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "Click the microphone to start your review"
+                ? "Click the microphone to start sharing your thoughts"
                 : isRecording 
-                  ? "Listening to your feedback..." 
-                  : "Processing your response..."}
+                  ? "I'm listening... Speak naturally about your experience" 
+                  : "Processing your feedback..."}
             </p>
+            {sessionStarted && (
+              <p className="text-sm text-muted-foreground mt-2">
+                💡 Tip: Speak naturally - the AI will ask follow-up questions
+              </p>
+            )}
           </div>
 
           {/* Voice Waveform */}

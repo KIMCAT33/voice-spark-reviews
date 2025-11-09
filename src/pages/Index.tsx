@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, MessageSquare, TrendingUp, Zap, ShoppingBag, Sparkles } from "lucide-react";
 import VoiceReview from "@/components/VoiceReview";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showVoiceReview, setShowVoiceReview] = useState(false);
 
+  // Check if we should show voice review based on URL
+  useEffect(() => {
+    const productId = searchParams.get("product");
+    const customerName = searchParams.get("customer");
+    if (productId || customerName) {
+      setShowVoiceReview(true);
+    }
+  }, [searchParams]);
+
   if (showVoiceReview) {
-    return <VoiceReview onBack={() => setShowVoiceReview(false)} />;
+    return <VoiceReview onBack={() => {
+      setShowVoiceReview(false);
+      navigate("/dashboard");
+    }} />;
   }
 
   return (

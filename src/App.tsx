@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import GeminiLiveChat from "./pages/GeminiLiveChat";
+import ProductPurchase from "./pages/ProductPurchase";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -16,8 +18,11 @@ function App() {
         <Toaster />
         <Sonner />
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<ProductPurchase />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/gemini-live" element={<GeminiLiveChat />} />
+          <Route path="/voice-review" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
