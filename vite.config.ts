@@ -10,20 +10,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Try to import lovable-tagger, but make it optional
-// Use createRequire for ESM compatibility
-function getComponentTagger() {
+async function getComponentTagger() {
   try {
-    const require = createRequire(import.meta.url);
-    const tagger = require("lovable-tagger");
-    return tagger?.componentTagger || null;
+    // Try dynamic import first (better for ESM)
+    const { componentTagger } = await import("lovable-tagger");
+    return componentTagger;
   } catch (e) {
-    // lovable-tagger is optional - not available in all environments
-    return null;
+    // If dynamic import fails, try createRequire
+    try {
+      const require = createRequire(import.meta.url);
+      const tagger = require("lovable-tagger");
+      return tagger?.componentTagger || null;
+    } catch (err) {
+      // lovable-tagger is optional - not available in all environments
+      console.log("lovable-tagger not available, skipping component tagging");
+      return null;
+    }
   }
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Vite uses VITE_ prefix by default, but we'll also support REACT_APP_ for compatibility
   const env = loadEnv(mode, process.cwd(), "");
@@ -34,9 +41,13 @@ export default defineConfig(({ mode }) => {
       projects: ['./tsconfig.app.json']
     })
   ];
-  const componentTagger = getComponentTagger();
-  if (mode === "development" && componentTagger) {
-    plugins.push(componentTagger());
+  
+  // Only load component tagger in development
+  if (mode === "development") {
+    const componentTagger = await getComponentTagger();
+    if (componentTagger) {
+      plugins.push(componentTagger());
+    }
   }
 
   return {
