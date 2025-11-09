@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Package, DollarSign, Users, ShoppingCart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Package, DollarSign, Users, ShoppingCart, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Extended mock data - 10 Beauty products reviews
 const initialMockReviews = [
@@ -121,8 +124,140 @@ const initialMockReviews = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
-  const [mockReviews] = useState(initialMockReviews);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchExplanation, setSearchExplanation] = useState("");
+
+  // Fetch reviews from database
+  useEffect(() => {
+    fetchReviews();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('reviews-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reviews'
+        },
+        () => {
+          console.log('Reviews updated, refetching...');
+          fetchReviews();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to match UI format
+      const transformedReviews = data?.map(review => ({
+        id: review.id,
+        customerName: review.customer_name || "Anonymous",
+        productName: review.product_name,
+        emotion: review.customer_emotion,
+        recommendationScore: review.recommendation_score,
+        timestamp: review.created_at,
+        summary: review.review_summary,
+        keyPositive: review.key_positive_points || [],
+        keyNegative: review.key_negative_points || [],
+      })) || [];
+
+      setReviews(transformedReviews.length > 0 ? transformedReviews : initialMockReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error loading reviews",
+        description: "Using sample data instead.",
+        variant: "destructive",
+      });
+      setReviews(initialMockReviews);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      fetchReviews();
+      setSearchExplanation("");
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const { data, error } = await supabase.functions.invoke('search-reviews', {
+        body: { query: searchQuery }
+      });
+
+      if (error) {
+        console.error('Search error:', error);
+        toast({
+          title: "Search failed",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.error) {
+        toast({
+          title: "Search failed",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Transform results to match UI format
+      const transformedResults = data.results?.map((review: any) => ({
+        id: review.id,
+        customerName: review.customer_name || "Anonymous",
+        productName: review.product_name,
+        emotion: review.customer_emotion,
+        recommendationScore: review.recommendation_score,
+        timestamp: review.created_at,
+        summary: review.review_summary,
+        keyPositive: review.key_positive_points || [],
+        keyNegative: review.key_negative_points || [],
+      })) || [];
+
+      setReviews(transformedResults);
+      setSearchExplanation(data.explanation || "");
+      
+      toast({
+        title: "Search complete",
+        description: `Found ${data.count} review(s)`,
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const getEmotionIcon = (emotion: string) => {
     switch (emotion) {
@@ -147,7 +282,9 @@ const Dashboard = () => {
     return colors[emotion as keyof typeof colors] || colors.satisfied;
   };
 
-  const averageScore = (mockReviews.reduce((acc, r) => acc + r.recommendationScore, 0) / mockReviews.length).toFixed(1);
+  const averageScore = reviews.length > 0 
+    ? (reviews.reduce((acc, r) => acc + r.recommendationScore, 0) / reviews.length).toFixed(1)
+    : "0.0";
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -175,6 +312,56 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Natural Language Search */}
+        <Card className="p-6 shadow-card">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">🔍 Ask About Your Reviews</h2>
+              <p className="text-muted-foreground text-sm">
+                Try: "Show unhappy customers", "What products have drying issues?", "Reviews from this week with low scores"
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ask a question about your reviews..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSearch}
+                disabled={isSearching}
+              >
+                {isSearching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
+              </Button>
+              {searchQuery && (
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchExplanation("");
+                    fetchReviews();
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            {searchExplanation && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Understanding:</strong> {searchExplanation}
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+
         {/* Insights Summary */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="p-6 shadow-card">
@@ -196,7 +383,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Reviews</p>
-                <p className="text-3xl font-bold">{mockReviews.length}</p>
+                <p className="text-3xl font-bold">{reviews.length}</p>
               </div>
             </div>
           </Card>
@@ -209,7 +396,9 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Positive Sentiment</p>
                 <p className="text-3xl font-bold">
-                  {Math.round((mockReviews.filter(r => r.emotion === "happy" || r.emotion === "satisfied").length / mockReviews.length) * 100)}%
+                  {reviews.length > 0 
+                    ? Math.round((reviews.filter(r => r.emotion === "happy" || r.emotion === "satisfied").length / reviews.length) * 100)
+                    : 0}%
                 </p>
               </div>
             </div>
@@ -219,8 +408,17 @@ const Dashboard = () => {
         {/* Recent Voice Reviews */}
         <Card className="p-6 shadow-card">
           <h2 className="text-2xl font-bold mb-6">Recent Voice Reviews</h2>
-          <div className="space-y-4">
-            {mockReviews.map((review) => (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No reviews found. Start collecting feedback!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
               <div
                 key={review.id}
                 className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
@@ -266,7 +464,7 @@ const Dashboard = () => {
                       <div>
                         <h4 className="font-semibold mb-1">Positive Points</h4>
                         <ul className="text-sm text-muted-foreground list-disc list-inside">
-                          {review.keyPositive.map((point, i) => (
+                          {review.keyPositive.map((point: string, i: number) => (
                             <li key={i}>{point}</li>
                           ))}
                         </ul>
@@ -276,7 +474,7 @@ const Dashboard = () => {
                       <div>
                         <h4 className="font-semibold mb-1">Areas for Improvement</h4>
                         <ul className="text-sm text-muted-foreground list-disc list-inside">
-                          {review.keyNegative.map((point, i) => (
+                          {review.keyNegative.map((point: string, i: number) => (
                             <li key={i}>{point}</li>
                           ))}
                         </ul>
@@ -285,8 +483,9 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Sales & Marketing Insights */}

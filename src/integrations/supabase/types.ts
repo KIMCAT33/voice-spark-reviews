@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      reviews: {
+        Row: {
+          created_at: string
+          customer_emotion: string
+          customer_name: string | null
+          id: string
+          improvement_suggestions: string[] | null
+          key_negative_points: string[] | null
+          key_positive_points: string[] | null
+          product_name: string
+          recommendation_score: number
+          review_summary: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_emotion: string
+          customer_name?: string | null
+          id?: string
+          improvement_suggestions?: string[] | null
+          key_negative_points?: string[] | null
+          key_positive_points?: string[] | null
+          product_name: string
+          recommendation_score: number
+          review_summary: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_emotion?: string
+          customer_name?: string | null
+          id?: string
+          improvement_suggestions?: string[] | null
+          key_negative_points?: string[] | null
+          key_positive_points?: string[] | null
+          product_name?: string
+          recommendation_score?: number
+          review_summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

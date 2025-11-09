@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { useLiveAPIContext } from "@/contexts/LiveAPIContext";
 import { AudioRecorder } from "@/lib/audio-recorder";
 import { Type, FunctionDeclaration } from "@google/genai";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface VoiceReviewProps {
   onBack: () => void;
@@ -74,6 +76,7 @@ const endReviewDeclaration: FunctionDeclaration = {
 
 const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { client, connected, connect, disconnect, setConfig, setModel } = useLiveAPIContext();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -137,13 +140,13 @@ Guidelines:
       setIsProcessing(false);
     };
 
-    const handleToolCall = (toolCall: any) => {
+    const handleToolCall = async (toolCall: any) => {
       console.log("Tool call received:", toolCall);
       if (toolCall.functionCalls) {
-        toolCall.functionCalls.forEach((fc: any) => {
+        for (const fc of toolCall.functionCalls) {
           if (fc.name === "end_review") {
             const args = fc.args;
-            setReviewData({
+            const reviewDataToSave = {
               product_name: args.product_name || "Rouge Velvet Matte Lipstick",
               customer_emotion: args.customer_emotion || "satisfied",
               key_positive_points: args.key_positive_points || [],
@@ -151,9 +154,43 @@ Guidelines:
               improvement_suggestions: args.improvement_suggestions || [],
               review_summary: args.review_summary || "",
               recommendation_score: args.recommendation_score || 3,
-            });
+            };
+
+            // Save to database
+            try {
+              const { error } = await supabase
+                .from("reviews")
+                .insert({
+                  product_name: reviewDataToSave.product_name,
+                  customer_emotion: reviewDataToSave.customer_emotion,
+                  recommendation_score: reviewDataToSave.recommendation_score,
+                  review_summary: reviewDataToSave.review_summary,
+                  key_positive_points: reviewDataToSave.key_positive_points,
+                  key_negative_points: reviewDataToSave.key_negative_points,
+                  improvement_suggestions: reviewDataToSave.improvement_suggestions,
+                });
+
+              if (error) {
+                console.error("Error saving review:", error);
+                toast({
+                  title: "Error saving review",
+                  description: "Your review couldn't be saved. Please try again.",
+                  variant: "destructive",
+                });
+              } else {
+                console.log("Review saved successfully");
+                toast({
+                  title: "Review saved!",
+                  description: "Your feedback has been recorded.",
+                });
+              }
+            } catch (error) {
+              console.error("Error saving review:", error);
+            }
+
+            setReviewData(reviewDataToSave);
           }
-        });
+        }
       }
     };
 
