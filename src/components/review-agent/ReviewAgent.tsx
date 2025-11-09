@@ -301,17 +301,17 @@ After Question 5, warmly conclude:
       {!connected && (
         <div className="connection-guide">
           <div className="guide-card">
-            <MessageCircle className="w-16 h-16 text-primary mb-2" />
+            <MessageCircle className="w-12 h-12 text-primary mb-1" />
             <p className="guide-title">Share Your Voice, Get Exclusive Benefits</p>
-            <p className="guide-description">Complete this quick voice review to unlock 10% discount and priority customer support</p>
+            <p className="guide-description">Quick voice review to unlock 10% discount & priority support</p>
             <div className="guide-steps">
               <div className="step">
                 <span className="step-number">1</span>
-                <span className="step-text">Connect & Start</span>
+                <span className="step-text">Connect</span>
               </div>
               <div className="step">
                 <span className="step-number">2</span>
-                <span className="step-text">Share Honestly</span>
+                <span className="step-text">Share</span>
               </div>
               <div className="step">
                 <span className="step-number">3</span>
