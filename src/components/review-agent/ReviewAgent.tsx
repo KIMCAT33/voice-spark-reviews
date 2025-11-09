@@ -23,6 +23,7 @@ import {
 } from "@google/genai";
 import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
+import { Sparkles, MessageCircle } from "lucide-react";
 
 // Review data structure
 export interface ReviewData {
@@ -279,19 +280,43 @@ After Question 5, warmly conclude:
   return (
     <div className="review-agent-container" ref={reviewContainerRef}>
       <div className="review-header">
-        <h2>💄 Beauty Product Review Collection</h2>
+        <div className="header-icon">
+          <Sparkles className="w-12 h-12 text-primary animate-pulse" />
+        </div>
+        <h2>
+          <span className="gradient-text">Beauty Product Review</span>
+        </h2>
         <p className="subtitle">
-          {connected
-            ? `Question ${currentQuestion}/5 in progress...`
-            : "Waiting for connection..."}
+          {connected ? (
+            <span className="flex items-center gap-2 justify-center">
+              <span className="status-dot"></span>
+              Question {currentQuestion}/5 in progress
+            </span>
+          ) : (
+            "Waiting for connection..."
+          )}
         </p>
       </div>
 
       {!connected && (
         <div className="connection-guide">
           <div className="guide-card">
-            <span className="guide-icon">🔵</span>
-            <p>Click the connect button to start collecting reviews</p>
+            <MessageCircle className="w-16 h-16 text-primary mb-2" />
+            <p>Click the play button below to start your voice review</p>
+            <div className="guide-steps">
+              <div className="step">
+                <span className="step-number">1</span>
+                <span className="step-text">Click play to connect</span>
+              </div>
+              <div className="step">
+                <span className="step-number">2</span>
+                <span className="step-text">Answer 5 questions</span>
+              </div>
+              <div className="step">
+                <span className="step-number">3</span>
+                <span className="step-text">Get insights & rewards</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

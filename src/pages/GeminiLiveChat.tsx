@@ -68,35 +68,44 @@ function GeminiLiveChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+      </div>
+
       <LiveAPIProvider options={apiOptions}>
-        <div className="flex flex-col h-screen">
-          {/* Header */}
-          <div className="p-4 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="flex flex-col h-screen relative z-10">
+          {/* Header with Glassmorphism */}
+          <div className="p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
             <div className="container mx-auto flex items-center justify-between">
               <Button
                 variant="ghost"
                 onClick={() => navigate("/")}
+                className="hover:bg-primary/10 transition-colors"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Purchase
               </Button>
-              <h1 className="text-xl font-semibold">Customer Service Review Call</h1>
-              <div className="w-32"></div> {/* Spacer for centering */}
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Customer Service Review Call
+              </h1>
+              <div className="w-32"></div>
             </div>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content with Animation */}
           <div className="flex-1 overflow-hidden">
-            <div className="h-full flex items-center justify-center p-4">
-              <div className="w-full max-w-4xl">
+            <div className="h-full flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500">
+              <div className="w-full max-w-5xl">
                 <ReviewAgent />
               </div>
             </div>
           </div>
 
-          {/* Control Tray */}
-          <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
+          {/* Control Tray with Glassmorphism */}
+          <div className="border-t border-border/30 bg-background/60 backdrop-blur-xl shadow-lg">
             <ControlTray
               videoRef={videoRef}
               supportsVideo={false}
