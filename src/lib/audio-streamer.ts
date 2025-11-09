@@ -100,6 +100,14 @@ export class AudioStreamer {
   }
 
   addPCM16(chunk: Uint8Array) {
+    // Check audio context state
+    if (this.context.state === "suspended") {
+      console.warn("Audio context is suspended, attempting to resume...");
+      this.context.resume().then(() => {
+        console.log("Audio context resumed successfully");
+      });
+    }
+    
     // Reset the stream complete flag when a new chunk is added.
     this.isStreamComplete = false;
     // Process the chunk into a Float32Array
@@ -118,6 +126,7 @@ export class AudioStreamer {
     // Start playing if not already playing.
     if (!this.isPlaying) {
       this.isPlaying = true;
+      console.log("Starting audio playback, context state:", this.context.state);
       // Initialize scheduledTime only when we start playing
       this.scheduledTime = this.context.currentTime + this.initialBufferTime;
       this.scheduleNextBuffer();
@@ -237,7 +246,9 @@ export class AudioStreamer {
 
   async resume() {
     if (this.context.state === "suspended") {
+      console.log("Resuming suspended audio context for mobile...");
       await this.context.resume();
+      console.log("Audio context resumed, state:", this.context.state);
     }
     this.isStreamComplete = false;
     this.scheduledTime = this.context.currentTime + this.initialBufferTime;

@@ -109,6 +109,10 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     if (!config) {
       throw new Error("config has not been set");
     }
+    // Resume audio context for mobile browsers
+    if (audioStreamerRef.current) {
+      await audioStreamerRef.current.resume();
+    }
     client.disconnect();
     await client.connect(model, config);
   }, [client, config, model]);
