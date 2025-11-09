@@ -292,7 +292,6 @@ After Question 5, warmly conclude:
             
             <div className="divider"></div>
             
-            <MessageCircle className="w-12 h-12 text-primary mb-2" />
             <p className="guide-description">Quick voice review to unlock 10% discount & priority support</p>
             
             <div className="guide-steps">
@@ -302,7 +301,7 @@ After Question 5, warmly conclude:
               </div>
               <div className="step">
                 <span className="step-number">2</span>
-                <span className="step-text">Answer 5 Questions</span>
+                <span className="step-text">Answer Questions</span>
               </div>
               <div className="step">
                 <span className="step-number">3</span>
