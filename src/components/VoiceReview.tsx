@@ -122,6 +122,41 @@ Guidelines:
   useEffect(() => {
     if (!connected) return;
 
+    const handleSetupComplete = async () => {
+      console.log("✅ Setup complete - WebSocket is ready");
+      
+      // Now it's safe to send the initial message
+      setTimeout(() => {
+        console.log("👋 Sending initial greeting...");
+        client.send([{
+          text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
+        }], true);
+        
+        // Start recording after AI has time to respond
+        setTimeout(async () => {
+          console.log("🎤 Starting audio recording...");
+          setIsRecording(true);
+          setIsConnecting(false);
+          
+          audioRecorderRef.current = new AudioRecorder(16000);
+          
+          audioRecorderRef.current.on("data", (base64Audio: string) => {
+            if (connected && isRecording) {
+              client.sendRealtimeInput([
+                {
+                  mimeType: "audio/pcm;rate=16000",
+                  data: base64Audio,
+                },
+              ]);
+            }
+          });
+
+          await audioRecorderRef.current.start();
+          console.log("✅ Recording started");
+        }, 2000);
+      }, 500);
+    };
+
     const handleContent = (data: any) => {
       const text = data.text || data.transcript;
       if (text) {
@@ -198,11 +233,13 @@ Guidelines:
       }
     };
 
+    client.on("setupcomplete", handleSetupComplete);
     client.on("content", handleContent);
     client.on("turncomplete", handleTurnComplete);
     client.on("toolcall", handleToolCall);
 
     return () => {
+      client.off("setupcomplete", handleSetupComplete);
       client.off("content", handleContent);
       client.off("turncomplete", handleTurnComplete);
       client.off("toolcall", handleToolCall);
@@ -222,44 +259,13 @@ Guidelines:
       setSessionStarted(true);
       setMessages([]);
 
-      // First, connect to Gemini Live API
+      // Connect to Gemini Live API
+      // The setupcomplete event handler will take care of sending messages and starting recording
       if (!connected) {
         console.log("📡 Connecting to Gemini Live API...");
         await connect();
-        console.log("✅ Connected to Gemini Live API");
+        console.log("⏳ Waiting for WebSocket setup to complete...");
       }
-
-      // Wait a moment for connection to stabilize
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Send initial greeting prompt to trigger AI to speak first
-      console.log("👋 Sending initial greeting...");
-      client.send([{
-        text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
-      }], true);
-
-      // Start recording after a brief delay to let AI respond
-      setTimeout(async () => {
-        console.log("🎤 Starting audio recording...");
-        setIsRecording(true);
-        setIsConnecting(false);
-        
-        audioRecorderRef.current = new AudioRecorder(16000);
-        
-        audioRecorderRef.current.on("data", (base64Audio: string) => {
-          if (connected && isRecording) {
-            client.sendRealtimeInput([
-              {
-                mimeType: "audio/pcm;rate=16000",
-                data: base64Audio,
-              },
-            ]);
-          }
-        });
-
-        await audioRecorderRef.current.start();
-        console.log("✅ Recording started");
-      }, 2000);
 
       toast({
         title: "연결 성공",

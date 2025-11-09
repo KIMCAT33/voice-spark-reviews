@@ -296,10 +296,22 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send normal content parts such as { text }
    */
   send(parts: Part | Part[], turnComplete: boolean = true) {
-    this.session?.sendClientContent({ turns: parts, turnComplete });
-    this.log(`client.send`, {
-      turns: Array.isArray(parts) ? parts : [parts],
-      turnComplete,
-    });
+    if (!this.session) {
+      console.warn("Cannot send content: session not available");
+      return;
+    }
+    if (this._status !== "connected") {
+      console.warn(`Cannot send content: status is ${this._status}`);
+      return;
+    }
+    try {
+      this.session.sendClientContent({ turns: parts, turnComplete });
+      this.log(`client.send`, {
+        turns: Array.isArray(parts) ? parts : [parts],
+        turnComplete,
+      });
+    } catch (error) {
+      console.error("Error sending content:", error);
+    }
   }
 }
