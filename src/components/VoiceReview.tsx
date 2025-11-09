@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Phone, PhoneOff, Loader2 } from "lucide-react";
@@ -6,6 +6,9 @@ import VoiceWaveform from "./VoiceWaveform";
 import TranscriptionDisplay from "./TranscriptionDisplay";
 import ReviewSummary from "./ReviewSummary";
 import { useNavigate } from "react-router-dom";
+import { useLiveAPIContext } from "@/contexts/LiveAPIContext";
+import { AudioRecorder } from "@/lib/audio-recorder";
+import { Type, FunctionDeclaration } from "@google/genai";
 
 interface VoiceReviewProps {
   onBack: () => void;
@@ -28,73 +31,187 @@ interface ReviewData {
 
 const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const navigate = useNavigate();
+  const { client, connected, connect, disconnect, setConfig } = useLiveAPIContext();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
+  const currentTranscriptRef = useRef<string>("");
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    setSessionStarted(true);
-    // Add initial greeting - CS team style
-    setMessages([
-      {
-        role: "assistant",
-        content: "Hello! Thank you for taking the time to speak with us today. We'd love to hear about your experience with the product you purchased. Let's start - which product did you receive and what are your initial thoughts?",
-      },
-    ]);
+  useEffect(() => {
+    const endReviewDeclaration: FunctionDeclaration = {
+      name: "end_review",
+      description: "Call this function when you have gathered enough feedback to complete the review. Include all structured data about the customer's experience.",
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          product_name: {
+            type: Type.STRING,
+            description: "Name of the product being reviewed"
+          },
+          customer_emotion: {
+            type: Type.STRING,
+            description: "Overall customer emotion: satisfied, neutral, or frustrated"
+          },
+          key_positive_points: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "List of positive feedback points"
+          },
+          key_negative_points: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "List of negative feedback points or concerns"
+          },
+          improvement_suggestions: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Suggestions for product improvement"
+          },
+          review_summary: {
+            type: Type.STRING,
+            description: "A brief summary of the customer's overall feedback"
+          },
+          recommendation_score: {
+            type: Type.NUMBER,
+            description: "Likelihood to recommend (1-5 scale)"
+          }
+        },
+        required: ["product_name", "customer_emotion", "review_summary", "recommendation_score"]
+      }
+    };
+
+    const initializeSession = async () => {
+      try {
+        setConfig({
+          systemInstruction: {
+            parts: [{
+              text: `You are a friendly customer service representative conducting a post-purchase review call. 
+              
+Your goal is to:
+1. Welcome the customer warmly
+2. Ask about their experience with the product they purchased
+3. Listen actively and ask 2-3 follow-up questions to understand their feedback
+4. When you have gathered enough information (positive points, negative points, and overall sentiment), call the end_review function with the structured data
+5. Keep the conversation natural and conversational - like a real CS team member
+
+Guidelines:
+- Be warm and professional
+- Ask open-ended questions
+- Show empathy and appreciation for their feedback
+- Don't sound robotic or scripted
+- After 2-3 exchanges, wrap up naturally and call the end_review function`
+            }]
+          },
+          tools: [{
+            functionDeclarations: [endReviewDeclaration]
+          }]
+        });
+      } catch (error) {
+        console.error("Error initializing session:", error);
+      }
+    };
+
+    initializeSession();
+  }, [setConfig]);
+
+  useEffect(() => {
+    if (!connected) return;
+
+    const handleContent = (data: any) => {
+      const text = data.text || data.transcript;
+      if (text) {
+        currentTranscriptRef.current += text;
+        setMessages(prev => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage?.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              { role: "assistant", content: currentTranscriptRef.current }
+            ];
+          }
+          return [...prev, { role: "assistant", content: currentTranscriptRef.current }];
+        });
+      }
+    };
+
+    const handleTurnComplete = () => {
+      currentTranscriptRef.current = "";
+      setIsProcessing(false);
+    };
+
+    const handleToolCall = (toolCall: any) => {
+      console.log("Tool call received:", toolCall);
+      if (toolCall.functionCalls) {
+        toolCall.functionCalls.forEach((fc: any) => {
+          if (fc.name === "end_review") {
+            const args = fc.args;
+            setReviewData({
+              product_name: args.product_name || "Rouge Velvet Matte Lipstick",
+              customer_emotion: args.customer_emotion || "satisfied",
+              key_positive_points: args.key_positive_points || [],
+              key_negative_points: args.key_negative_points || [],
+              improvement_suggestions: args.improvement_suggestions || [],
+              review_summary: args.review_summary || "",
+              recommendation_score: args.recommendation_score || 3,
+            });
+          }
+        });
+      }
+    };
+
+    client.on("content", handleContent);
+    client.on("turncomplete", handleTurnComplete);
+    client.on("toolcall", handleToolCall);
+
+    return () => {
+      client.off("content", handleContent);
+      client.off("turncomplete", handleTurnComplete);
+      client.off("toolcall", handleToolCall);
+    };
+  }, [client, connected]);
+
+  const handleStartRecording = async () => {
+    try {
+      setIsRecording(true);
+      setSessionStarted(true);
+      setMessages([]);
+
+      if (!connected) {
+        await connect();
+      }
+
+      audioRecorderRef.current = new AudioRecorder(16000);
+      
+      audioRecorderRef.current.on("data", (base64Audio: string) => {
+        if (connected && isRecording) {
+          client.sendRealtimeInput([
+            {
+              mimeType: "audio/pcm;rate=16000",
+              data: base64Audio,
+            },
+          ]);
+        }
+      });
+
+      await audioRecorderRef.current.start();
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      setIsRecording(false);
+      setSessionStarted(false);
+    }
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     setIsRecording(false);
     setIsProcessing(true);
-    
-    // Simulate customer response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        role: "user",
-        content: "I bought the Rouge Velvet Matte Lipstick in Cherry Red. The color is absolutely gorgeous and it stays on all day!",
-      }]);
-    }, 1000);
 
-    // Simulate CS follow-up
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "That's wonderful to hear! I'm glad you love the color. Could you tell me more about the texture and if there's anything you think we could improve?",
-      }]);
-      setIsProcessing(false);
-    }, 2500);
-    
-    // Simulate processing and generating review data after conversation
-    setTimeout(() => {
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        setReviewData({
-          product_name: "Rouge Velvet Matte Lipstick",
-          customer_emotion: "satisfied",
-          key_positive_points: [
-            "Beautiful cherry red color",
-            "Long-lasting formula",
-            "Smooth matte finish",
-            "Comfortable to wear",
-          ],
-          key_negative_points: [
-            "Slightly drying after 6+ hours",
-            "Packaging could be more luxurious",
-          ],
-          improvement_suggestions: [
-            "Add hydrating ingredients",
-            "Upgrade packaging design",
-            "Include color chart for online shopping",
-          ],
-          review_summary: "Customer is very satisfied with the color and longevity of the lipstick. Minor feedback on hydration and packaging design.",
-          recommendation_score: 4,
-        });
-      }, 2000);
-    }, 5000);
+    if (audioRecorderRef.current) {
+      audioRecorderRef.current.stop();
+      audioRecorderRef.current = null;
+    }
   };
 
   if (reviewData) {

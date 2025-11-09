@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Mic, MessageSquare, TrendingUp, Zap, ShoppingBag, Sparkles } from "lucide-react";
 import VoiceReview from "@/components/VoiceReview";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { LiveAPIProvider } from "@/contexts/LiveAPIContext";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,11 +20,21 @@ const Index = () => {
     }
   }, [searchParams]);
 
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.REACT_APP_GEMINI_API_KEY;
+
   if (showVoiceReview) {
-    return <VoiceReview onBack={() => {
-      setShowVoiceReview(false);
-      navigate("/dashboard");
-    }} />;
+    return (
+      <LiveAPIProvider
+        options={{
+          apiKey: apiKey?.trim() || "",
+        }}
+      >
+        <VoiceReview onBack={() => {
+          setShowVoiceReview(false);
+          navigate("/dashboard");
+        }} />
+      </LiveAPIProvider>
+    );
   }
 
   return (
