@@ -57,6 +57,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        voice: {
+          active: "hsl(var(--voice-active))",
+          listening: "hsl(var(--voice-listening))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
