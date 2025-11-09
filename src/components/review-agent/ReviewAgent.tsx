@@ -23,7 +23,7 @@ import {
 } from "@google/genai";
 import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
-import { Sparkles, MessageCircle } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 // Review data structure
 export interface ReviewData {
