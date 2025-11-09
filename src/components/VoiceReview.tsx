@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Phone, PhoneOff, Loader2 } from "lucide-react";
@@ -29,9 +29,52 @@ interface ReviewData {
   recommendation_score: number;
 }
 
+// Define the function declaration outside component to avoid recreation
+const endReviewDeclaration: FunctionDeclaration = {
+  name: "end_review",
+  description: "Call this function when you have gathered enough feedback to complete the review. Include all structured data about the customer's experience.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      product_name: {
+        type: Type.STRING,
+        description: "Name of the product being reviewed"
+      },
+      customer_emotion: {
+        type: Type.STRING,
+        description: "Overall customer emotion: satisfied, neutral, or frustrated"
+      },
+      key_positive_points: {
+        type: Type.ARRAY,
+        items: { type: Type.STRING },
+        description: "List of positive feedback points"
+      },
+      key_negative_points: {
+        type: Type.ARRAY,
+        items: { type: Type.STRING },
+        description: "List of negative feedback points or concerns"
+      },
+      improvement_suggestions: {
+        type: Type.ARRAY,
+        items: { type: Type.STRING },
+        description: "Suggestions for product improvement"
+      },
+      review_summary: {
+        type: Type.STRING,
+        description: "A brief summary of the customer's overall feedback"
+      },
+      recommendation_score: {
+        type: Type.NUMBER,
+        description: "Likelihood to recommend (1-5 scale)"
+      }
+    },
+    required: ["product_name", "customer_emotion", "review_summary", "recommendation_score"]
+  }
+};
+
 const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const navigate = useNavigate();
-  const { client, connected, connect, disconnect, setConfig } = useLiveAPIContext();
+  const { client, connected, connect, disconnect, setConfig, setModel } = useLiveAPIContext();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,55 +83,13 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const currentTranscriptRef = useRef<string>("");
 
+  // Initialize Gemini configuration
   useEffect(() => {
-    const endReviewDeclaration: FunctionDeclaration = {
-      name: "end_review",
-      description: "Call this function when you have gathered enough feedback to complete the review. Include all structured data about the customer's experience.",
-      parameters: {
-        type: Type.OBJECT,
-        properties: {
-          product_name: {
-            type: Type.STRING,
-            description: "Name of the product being reviewed"
-          },
-          customer_emotion: {
-            type: Type.STRING,
-            description: "Overall customer emotion: satisfied, neutral, or frustrated"
-          },
-          key_positive_points: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "List of positive feedback points"
-          },
-          key_negative_points: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "List of negative feedback points or concerns"
-          },
-          improvement_suggestions: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "Suggestions for product improvement"
-          },
-          review_summary: {
-            type: Type.STRING,
-            description: "A brief summary of the customer's overall feedback"
-          },
-          recommendation_score: {
-            type: Type.NUMBER,
-            description: "Likelihood to recommend (1-5 scale)"
-          }
-        },
-        required: ["product_name", "customer_emotion", "review_summary", "recommendation_score"]
-      }
-    };
-
-    const initializeSession = async () => {
-      try {
-        setConfig({
-          systemInstruction: {
-            parts: [{
-              text: `You are a friendly customer service representative conducting a post-purchase review call. 
+    setModel("models/gemini-2.0-flash-exp");
+    setConfig({
+      systemInstruction: {
+        parts: [{
+          text: `You are a friendly customer service representative conducting a post-purchase review call. 
               
 Your goal is to:
 1. Welcome the customer warmly
@@ -103,19 +104,13 @@ Guidelines:
 - Show empathy and appreciation for their feedback
 - Don't sound robotic or scripted
 - After 2-3 exchanges, wrap up naturally and call the end_review function`
-            }]
-          },
-          tools: [{
-            functionDeclarations: [endReviewDeclaration]
-          }]
-        });
-      } catch (error) {
-        console.error("Error initializing session:", error);
-      }
-    };
-
-    initializeSession();
-  }, [setConfig]);
+        }]
+      },
+      tools: [{
+        functionDeclarations: [endReviewDeclaration]
+      }]
+    });
+  }, [setConfig, setModel]);
 
   useEffect(() => {
     if (!connected) return;
