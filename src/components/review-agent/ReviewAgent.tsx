@@ -284,16 +284,16 @@ After Question 5, warmly conclude:
           <Sparkles className="w-12 h-12 text-primary animate-pulse" />
         </div>
         <h2>
-          <span className="gradient-text">Beauty Product Review</span>
+          <span className="gradient-text">Share Your Voice, Shape the Future</span>
         </h2>
         <p className="subtitle">
           {connected ? (
             <span className="flex items-center gap-2 justify-center">
               <span className="status-dot"></span>
-              Question {currentQuestion}/5 in progress
+              Question {currentQuestion}/5 • Your opinion matters!
             </span>
           ) : (
-            "Waiting for connection..."
+            "Ready to make an impact? Let's start!"
           )}
         </p>
       </div>
@@ -302,19 +302,20 @@ After Question 5, warmly conclude:
         <div className="connection-guide">
           <div className="guide-card">
             <MessageCircle className="w-16 h-16 text-primary mb-2" />
-            <p>Click the play button below to start your voice review</p>
+            <p className="guide-title">Your Experience, Your Voice</p>
+            <p className="guide-description">Help us create better products by sharing your honest feedback in just 2 minutes</p>
             <div className="guide-steps">
               <div className="step">
                 <span className="step-number">1</span>
-                <span className="step-text">Click play to connect</span>
+                <span className="step-text">Connect & Start</span>
               </div>
               <div className="step">
                 <span className="step-number">2</span>
-                <span className="step-text">Answer 5 questions</span>
+                <span className="step-text">Share Honestly</span>
               </div>
               <div className="step">
                 <span className="step-number">3</span>
-                <span className="step-text">Get insights & rewards</span>
+                <span className="step-text">Get Rewards</span>
               </div>
             </div>
           </div>

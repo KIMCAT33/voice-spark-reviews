@@ -226,6 +226,18 @@
       margin: 0;
       font-weight: 500;
       max-width: 400px;
+
+      &.guide-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.5rem;
+      }
+
+      &.guide-description {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
     }
 
     .guide-steps {
