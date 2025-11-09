@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MessageSquare, TrendingUp, Zap, ShoppingBag } from "lucide-react";
+import { Mic, MessageSquare, TrendingUp, Zap, ShoppingBag, Sparkles } from "lucide-react";
 import VoiceReview from "@/components/VoiceReview";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [showVoiceReview, setShowVoiceReview] = useState(false);
 
   if (showVoiceReview) {
@@ -35,17 +37,19 @@ const Index = () => {
             <Button 
               size="lg" 
               className="text-lg px-8 py-6 gradient-primary shadow-glow hover:opacity-90 transition-all"
-              onClick={() => setShowVoiceReview(true)}
+              onClick={() => navigate("/gemini-live")}
             >
-              <Mic className="mr-2 h-5 w-5" />
-              Start Voice Review
+              <Sparkles className="mr-2 h-5 w-5" />
+              Try Gemini Live API
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               className="text-lg px-8 py-6"
+              onClick={() => setShowVoiceReview(true)}
             >
-              Watch Demo
+              <Mic className="mr-2 h-5 w-5" />
+              Voice Review Demo
             </Button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import GeminiLiveChat from "./pages/GeminiLiveChat";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ function App() {
         <Sonner />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/gemini-live" element={<GeminiLiveChat />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
