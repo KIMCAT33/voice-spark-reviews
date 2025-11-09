@@ -25,6 +25,7 @@ import { AudioRecorder } from "../../lib/audio-recorder";
 import AudioPulse from "../audio-pulse/AudioPulse";
 import "./control-tray.scss";
 import SettingsDialog from "../settings-dialog/SettingsDialog";
+import { Mic, MicOff, MonitorOff, Monitor, VideoOff, Video, Play, Pause } from "lucide-react";
 
 export type ControlTrayProps = {
   videoRef: RefObject<HTMLVideoElement>;
@@ -46,16 +47,20 @@ type MediaStreamButtonProps = {
  * button used for triggering webcam or screen-capture
  */
 const MediaStreamButton = memo(
-  ({ isStreaming, onIcon, offIcon, start, stop }: MediaStreamButtonProps) =>
-    isStreaming ? (
+  ({ isStreaming, onIcon, offIcon, start, stop }: MediaStreamButtonProps) => {
+    const OnIcon = onIcon === "cancel_presentation" ? MonitorOff : VideoOff;
+    const OffIcon = offIcon === "present_to_all" ? Monitor : Video;
+    
+    return isStreaming ? (
       <button className="action-button" onClick={stop}>
-        <span className="material-symbols-outlined">{onIcon}</span>
+        <OnIcon size={24} />
       </button>
     ) : (
       <button className="action-button" onClick={start}>
-        <span className="material-symbols-outlined">{offIcon}</span>
+        <OffIcon size={24} />
       </button>
-    )
+    );
+  }
 );
 
 function ControlTray({
@@ -194,9 +199,9 @@ function ControlTray({
             title={muted ? "마이크 음소거 해제" : "마이크 음소거"}
           >
             {!muted ? (
-              <span className="material-symbols-outlined filled">mic</span>
+              <Mic size={24} />
             ) : (
-              <span className="material-symbols-outlined filled">mic_off</span>
+              <MicOff size={24} />
             )}
           </button>
           {connected && (
@@ -241,9 +246,7 @@ function ControlTray({
             className={cn("action-button connect-toggle", { connected })}
             onClick={connected ? disconnect : connect}
           >
-            <span className="material-symbols-outlined filled">
-              {connected ? "pause" : "play_arrow"}
-            </span>
+            {connected ? <Pause size={24} /> : <Play size={24} />}
           </button>
         </div>
         <span className="text-indicator">Streaming</span>
