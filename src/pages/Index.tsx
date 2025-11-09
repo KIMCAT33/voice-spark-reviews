@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MessageSquare, TrendingUp, Zap } from "lucide-react";
+import { Mic, MessageSquare, TrendingUp, Zap, ShoppingBag } from "lucide-react";
 import VoiceReview from "@/components/VoiceReview";
 
 const Index = () => {
@@ -23,12 +23,12 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Voice Review Agent
+            Turn Customer Voices Into Revenue Growth
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Replace boring text reviews with natural AI-powered voice conversations. 
-            Your customers talk, we listen, and you get actionable insights.
+            AI-powered voice reviews that integrate seamlessly with your e-commerce platform. 
+            Collect authentic feedback, boost conversions, and reduce return rates.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -47,6 +47,25 @@ const Index = () => {
             >
               Watch Demo
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Integrations Section */}
+      <section className="container mx-auto px-4 py-12 border-y border-border/50">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <ShoppingBag className="h-4 w-4" />
+              <span className="text-sm font-medium">Integrates with your existing platforms</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+              <div className="text-2xl font-bold text-foreground/80">Shopify</div>
+              <div className="text-2xl font-bold text-foreground/80">Square</div>
+              <div className="text-2xl font-bold text-foreground/80">WooCommerce</div>
+              <div className="text-2xl font-bold text-foreground/80">BigCommerce</div>
+              <div className="text-2xl font-bold text-foreground/80">Magento</div>
+            </div>
           </div>
         </div>
       </section>
