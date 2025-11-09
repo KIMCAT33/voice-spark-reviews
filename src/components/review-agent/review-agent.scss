@@ -201,6 +201,118 @@
   width: 100%;
   animation: fadeIn 0.5s ease-in;
 
+  .guide-card-combined {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--accent) / 0.05));
+    border-radius: 20px;
+    border: 1px solid hsl(var(--border) / 0.5);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px hsl(var(--primary) / 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+
+    &:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+      animation: shimmer 3s linear infinite;
+    }
+
+    &:hover {
+      box-shadow: 0 12px 48px hsl(var(--primary) / 0.15);
+    }
+
+    .header-icon {
+      display: inline-flex;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+
+      .gradient-text {
+        background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: hsl(var(--muted-foreground));
+      margin: 0 0 1rem 0;
+      font-weight: 500;
+    }
+
+    .divider {
+      width: 100%;
+      max-width: 200px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+      margin: 0.5rem 0;
+    }
+
+    .guide-description {
+      font-size: 0.95rem;
+      color: hsl(var(--muted-foreground));
+      margin: 0.5rem 0;
+      font-weight: 500;
+      max-width: 450px;
+    }
+
+    .guide-steps {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+
+        .step-number {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+          color: white;
+          font-weight: 700;
+          font-size: 1rem;
+          box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+        }
+
+        .step-text {
+          font-size: 0.8rem;
+          color: hsl(var(--muted-foreground));
+          font-weight: 500;
+          max-width: 90px;
+          text-align: center;
+        }
+      }
+    }
+  }
+
   .guide-card {
     text-align: center;
     padding: 2rem 1.5rem;

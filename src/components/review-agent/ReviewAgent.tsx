@@ -279,31 +279,22 @@ After Question 5, warmly conclude:
 
   return (
     <div className="review-agent-container" ref={reviewContainerRef}>
-      <div className="review-header">
-        <div className="header-icon">
-          <Sparkles className="w-12 h-12 text-primary animate-pulse" />
-        </div>
-        <h2>
-          <span className="gradient-text">Share Your Voice, Get Rewarded</span>
-        </h2>
-        <p className="subtitle">
-          {connected ? (
-            <span className="flex items-center gap-2 justify-center">
-              <span className="status-dot"></span>
-              Question {currentQuestion}/5 • Earn 10% discount!
-            </span>
-          ) : (
-            "2 minutes for exclusive rewards & priority support"
-          )}
-        </p>
-      </div>
-
       {!connected && (
         <div className="connection-guide">
-          <div className="guide-card">
-            <MessageCircle className="w-12 h-12 text-primary mb-1" />
-            <p className="guide-title">Share Your Voice, Get Exclusive Benefits</p>
+          <div className="guide-card-combined">
+            <div className="header-icon">
+              <Sparkles className="w-12 h-12 text-primary animate-pulse" />
+            </div>
+            <h2>
+              <span className="gradient-text">Share Your Voice, Get Rewarded</span>
+            </h2>
+            <p className="subtitle">2 minutes for exclusive rewards & priority support</p>
+            
+            <div className="divider"></div>
+            
+            <MessageCircle className="w-12 h-12 text-primary mb-2" />
             <p className="guide-description">Quick voice review to unlock 10% discount & priority support</p>
+            
             <div className="guide-steps">
               <div className="step">
                 <span className="step-number">1</span>
@@ -319,6 +310,23 @@ After Question 5, warmly conclude:
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {connected && (
+        <div className="review-header">
+          <div className="header-icon">
+            <Sparkles className="w-12 h-12 text-primary animate-pulse" />
+          </div>
+          <h2>
+            <span className="gradient-text">Share Your Voice, Get Rewarded</span>
+          </h2>
+          <p className="subtitle">
+            <span className="flex items-center gap-2 justify-center">
+              <span className="status-dot"></span>
+              Question {currentQuestion}/5 • Earn 10% discount!
+            </span>
+          </p>
         </div>
       )}
     </div>
