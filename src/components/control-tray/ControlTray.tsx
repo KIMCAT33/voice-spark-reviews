@@ -72,6 +72,7 @@ function ControlTray({
   const [inVolume, setInVolume] = useState(0);
   const [audioRecorder] = useState(() => new AudioRecorder());
   const [muted, setMuted] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const renderCanvasRef = useRef<HTMLCanvasElement>(null);
   const connectButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -100,12 +101,29 @@ function ControlTray({
       ]);
     };
     if (connected && !muted && audioRecorder) {
-      audioRecorder.on("data", onData).on("volume", setInVolume).start();
+      setIsRecording(true);
+      audioRecorder
+        .on("data", onData)
+        .on("volume", setInVolume)
+        .start()
+        .then(() => {
+          setIsRecording(true);
+        })
+        .catch((error: Error) => {
+          console.error("마이크 권한 오류:", error);
+          setIsRecording(false);
+          // 권한이 거부된 경우 사용자에게 알림
+          if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+            alert("마이크 권한이 필요합니다. 브라우저 설정에서 마이크 권한을 허용해주세요.");
+          }
+        });
     } else {
       audioRecorder.stop();
+      setIsRecording(false);
     }
     return () => {
       audioRecorder.off("data", onData).off("volume", setInVolume);
+      setIsRecording(false);
     };
   }, [connected, client, muted, audioRecorder]);
 
@@ -163,16 +181,30 @@ function ControlTray({
     <section className="control-tray">
       <canvas style={{ display: "none" }} ref={renderCanvasRef} />
       <nav className={cn("actions-nav", { disabled: !connected })}>
-        <button
-          className={cn("action-button mic-button")}
-          onClick={() => setMuted(!muted)}
-        >
-          {!muted ? (
-            <span className="material-symbols-outlined filled">mic</span>
-          ) : (
-            <span className="material-symbols-outlined filled">mic_off</span>
+        <div className="mic-container">
+          <button
+            className={cn("action-button mic-button", { 
+              recording: isRecording && !muted,
+              muted: muted 
+            })}
+            onClick={() => setMuted(!muted)}
+            title={muted ? "마이크 음소거 해제" : "마이크 음소거"}
+          >
+            {!muted ? (
+              <span className="material-symbols-outlined filled">mic</span>
+            ) : (
+              <span className="material-symbols-outlined filled">mic_off</span>
+            )}
+          </button>
+          {connected && (
+            <div className="input-audio-visualizer">
+              <AudioPulse volume={inVolume} active={isRecording && !muted} hover={false} />
+              {isRecording && !muted && (
+                <span className="recording-indicator">●</span>
+              )}
+            </div>
           )}
-        </button>
+        </div>
 
         <div className="action-button no-action outlined">
           <AudioPulse volume={volume} active={connected} hover={false} />
