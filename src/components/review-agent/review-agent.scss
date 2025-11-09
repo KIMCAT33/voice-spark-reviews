@@ -305,9 +305,10 @@
         .step-text {
           font-size: 0.8rem;
           color: hsl(var(--muted-foreground));
-          font-weight: 500;
-          max-width: 90px;
+          font-weight: 600;
+          max-width: 100px;
           text-align: center;
+          line-height: 1.3;
         }
       }
     }

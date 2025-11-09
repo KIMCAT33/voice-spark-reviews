@@ -298,15 +298,15 @@ After Question 5, warmly conclude:
             <div className="guide-steps">
               <div className="step">
                 <span className="step-number">1</span>
-                <span className="step-text">Connect</span>
+                <span className="step-text">Start Call</span>
               </div>
               <div className="step">
                 <span className="step-number">2</span>
-                <span className="step-text">Share</span>
+                <span className="step-text">Answer 5 Questions</span>
               </div>
               <div className="step">
                 <span className="step-number">3</span>
-                <span className="step-text">Get 10% Off</span>
+                <span className="step-text">Receive 10% Discount</span>
               </div>
             </div>
           </div>
