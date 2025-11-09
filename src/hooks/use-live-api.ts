@@ -109,8 +109,27 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     if (!config) {
       throw new Error("config has not been set");
     }
+    
+    console.log("🎯 Connect called - attempting to activate audio...");
+    
+    // CRITICAL: Resume audio context BEFORE connecting
+    // This must happen in the user gesture handler (button click)
+    if (audioStreamerRef.current) {
+      console.log("Audio context state before resume:", audioStreamerRef.current.context.state);
+      await audioStreamerRef.current.resume();
+      console.log("Audio context state after resume:", audioStreamerRef.current.context.state);
+      
+      // Double-check and force resume if still suspended
+      if (audioStreamerRef.current.context.state === "suspended") {
+        console.warn("⚠️ Audio context still suspended, forcing resume...");
+        await audioStreamerRef.current.context.resume();
+        console.log("Audio context state after force resume:", audioStreamerRef.current.context.state);
+      }
+    }
+    
     client.disconnect();
     await client.connect(model, config);
+    console.log("✅ Connection established");
   }, [client, config, model]);
 
   const disconnect = useCallback(async () => {

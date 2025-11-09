@@ -79,6 +79,7 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const { toast } = useToast();
   const { client, connected, connect, disconnect, setConfig, setModel } = useLiveAPIContext();
   const [isRecording, setIsRecording] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reviewData, setReviewData] = useState<ReviewData | null>(null);
@@ -92,21 +93,24 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
     setConfig({
       systemInstruction: {
         parts: [{
-          text: `You are a friendly customer service representative conducting a post-purchase review call. 
-              
-Your goal is to:
-1. Welcome the customer warmly
+          text: `You are a friendly customer service representative conducting a post-purchase review call for VOIX. 
+
+CRITICAL INSTRUCTIONS:
+1. START IMMEDIATELY with a warm greeting when the customer says hello: "Hi! Thanks so much for taking the time to share your thoughts about your recent purchase. I'd love to hear about your experience!"
 2. Ask about their experience with the product they purchased
-3. Listen actively and ask 2-3 follow-up questions to understand their feedback
+3. Listen actively and ask 2-3 follow-up questions to understand their feedback deeply
 4. When you have gathered enough information (positive points, negative points, and overall sentiment), call the end_review function with the structured data
 5. Keep the conversation natural and conversational - like a real CS team member
 
 Guidelines:
-- Be warm and professional
-- Ask open-ended questions
+- Be warm, enthusiastic and professional
+- ALWAYS greet first when the customer says hello
+- Ask open-ended questions like "What did you love most?" or "Was there anything that could be improved?"
 - Show empathy and appreciation for their feedback
+- Keep responses concise (2-3 sentences max per turn)
 - Don't sound robotic or scripted
-- After 2-3 exchanges, wrap up naturally and call the end_review function`
+- After 2-3 meaningful exchanges, wrap up naturally and call the end_review function
+- Make the customer feel heard and valued`
         }]
       },
       tools: [{
@@ -117,6 +121,41 @@ Guidelines:
 
   useEffect(() => {
     if (!connected) return;
+
+    const handleSetupComplete = async () => {
+      console.log("✅ Setup complete - WebSocket is ready");
+      
+      // Now it's safe to send the initial message
+      setTimeout(() => {
+        console.log("👋 Sending initial greeting...");
+        client.send([{
+          text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
+        }], true);
+        
+        // Start recording after AI has time to respond
+        setTimeout(async () => {
+          console.log("🎤 Starting audio recording...");
+          setIsRecording(true);
+          setIsConnecting(false);
+          
+          audioRecorderRef.current = new AudioRecorder(16000);
+          
+          audioRecorderRef.current.on("data", (base64Audio: string) => {
+            if (connected && isRecording) {
+              client.sendRealtimeInput([
+                {
+                  mimeType: "audio/pcm;rate=16000",
+                  data: base64Audio,
+                },
+              ]);
+            }
+          });
+
+          await audioRecorderRef.current.start();
+          console.log("✅ Recording started");
+        }, 2000);
+      }, 500);
+    };
 
     const handleContent = (data: any) => {
       const text = data.text || data.transcript;
@@ -194,11 +233,13 @@ Guidelines:
       }
     };
 
+    client.on("setupcomplete", handleSetupComplete);
     client.on("content", handleContent);
     client.on("turncomplete", handleTurnComplete);
     client.on("toolcall", handleToolCall);
 
     return () => {
+      client.off("setupcomplete", handleSetupComplete);
       client.off("content", handleContent);
       client.off("turncomplete", handleTurnComplete);
       client.off("toolcall", handleToolCall);
@@ -206,37 +247,46 @@ Guidelines:
   }, [client, connected]);
 
   const handleStartRecording = async () => {
+    // Prevent multiple clicks during connection
+    if (isConnecting || isRecording) {
+      console.log("⚠️ Already connecting or recording, ignoring click");
+      return;
+    }
+
     try {
-      setIsRecording(true);
+      console.log("🎬 Starting voice review session...");
+      setIsConnecting(true);
       setSessionStarted(true);
       setMessages([]);
 
+      // Connect to Gemini Live API
+      // The setupcomplete event handler will take care of sending messages and starting recording
       if (!connected) {
+        console.log("📡 Connecting to Gemini Live API...");
         await connect();
+        console.log("⏳ Waiting for WebSocket setup to complete...");
       }
 
-      audioRecorderRef.current = new AudioRecorder(16000);
-      
-      audioRecorderRef.current.on("data", (base64Audio: string) => {
-        if (connected && isRecording) {
-          client.sendRealtimeInput([
-            {
-              mimeType: "audio/pcm;rate=16000",
-              data: base64Audio,
-            },
-          ]);
-        }
+      toast({
+        title: "연결 성공",
+        description: "AI가 곧 인사할 예정입니다. 인사가 들린 후 말씀해 주세요.",
       });
 
-      await audioRecorderRef.current.start();
     } catch (error) {
-      console.error("Error starting recording:", error);
+      console.error("❌ Error starting recording:", error);
       setIsRecording(false);
+      setIsConnecting(false);
       setSessionStarted(false);
+      toast({
+        title: "연결 실패",
+        description: "음성 리뷰를 시작할 수 없습니다. 다시 시도해 주세요.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleStopRecording = async () => {
+    console.log("🛑 Stopping recording...");
     setIsRecording(false);
     setIsProcessing(true);
 
@@ -272,17 +322,24 @@ Guidelines:
 
         <Card className="p-8 md:p-12 shadow-card">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">Customer Service Review Call</h2>
+            <h2 className="text-3xl font-bold mb-2">VOIX Voice Review</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "Press the call button to connect with our team"
-                : isRecording 
-                  ? "Connected - Share your thoughts naturally" 
-                  : "Processing your feedback..."}
+                ? "통화 버튼을 눌러 음성 리뷰를 시작하세요"
+                : isConnecting
+                  ? "🎧 연결 중... 잠시만 기다려주세요"
+                  : !isRecording
+                    ? "🎧 AI가 인사하고 있습니다... 기다려주세요"
+                    : "🎤 연결됨 - 자유롭게 말씀하세요"}
             </p>
-            {sessionStarted && (
+            {sessionStarted && isRecording && (
               <p className="text-sm text-muted-foreground mt-2">
-                💬 Speak naturally - our team will guide the conversation
+                💬 AI가 질문을 하며 피드백을 듣고 있습니다
+              </p>
+            )}
+            {sessionStarted && (isConnecting || !isRecording) && (
+              <p className="text-sm text-primary mt-2 font-medium animate-pulse">
+                ⏳ AI 인사를 기다려주세요...
               </p>
             )}
           </div>
@@ -302,18 +359,19 @@ Guidelines:
               >
                 <Phone className="h-10 w-10 text-primary-foreground" />
               </Button>
-            ) : isProcessing ? (
+            ) : (isProcessing || isConnecting) ? (
               <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </div>
             ) : (
               <Button
                 size="lg"
-                onClick={isRecording ? handleStopRecording : handleStartRecording}
+                onClick={handleStopRecording}
+                disabled={!isRecording}
                 className={`w-24 h-24 rounded-full shadow-glow ${
                   isRecording
                     ? "bg-accent hover:bg-accent/90"
-                    : "gradient-primary"
+                    : "gradient-primary opacity-50 cursor-not-allowed"
                 }`}
               >
                 {isRecording ? (

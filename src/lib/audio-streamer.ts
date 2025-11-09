@@ -100,6 +100,20 @@ export class AudioStreamer {
   }
 
   addPCM16(chunk: Uint8Array) {
+    // Check audio context state
+    if (this.context.state === "suspended") {
+      console.error("❌ Audio context is SUSPENDED when receiving audio! State:", this.context.state);
+      console.error("This should not happen - audio context should be resumed before receiving data");
+      // Try to resume anyway (though this likely won't work without user gesture)
+      this.context.resume().then(() => {
+        console.log("Audio context resumed successfully in addPCM16");
+      }).catch(err => {
+        console.error("Failed to resume audio context:", err);
+      });
+    } else {
+      console.log("✅ Audio context state is OK:", this.context.state);
+    }
+    
     // Reset the stream complete flag when a new chunk is added.
     this.isStreamComplete = false;
     // Process the chunk into a Float32Array
@@ -118,6 +132,7 @@ export class AudioStreamer {
     // Start playing if not already playing.
     if (!this.isPlaying) {
       this.isPlaying = true;
+      console.log("Starting audio playback, context state:", this.context.state);
       // Initialize scheduledTime only when we start playing
       this.scheduledTime = this.context.currentTime + this.initialBufferTime;
       this.scheduleNextBuffer();
@@ -236,9 +251,21 @@ export class AudioStreamer {
   }
 
   async resume() {
+    console.log("🔊 Resume called - current state:", this.context.state);
+    
     if (this.context.state === "suspended") {
-      await this.context.resume();
+      console.log("Attempting to resume suspended audio context...");
+      try {
+        await this.context.resume();
+        console.log("✅ Audio context resumed successfully! State:", this.context.state);
+      } catch (error) {
+        console.error("❌ Failed to resume audio context:", error);
+        throw error;
+      }
+    } else {
+      console.log("Audio context already in state:", this.context.state);
     }
+    
     this.isStreamComplete = false;
     this.scheduledTime = this.context.currentTime + this.initialBufferTime;
     this.gainNode.gain.setValueAtTime(1, this.context.currentTime);

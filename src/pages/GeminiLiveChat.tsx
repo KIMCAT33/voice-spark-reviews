@@ -78,20 +78,39 @@ function GeminiLiveChat() {
       <LiveAPIProvider options={apiOptions}>
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
-          <div className="p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
-            <div className="container mx-auto flex items-center justify-between">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/")}
-                className="hover:bg-primary/10 transition-colors"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Purchase
-              </Button>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Customer Service Review Call
-              </h1>
-              <div className="w-32"></div>
+          <div className="p-3 xs:p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
+            <div className="container mx-auto">
+              {/* Mobile Layout */}
+              <div className="flex md:hidden items-center justify-between gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/")}
+                  className="hover:bg-primary/10 transition-colors flex-shrink-0 px-2"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  <span className="text-xs xs:text-sm">Back to Purchase</span>
+                </Button>
+                <h1 className="text-xs xs:text-sm font-bold text-primary text-right leading-tight flex-1 min-w-0 break-words">
+                  Customer Service Review Call
+                </h1>
+              </div>
+              
+              {/* Desktop Layout */}
+              <div className="hidden md:flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                  className="hover:bg-primary/10 transition-colors"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Purchase
+                </Button>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Customer Service Review Call
+                </h1>
+                <div className="w-32"></div>
+              </div>
             </div>
           </div>
 
