@@ -103,7 +103,7 @@ function ReviewAgentComponent() {
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
-  const { client, setConfig, setModel, connected } = useLiveAPIContext();
+  const { client, setConfig, setModel, connected, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
 
   // Initial setup: Beauty product review collection agent persona
@@ -234,7 +234,7 @@ After Question 5, warmly conclude:
           setIsComplete(true);
           // Disconnect the call after finishing interview
           setTimeout(() => {
-            client.disconnect();
+            disconnect();
           }, 2000);
         }
 
@@ -262,7 +262,7 @@ After Question 5, warmly conclude:
     return () => {
       client.off("toolcall", onToolCall);
     };
-  }, [client]);
+  }, [client, disconnect]);
 
   // Send initial message when connected
   useEffect(() => {
