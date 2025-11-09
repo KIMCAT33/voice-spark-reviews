@@ -58,7 +58,7 @@ export const ReviewCompletion = ({ reviewData }: ReviewCompletionProps) => {
         <div className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Product</p>
-            <p className="font-semibold">{reviewData.productName || "Rouge Velvet Matte Lipstick"}</p>
+            <p className="font-semibold">{reviewData.productName || "Rouge Velvet Matte Lipstick - Cherry Red #05"}</p>
           </div>
           
           {reviewData.overallRating && (
