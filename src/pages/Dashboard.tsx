@@ -310,7 +310,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">VOIX Dashboard</h1>
+            <h1 className="text-3xl font-bold">Voice Review Dashboard</h1>
             <p className="text-muted-foreground">Real-time insights from customer feedback</p>
           </div>
         </div>
@@ -432,7 +432,7 @@ const Dashboard = () => {
 
         {/* Recent Voice Reviews */}
         <Card className="p-6 shadow-card">
-          <h2 className="text-2xl font-bold mb-6">Recent Reviews</h2>
+          <h2 className="text-2xl font-bold mb-6">Recent Voice Reviews</h2>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -573,7 +573,7 @@ const Dashboard = () => {
               
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-muted-foreground">Review Completion</p>
+                  <p className="text-sm text-muted-foreground">Voice Review Completion</p>
                   <p className="text-2xl font-bold">94%</p>
                 </div>
                 <Mic className="w-8 h-8 text-accent" />
@@ -626,7 +626,7 @@ const Dashboard = () => {
 
         {/* Real-time Flow Visualization */}
         <Card className="p-6 shadow-card">
-          <h2 className="text-2xl font-bold mb-6">VOIX Review Flow</h2>
+          <h2 className="text-2xl font-bold mb-6">Voice Review Flow</h2>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col items-center text-center space-y-2">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

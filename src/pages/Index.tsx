@@ -49,7 +49,7 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            VOIX: Turn Customer Voices Into Revenue Growth
+            Turn Customer Voices Into Revenue Growth
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
