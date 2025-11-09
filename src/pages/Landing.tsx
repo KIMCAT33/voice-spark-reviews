@@ -46,7 +46,7 @@ const Landing = () => {
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
             </div>
-            <span className="text-base sm:text-lg md:text-xl font-bold">HacknationAI</span>
+            <span className="text-base sm:text-lg md:text-xl font-bold">VOIX</span>
           </div>
         </div>
       </header>
@@ -61,7 +61,7 @@ const Landing = () => {
           </div>
           
           <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-tight px-2 animate-fade-in break-words">
-            Voice CRM Agent for Customer Experience & Reviews
+            VOIX: Voice-First CRM Agent for Customer Experience
           </h1>
           
           <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 animate-fade-in leading-relaxed">
