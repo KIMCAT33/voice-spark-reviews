@@ -132,6 +132,13 @@ const Dashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchExplanation, setSearchExplanation] = useState("");
 
+  const exampleQueries = [
+    "Show unhappy customers",
+    "Reviews from this week with low scores",
+    "5-star reviews",
+    "What products have drying issues?",
+  ];
+
   // Fetch reviews from database
   useEffect(() => {
     fetchReviews();
@@ -316,14 +323,14 @@ const Dashboard = () => {
         <Card className="p-6 shadow-card">
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold mb-2">🔍 Ask About Your Reviews</h2>
+              <h2 className="text-2xl font-bold mb-2">🔍 Search Reviews with Natural Language</h2>
               <p className="text-muted-foreground text-sm">
-                Try: "Show unhappy customers", "What products have drying issues?", "Reviews from this week with low scores"
+                Ask questions in plain English and AI will understand what you're looking for
               </p>
             </div>
             <div className="flex gap-2">
               <Input
-                placeholder="Ask a question about your reviews..."
+                placeholder='Example: "Show frustrated customers" or "5-star reviews this week"'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -352,10 +359,32 @@ const Dashboard = () => {
                 </Button>
               )}
             </div>
+            
+            {/* Example queries as chips */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-muted-foreground">Try these:</span>
+              {exampleQueries.map((query, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery(query);
+                    setTimeout(() => handleSearch(), 100);
+                  }}
+                  className="text-xs h-7"
+                >
+                  {query}
+                </Button>
+              ))}
+            </div>
+
+            {/* AI explanation */}
             {searchExplanation && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Understanding:</strong> {searchExplanation}
+              <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-sm">
+                  <span className="font-semibold text-primary">AI Understanding:</span>{" "}
+                  <span className="text-foreground">{searchExplanation}</span>
                 </p>
               </div>
             )}
