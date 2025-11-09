@@ -22,6 +22,7 @@ import {
   Type,
 } from "@google/genai";
 import "./review-agent.scss";
+import { ReviewCompletion } from "./ReviewCompletion";
 
 // Review data structure
 export interface ReviewData {
@@ -227,103 +228,32 @@ function ReviewAgentComponent() {
     }
   }, [connected, client, currentQuestion]);
 
+  // Show completion screen when interview is done
+  if (isComplete && Object.keys(reviewData).length > 0) {
+    return (
+      <div className="review-agent-container" ref={reviewContainerRef}>
+        <ReviewCompletion reviewData={reviewData} />
+      </div>
+    );
+  }
+
   return (
     <div className="review-agent-container" ref={reviewContainerRef}>
       <div className="review-header">
         <h2>💄 Beauty Product Review Collection</h2>
         <p className="subtitle">
           {connected
-            ? isComplete
-              ? "Review collection completed!"
-              : `Question ${currentQuestion}/5 in progress...`
+            ? `Question ${currentQuestion}/5 in progress...`
             : "Waiting for connection..."}
         </p>
       </div>
 
-      {isComplete && Object.keys(reviewData).length > 0 && (
-        <div className="review-summary">
-          <h3>📝 Collected Review Data</h3>
-          <div className="review-data-card">
-            {reviewData.productName && (
-              <div className="review-item">
-                <span className="label">Product Name:</span>
-                <span className="value">{reviewData.productName}</span>
-              </div>
-            )}
-            {reviewData.overallRating && (
-              <div className="review-item">
-                <span className="label">Rating:</span>
-                <span className="value rating">
-                  {"⭐".repeat(reviewData.overallRating)} ({reviewData.overallRating}/5)
-                </span>
-              </div>
-            )}
-            {reviewData.positivePoints && reviewData.positivePoints.length > 0 && (
-              <div className="review-item">
-                <span className="label">Positive Points:</span>
-                <ul className="value list">
-                  {reviewData.positivePoints.map((point, idx) => (
-                    <li key={idx}>{point}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {reviewData.negativePoints && reviewData.negativePoints.length > 0 && (
-              <div className="review-item">
-                <span className="label">Negative Points:</span>
-                <ul className="value list">
-                  {reviewData.negativePoints.map((point, idx) => (
-                    <li key={idx}>{point}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {reviewData.improvementSuggestions &&
-              reviewData.improvementSuggestions.length > 0 && (
-                <div className="review-item">
-                  <span className="label">Improvement Suggestions:</span>
-                  <ul className="value list">
-                    {reviewData.improvementSuggestions.map((suggestion, idx) => (
-                      <li key={idx}>{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            {reviewData.repurchaseIntent !== undefined && (
-              <div className="review-item">
-                <span className="label">Repurchase Intent:</span>
-                <span className="value">
-                  {reviewData.repurchaseIntent ? "✅ Yes" : "❌ No"}
-                </span>
-              </div>
-            )}
-            {reviewData.additionalComments && (
-              <div className="review-item">
-                <span className="label">Additional Comments:</span>
-                <span className="value">{reviewData.additionalComments}</span>
-              </div>
-            )}
-            {reviewData.sentiment && (
-              <div className="review-item">
-                <span className="label">Sentiment Analysis:</span>
-                <span
-                  className={`value sentiment sentiment-${reviewData.sentiment}`}
-                >
-                  {reviewData.sentiment === "positive"
-                    ? "😊 Positive"
-                    : reviewData.sentiment === "negative"
-                    ? "😔 Negative"
-                    : "😐 Neutral"}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {!connected && (
-        <div className="connection-prompt">
-          <p>🔵 Click the connect button to start collecting reviews</p>
+        <div className="connection-guide">
+          <div className="guide-card">
+            <span className="guide-icon">🔵</span>
+            <p>Click the connect button to start collecting reviews</p>
+          </div>
         </div>
       )}
     </div>

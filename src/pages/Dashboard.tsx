@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic } from "lucide-react";
+import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Package, DollarSign, Users, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Mock data - Beauty products
-const mockReviews = [
+// Extended mock data - 10 Beauty products reviews
+const initialMockReviews = [
   {
     id: "1",
     customerName: "Sarah Johnson",
@@ -40,11 +40,89 @@ const mockReviews = [
     keyPositive: ["Nice color selection", "Compact packaging"],
     keyNegative: ["Color payoff not strong enough", "Some shades difficult to blend"],
   },
+  {
+    id: "4",
+    customerName: "Jessica Kim",
+    productName: "Volumizing Mascara",
+    emotion: "happy",
+    recommendationScore: 5,
+    timestamp: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+    summary: "Best mascara I've ever used! Creates dramatic volume without clumping.",
+    keyPositive: ["Dramatic volume", "No clumping", "Long-lasting", "Easy to remove"],
+    keyNegative: [],
+  },
+  {
+    id: "5",
+    customerName: "David Park",
+    productName: "Gentle Face Cleanser",
+    emotion: "satisfied",
+    recommendationScore: 4,
+    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    summary: "Great cleanser for sensitive skin. Would like a larger size option.",
+    keyPositive: ["Gentle formula", "No irritation", "Pleasant scent"],
+    keyNegative: ["Small bottle size"],
+  },
+  {
+    id: "6",
+    customerName: "Amanda Lewis",
+    productName: "Anti-Aging Night Cream",
+    emotion: "happy",
+    recommendationScore: 5,
+    timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    summary: "Noticed visible improvement in fine lines after 2 weeks. Highly recommend!",
+    keyPositive: ["Visible results", "Luxurious texture", "Non-greasy", "Pleasant smell"],
+    keyNegative: [],
+  },
+  {
+    id: "7",
+    customerName: "Robert Taylor",
+    productName: "BB Cream SPF 30",
+    emotion: "satisfied",
+    recommendationScore: 4,
+    timestamp: new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString(),
+    summary: "Good coverage and sun protection. Limited shade range.",
+    keyPositive: ["Natural coverage", "SPF protection", "Lightweight"],
+    keyNegative: ["Limited shade options"],
+  },
+  {
+    id: "8",
+    customerName: "Lisa Anderson",
+    productName: "Liquid Eyeliner Pen",
+    emotion: "neutral",
+    recommendationScore: 3,
+    timestamp: new Date(Date.now() - 120 * 60 * 60 * 1000).toISOString(),
+    summary: "Precise application but dries out quickly. Good for the price.",
+    keyPositive: ["Precise tip", "Affordable price"],
+    keyNegative: ["Dries out fast", "Not very pigmented"],
+  },
+  {
+    id: "9",
+    customerName: "Kevin Martinez",
+    productName: "Moisturizing Lip Balm",
+    emotion: "happy",
+    recommendationScore: 5,
+    timestamp: new Date(Date.now() - 144 * 60 * 60 * 1000).toISOString(),
+    summary: "Perfect for daily use! Keeps lips soft and moisturized all day.",
+    keyPositive: ["Long-lasting moisture", "Pleasant taste", "Compact size", "Not sticky"],
+    keyNegative: [],
+  },
+  {
+    id: "10",
+    customerName: "Rachel White",
+    productName: "Setting Powder",
+    emotion: "satisfied",
+    recommendationScore: 4,
+    timestamp: new Date(Date.now() - 168 * 60 * 60 * 1000).toISOString(),
+    summary: "Controls oil well and doesn't look cakey. Good value for money.",
+    keyPositive: ["Oil control", "Natural finish", "Good value"],
+    keyNegative: ["Limited shade range"],
+  },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
+  const [mockReviews] = useState(initialMockReviews);
 
   const getEmotionIcon = (emotion: string) => {
     switch (emotion) {
@@ -210,6 +288,90 @@ const Dashboard = () => {
             ))}
           </div>
         </Card>
+
+        {/* Sales & Marketing Insights */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="p-6 shadow-card">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-green-600" />
+              Sales Insights
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Average Order Value</p>
+                  <p className="text-2xl font-bold">$42.50</p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-green-500" />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Repurchase Rate</p>
+                  <p className="text-2xl font-bold">68%</p>
+                </div>
+                <ShoppingCart className="w-8 h-8 text-blue-500" />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Top Converting Products</p>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Hydrating Face Serum</span>
+                    <Badge className="bg-green-100 text-green-800">92%</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Volumizing Mascara</span>
+                    <Badge className="bg-green-100 text-green-800">88%</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Moisturizing Lip Balm</span>
+                    <Badge className="bg-green-100 text-green-800">85%</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 shadow-card">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Users className="w-6 h-6 text-purple-600" />
+              Marketing Insights
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Customer Satisfaction</p>
+                  <p className="text-2xl font-bold">4.2/5.0</p>
+                </div>
+                <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Voice Review Completion</p>
+                  <p className="text-2xl font-bold">94%</p>
+                </div>
+                <Mic className="w-8 h-8 text-accent" />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Key Action Items</p>
+                <div className="space-y-2">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded border-l-4 border-blue-500">
+                    <p className="text-sm font-medium">Address drying concerns in lipstick formula</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded border-l-4 border-purple-500">
+                    <p className="text-sm font-medium">Expand shade range for BB cream & powder</p>
+                  </div>
+                  <div className="p-3 bg-green-50 dark:bg-green-950 rounded border-l-4 border-green-500">
+                    <p className="text-sm font-medium">Highlight long-lasting benefits in marketing</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
 
         {/* Common Keywords */}
         <Card className="p-6 shadow-card">
