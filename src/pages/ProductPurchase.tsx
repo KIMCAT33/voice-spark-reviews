@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Package, Mic } from "lucide-react";
+import { CheckCircle, Package, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import lipstickImage from "@/assets/red-lipstick.jpg";
 
 const ProductPurchase = () => {
   const navigate = useNavigate();
 
-  // Mock product data - in real scenario, this would come from URL params
+  // Mock product data - Beauty product
   const mockPurchase = {
     customerName: "Sarah Johnson",
     email: "sarah.j@example.com",
     productId: "PRD-2024-001",
-    productName: "Premium Wireless Headphones",
+    productName: "Rouge Velvet Matte Lipstick",
+    productColor: "Cherry Red #05",
     orderNumber: "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
   };
 
@@ -31,12 +33,21 @@ const ProductPurchase = () => {
           </p>
         </div>
 
-        {/* Order Details */}
+        {/* Product Image & Details */}
         <div className="space-y-4 bg-muted/50 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <Package className="w-6 h-6 text-primary mt-1" />
-            <div className="flex-1 space-y-2">
-              <h3 className="font-semibold text-lg">{mockPurchase.productName}</h3>
+          <div className="flex items-start gap-6">
+            <div className="w-32 h-32 rounded-lg overflow-hidden bg-white shadow-md flex-shrink-0">
+              <img 
+                src={lipstickImage} 
+                alt={mockPurchase.productName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="font-semibold text-xl">{mockPurchase.productName}</h3>
+                <p className="text-sm text-muted-foreground">{mockPurchase.productColor}</p>
+              </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>Order Number: {mockPurchase.orderNumber}</p>
                 <p>Customer: {mockPurchase.customerName}</p>
@@ -51,8 +62,7 @@ const ProductPurchase = () => {
           <div className="text-center space-y-2">
             <h2 className="text-xl font-semibold">Share Your Experience</h2>
             <p className="text-muted-foreground">
-              Help us improve! Share your thoughts in just 2 minutes with our AI voice assistant.
-              Your feedback helps other customers make better decisions.
+              Our customer service team would love to hear from you! Share your thoughts in just 2 minutes through a quick call.
             </p>
           </div>
 
@@ -61,8 +71,8 @@ const ProductPurchase = () => {
             className="w-full text-lg py-6 gradient-primary shadow-glow hover:opacity-90 transition-all"
             onClick={() => navigate(`/voice-review?product=${mockPurchase.productId}&customer=${encodeURIComponent(mockPurchase.customerName)}`)}
           >
-            <Mic className="mr-2 h-6 w-6" />
-            Give Voice Review (2 min)
+            <Phone className="mr-2 h-6 w-6" />
+            Start Review Call (2 min)
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
@@ -80,7 +90,7 @@ const ProductPurchase = () => {
           </button>
           <span>•</span>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
             className="hover:text-primary transition-colors"
           >
             Back to Home

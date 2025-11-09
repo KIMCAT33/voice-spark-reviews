@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Mic, MicOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, PhoneOff, Loader2 } from "lucide-react";
 import VoiceWaveform from "./VoiceWaveform";
 import TranscriptionDisplay from "./TranscriptionDisplay";
 import ReviewSummary from "./ReviewSummary";
@@ -37,11 +37,11 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
   const handleStartRecording = () => {
     setIsRecording(true);
     setSessionStarted(true);
-    // Add initial greeting with more context
+    // Add initial greeting - CS team style
     setMessages([
       {
         role: "assistant",
-        content: "Hi! Thanks for taking the time to share your feedback. I'm here to learn about your experience with the product. Let's start - what product did you purchase and what did you think of it?",
+        content: "Hello! Thank you for taking the time to speak with us today. We'd love to hear about your experience with the product you purchased. Let's start - which product did you receive and what are your initial thoughts?",
       },
     ]);
   };
@@ -50,19 +50,19 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
     setIsRecording(false);
     setIsProcessing(true);
     
-    // Simulate AI conversation - add user response
+    // Simulate customer response
     setTimeout(() => {
       setMessages(prev => [...prev, {
         role: "user",
-        content: "I bought the Premium Wireless Headphones. The sound quality is excellent and they're really comfortable!",
+        content: "I bought the Rouge Velvet Matte Lipstick in Cherry Red. The color is absolutely gorgeous and it stays on all day!",
       }]);
     }, 1000);
 
-    // Simulate AI follow-up
+    // Simulate CS follow-up
     setTimeout(() => {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "That's great to hear! Could you tell me more about the comfort and if there was anything you didn't like?",
+        content: "That's wonderful to hear! I'm glad you love the color. Could you tell me more about the texture and if there's anything you think we could improve?",
       }]);
       setIsProcessing(false);
     }, 2500);
@@ -73,24 +73,24 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
       setTimeout(() => {
         setIsProcessing(false);
         setReviewData({
-          product_name: "Premium Wireless Headphones",
+          product_name: "Rouge Velvet Matte Lipstick",
           customer_emotion: "satisfied",
           key_positive_points: [
-            "Excellent sound quality",
-            "Very comfortable for long use",
-            "Fast delivery",
-            "High quality packaging",
+            "Beautiful cherry red color",
+            "Long-lasting formula",
+            "Smooth matte finish",
+            "Comfortable to wear",
           ],
           key_negative_points: [
-            "Size was smaller than expected",
-            "Instructions could be clearer",
+            "Slightly drying after 6+ hours",
+            "Packaging could be more luxurious",
           ],
           improvement_suggestions: [
-            "Include detailed size chart",
-            "Add quick start guide with visuals",
-            "Provide video tutorials online",
+            "Add hydrating ingredients",
+            "Upgrade packaging design",
+            "Include color chart for online shopping",
           ],
-          review_summary: "Customer is very satisfied with the product quality and comfort. Main feedback focuses on improving documentation and size expectations.",
+          review_summary: "Customer is very satisfied with the color and longevity of the lipstick. Minor feedback on hydration and packaging design.",
           recommendation_score: 4,
         });
       }, 2000);
@@ -123,17 +123,17 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
 
         <Card className="p-8 md:p-12 shadow-card">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">AI Voice Review Assistant</h2>
+            <h2 className="text-3xl font-bold mb-2">Customer Service Review Call</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "Click the microphone to start sharing your thoughts"
+                ? "Press the call button to connect with our team"
                 : isRecording 
-                  ? "I'm listening... Speak naturally about your experience" 
+                  ? "Connected - Share your thoughts naturally" 
                   : "Processing your feedback..."}
             </p>
             {sessionStarted && (
               <p className="text-sm text-muted-foreground mt-2">
-                💡 Tip: Speak naturally - the AI will ask follow-up questions
+                💬 Speak naturally - our team will guide the conversation
               </p>
             )}
           </div>
@@ -151,7 +151,7 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
                 onClick={handleStartRecording}
                 className="w-24 h-24 rounded-full gradient-primary shadow-glow"
               >
-                <Mic className="h-10 w-10 text-primary-foreground" />
+                <Phone className="h-10 w-10 text-primary-foreground" />
               </Button>
             ) : isProcessing ? (
               <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
@@ -168,9 +168,9 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
                 }`}
               >
                 {isRecording ? (
-                  <MicOff className="h-10 w-10 text-accent-foreground" />
+                  <PhoneOff className="h-10 w-10 text-accent-foreground" />
                 ) : (
-                  <Mic className="h-10 w-10 text-primary-foreground" />
+                  <Phone className="h-10 w-10 text-primary-foreground" />
                 )}
               </Button>
             )}

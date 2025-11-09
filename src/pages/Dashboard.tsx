@@ -5,40 +5,40 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Mock data - in production, this would come from your database
+// Mock data - Beauty products
 const mockReviews = [
   {
     id: "1",
     customerName: "Sarah Johnson",
-    productName: "Premium Wireless Headphones",
+    productName: "Rouge Velvet Matte Lipstick",
     emotion: "satisfied",
     recommendationScore: 4,
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    summary: "Great sound quality and comfortable fit, but size was smaller than expected.",
-    keyPositive: ["Excellent sound quality", "Comfortable design", "Fast delivery"],
-    keyNegative: ["Smaller than expected"],
+    summary: "Beautiful cherry red color with long-lasting formula. Slightly drying after extended wear.",
+    keyPositive: ["Gorgeous color", "Long-lasting", "Smooth matte finish", "Comfortable"],
+    keyNegative: ["Slightly drying after 6+ hours"],
   },
   {
     id: "2",
     customerName: "Michael Chen",
-    productName: "Smart Watch Pro",
+    productName: "Hydrating Face Serum",
     emotion: "happy",
     recommendationScore: 5,
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    summary: "Absolutely love it! Battery life is amazing and the features are incredible.",
-    keyPositive: ["Long battery life", "Great features", "Beautiful design"],
+    summary: "Absolutely love it! Skin feels hydrated all day and the glow is amazing.",
+    keyPositive: ["Deeply hydrating", "Natural glow", "Pleasant scent", "Fast absorption"],
     keyNegative: [],
   },
   {
     id: "3",
     customerName: "Emily Rodriguez",
-    productName: "Yoga Mat Premium",
+    productName: "Eyeshadow Palette Nude",
     emotion: "neutral",
     recommendationScore: 3,
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    summary: "Good quality but expected better grip. Instructions could be clearer.",
-    keyPositive: ["Good material", "Nice color"],
-    keyNegative: ["Grip could be better", "Unclear instructions"],
+    summary: "Good quality eyeshadows but color payoff could be better. Some shades are hard to blend.",
+    keyPositive: ["Nice color selection", "Compact packaging"],
+    keyNegative: ["Color payoff not strong enough", "Some shades difficult to blend"],
   },
 ];
 
@@ -215,26 +215,26 @@ const Dashboard = () => {
         <Card className="p-6 shadow-card">
           <h2 className="text-2xl font-bold mb-6">Top Keywords</h2>
           <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-3 text-green-600 dark:text-green-400">Positive</h3>
-              <div className="flex flex-wrap gap-2">
-                {["Sound quality", "Comfortable", "Fast delivery", "Battery life", "Design"].map((keyword) => (
-                  <Badge key={keyword} variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    {keyword}
-                  </Badge>
-                ))}
+              <div>
+                <h3 className="font-semibold mb-3 text-green-600 dark:text-green-400">Positive</h3>
+                <div className="flex flex-wrap gap-2">
+                  {["Color", "Long-lasting", "Hydrating", "Smooth finish", "Natural glow"].map((keyword) => (
+                    <Badge key={keyword} variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3 text-red-600 dark:text-red-400">Negative</h3>
-              <div className="flex flex-wrap gap-2">
-                {["Size smaller", "Instructions unclear", "Grip"].map((keyword) => (
-                  <Badge key={keyword} variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                    {keyword}
-                  </Badge>
-                ))}
+              <div>
+                <h3 className="font-semibold mb-3 text-red-600 dark:text-red-400">Negative</h3>
+                <div className="flex flex-wrap gap-2">
+                  {["Drying", "Color payoff", "Blending difficulty"].map((keyword) => (
+                    <Badge key={keyword} variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
           </div>
         </Card>
 
