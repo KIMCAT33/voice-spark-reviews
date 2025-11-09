@@ -8,9 +8,9 @@
   line-height: 1.75rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   border: 1px solid hsl(var(--border) / 0.5);
   user-select: none;
   backdrop-filter: blur(10px);
@@ -115,12 +115,12 @@
 .input-audio-visualizer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 4px 10px;
   background: hsl(var(--card));
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid hsl(var(--border) / 0.5);
-  min-width: 70px;
+  min-width: 60px;
   justify-content: center;
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px hsl(var(--primary) / 0.05);
@@ -159,8 +159,8 @@
   display: inline-flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 12px;
-  padding-bottom: 24px;
+  gap: 10px;
+  padding-bottom: 16px;
 
   .disabled .action-button,
   .action-button.disabled {
@@ -175,19 +175,19 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 
     .connection-button-container {
-      border-radius: 20px;
+      border-radius: 16px;
       border: 1px solid hsl(var(--border) / 0.5);
       background: hsl(var(--card));
-      padding: 12px;
+      padding: 8px;
       backdrop-filter: blur(10px);
       box-shadow: 0 4px 12px hsl(var(--primary) / 0.1);
     }
 
     .text-indicator {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: hsl(var(--primary));
       user-select: none;
@@ -205,12 +205,12 @@
 .actions-nav {
   background: hsl(var(--card) / 0.8);
   border: 1px solid hsl(var(--border) / 0.5);
-  border-radius: 20px;
+  border-radius: 16px;
   display: inline-flex;
-  gap: 16px;
+  gap: 10px;
   align-items: center;
   overflow: clip;
-  padding: 12px;
+  padding: 8px;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px hsl(var(--primary) / 0.1);
 

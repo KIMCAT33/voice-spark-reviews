@@ -284,16 +284,16 @@ After Question 5, warmly conclude:
           <Sparkles className="w-12 h-12 text-primary animate-pulse" />
         </div>
         <h2>
-          <span className="gradient-text">Share Your Voice, Shape the Future</span>
+          <span className="gradient-text">Share Your Voice, Get Rewarded</span>
         </h2>
         <p className="subtitle">
           {connected ? (
             <span className="flex items-center gap-2 justify-center">
               <span className="status-dot"></span>
-              Question {currentQuestion}/5 • Your opinion matters!
+              Question {currentQuestion}/5 • Earn 10% discount!
             </span>
           ) : (
-            "Ready to make an impact? Let's start!"
+            "2 minutes for exclusive rewards & priority support"
           )}
         </p>
       </div>
@@ -302,8 +302,8 @@ After Question 5, warmly conclude:
         <div className="connection-guide">
           <div className="guide-card">
             <MessageCircle className="w-16 h-16 text-primary mb-2" />
-            <p className="guide-title">Your Experience, Your Voice</p>
-            <p className="guide-description">Help us create better products by sharing your honest feedback in just 2 minutes</p>
+            <p className="guide-title">Share Your Voice, Get Exclusive Benefits</p>
+            <p className="guide-description">Complete this quick voice review to unlock 10% discount and priority customer support</p>
             <div className="guide-steps">
               <div className="step">
                 <span className="step-number">1</span>
@@ -315,7 +315,7 @@ After Question 5, warmly conclude:
               </div>
               <div className="step">
                 <span className="step-number">3</span>
-                <span className="step-text">Get Rewards</span>
+                <span className="step-text">Get 10% Off</span>
               </div>
             </div>
           </div>

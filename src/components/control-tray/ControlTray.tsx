@@ -53,11 +53,11 @@ const MediaStreamButton = memo(
     
     return isStreaming ? (
       <button className="action-button" onClick={stop}>
-        <OnIcon size={24} />
+        <OnIcon size={20} />
       </button>
     ) : (
       <button className="action-button" onClick={start}>
-        <OffIcon size={24} />
+        <OffIcon size={20} />
       </button>
     );
   }
@@ -199,9 +199,9 @@ function ControlTray({
             title={muted ? "마이크 음소거 해제" : "마이크 음소거"}
           >
             {!muted ? (
-              <Mic size={24} />
+              <Mic size={20} />
             ) : (
-              <MicOff size={24} />
+              <MicOff size={20} />
             )}
           </button>
           {connected && (
@@ -242,7 +242,7 @@ function ControlTray({
             className={cn("action-button connect-toggle", { connected })}
             onClick={connected ? disconnect : connect}
           >
-            {connected ? <Pause size={24} /> : <Play size={24} />}
+            {connected ? <Pause size={20} /> : <Play size={20} />}
           </button>
         </div>
         <span className="text-indicator">Streaming</span>
