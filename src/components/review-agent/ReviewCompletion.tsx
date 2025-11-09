@@ -110,18 +110,6 @@ export const ReviewCompletion = ({ reviewData }: ReviewCompletionProps) => {
           ))}
         </div>
       </Card>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Button
-          size="lg"
-          className="flex-1 gradient-primary shadow-glow"
-          onClick={() => navigate("/dashboard")}
-        >
-          Go to Dashboard
-          <ArrowRight className="ml-2 h-5 w-5" />
-        </Button>
-      </div>
     </div>
   );
 };

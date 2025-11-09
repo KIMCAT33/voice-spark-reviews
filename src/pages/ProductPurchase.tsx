@@ -80,23 +80,6 @@ const ProductPurchase = () => {
             🎁 Get 10% off your next purchase for completing the review
           </p>
         </div>
-
-        {/* Footer Links */}
-        <div className="text-center text-sm text-muted-foreground space-x-4 pt-4 border-t">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="hover:text-primary transition-colors"
-          >
-            View Dashboard
-          </button>
-          <span>•</span>
-          <button
-            onClick={() => navigate("/home")}
-            className="hover:text-primary transition-colors"
-          >
-            Back to Home
-          </button>
-        </div>
       </Card>
     </div>
   );

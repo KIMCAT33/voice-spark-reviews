@@ -310,11 +310,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <Button variant="ghost" onClick={() => navigate("/")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-            <h1 className="text-3xl font-bold mt-4">Voice Review Dashboard</h1>
+            <h1 className="text-3xl font-bold">Voice Review Dashboard</h1>
             <p className="text-muted-foreground">Real-time insights from customer feedback</p>
           </div>
         </div>
