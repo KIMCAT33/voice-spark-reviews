@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 // Try to import lovable-tagger, but make it optional
 let componentTagger: any = null;
@@ -17,7 +18,12 @@ export default defineConfig(({ mode }) => {
   // Vite uses VITE_ prefix by default, but we'll also support REACT_APP_ for compatibility
   const env = loadEnv(mode, process.cwd(), "");
 
-  const plugins = [react()];
+  const plugins = [
+    react(), 
+    tsconfigPaths({
+      projects: ['./tsconfig.app.json']
+    })
+  ];
   if (mode === "development" && componentTagger) {
     plugins.push(componentTagger());
   }
@@ -25,7 +31,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "::",
-      port: 3000,
+      port: 8080,
       https: mode === "development" ? false : undefined,
     },
     // Expose both VITE_ and REACT_APP_ prefixed env vars to client
