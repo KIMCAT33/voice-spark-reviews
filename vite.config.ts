@@ -9,22 +9,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Try to import lovable-tagger synchronously
-function getComponentTagger() {
-  try {
-    const require = createRequire(import.meta.url);
-    const tagger = require("lovable-tagger");
-    return tagger?.componentTagger || null;
-  } catch (e) {
-    // lovable-tagger is optional - not available in all environments
-    return null;
-  }
-}
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Vite uses VITE_ prefix by default, but we'll also support REACT_APP_ for compatibility
   const env = loadEnv(mode, process.cwd(), "");
 
   const plugins = [
@@ -33,23 +20,25 @@ export default defineConfig(({ mode }) => {
       projects: ['./tsconfig.app.json']
     })
   ];
-  
-  // Only load component tagger in development
+
+  // Try to add lovable-tagger only in development
   if (mode === "development") {
-    const componentTagger = getComponentTagger();
-    if (componentTagger) {
-      plugins.push(componentTagger());
+    try {
+      const require = createRequire(import.meta.url);
+      const tagger = require("lovable-tagger");
+      if (tagger?.componentTagger) {
+        plugins.push(tagger.componentTagger());
+      }
+    } catch (e) {
+      // Silently skip if lovable-tagger is not available
     }
   }
 
   return {
     server: {
-      // Lovable manages host/port, so use defaults unless specified
-      host: process.env.VITE_HOST || "::",
-      port: process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 8080,
-      https: mode === "development" ? false : undefined,
+      host: "::",
+      port: 8080,
     },
-    // Expose both VITE_ and REACT_APP_ prefixed env vars to client
     envPrefix: ["VITE_", "REACT_APP_"],
     plugins,
     resolve: {
@@ -59,15 +48,12 @@ export default defineConfig(({ mode }) => {
     },
     css: {
       preprocessorOptions: {
-        scss: {
-          // SCSS additional data can be added here if needed
-        },
+        scss: {},
       },
     },
     define: {
       "process.env": {
         ...Object.keys(env).reduce((prev, key) => {
-          // Support both VITE_ and REACT_APP_ prefixes
           if (key.startsWith("VITE_") || key.startsWith("REACT_APP_")) {
             prev[key] = JSON.stringify(env[key]);
           }
