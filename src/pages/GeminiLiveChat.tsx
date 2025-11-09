@@ -15,12 +15,9 @@
  */
 
 import { useRef, useState } from "react";
-import "../pages/GeminiApp.scss";
 import { LiveAPIProvider } from "../contexts/LiveAPIContext";
-import SidePanel from "../components/side-panel/SidePanel";
 import { ReviewAgent } from "../components/review-agent/ReviewAgent";
 import ControlTray from "../components/control-tray/ControlTray";
-import cn from "classnames";
 import { LiveClientOptions } from "../types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -71,44 +68,42 @@ function GeminiLiveChat() {
   }
 
   return (
-    <div className="App">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
       <LiveAPIProvider options={apiOptions}>
-        <div className="streaming-console">
-          <SidePanel />
-          <main>
-            <div className="main-app-area">
-              <div className="fixed top-4 left-4 z-50">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/")}
-                  className="bg-background/80 backdrop-blur-sm"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Home
-                </Button>
-              </div>
-              
-              {/* Beauty Product Review Collection Agent */}
-              <ReviewAgent />
-              <video
-                className={cn("stream", {
-                  hidden: !videoRef.current || !videoStream,
-                })}
-                ref={videoRef}
-                autoPlay
-                playsInline
-              />
+        <div className="flex flex-col h-screen">
+          {/* Header */}
+          <div className="p-4 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+            <div className="container mx-auto flex items-center justify-between">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/")}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Purchase
+              </Button>
+              <h1 className="text-xl font-semibold">Customer Service Review Call</h1>
+              <div className="w-32"></div> {/* Spacer for centering */}
             </div>
+          </div>
 
+          {/* Main Content */}
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full flex items-center justify-center p-4">
+              <div className="w-full max-w-4xl">
+                <ReviewAgent />
+              </div>
+            </div>
+          </div>
+
+          {/* Control Tray */}
+          <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
             <ControlTray
               videoRef={videoRef}
-              supportsVideo={true}
+              supportsVideo={false}
               onVideoStreamChange={setVideoStream}
-              enableEditingSettings={true}
-            >
-              {/* put your own buttons here */}
-            </ControlTray>
-          </main>
+              enableEditingSettings={false}
+            />
+          </div>
         </div>
       </LiveAPIProvider>
     </div>
