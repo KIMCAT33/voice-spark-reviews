@@ -31,6 +31,8 @@ const API_KEY = (
   (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY)
 ) as string;
 
+console.log("🔑 API Key check:", API_KEY ? `Loaded (${API_KEY.substring(0, 10)}...)` : "NOT FOUND");
+
 if (!API_KEY || typeof API_KEY !== "string" || API_KEY.trim() === "") {
   console.error("API Key not configured");
 }
