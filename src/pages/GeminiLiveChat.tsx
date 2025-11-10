@@ -32,14 +32,10 @@ const API_KEY = (
 ) as string;
 
 if (!API_KEY || typeof API_KEY !== "string" || API_KEY.trim() === "") {
-  console.error("API Key not found. Available env vars:", {
-    "import.meta.env.VITE_GEMINI_API_KEY": import.meta.env.VITE_GEMINI_API_KEY,
-    "import.meta.env.REACT_APP_GEMINI_API_KEY": import.meta.env.REACT_APP_GEMINI_API_KEY,
-  });
+  console.error("API Key not configured");
 }
 
 const trimmedAPIKey = API_KEY?.trim() || "";
-console.log("API Key loaded:", trimmedAPIKey.substring(0, 10) + "...");
 
 const apiOptions: LiveClientOptions = {
   apiKey: trimmedAPIKey,
