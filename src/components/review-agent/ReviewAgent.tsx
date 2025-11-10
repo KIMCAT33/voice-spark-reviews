@@ -103,7 +103,7 @@ function ReviewAgentComponent() {
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
-  const { client, setConfig, setModel, connected, disconnect } = useLiveAPIContext();
+  const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
 
   // Initial setup: Beauty product review collection agent persona
@@ -274,19 +274,20 @@ After Question 5, warmly conclude:
     };
   }, [client, disconnect]);
 
-  // Send initial message when connected
+  // Send initial message when connected AND setup is complete
   useEffect(() => {
-    if (connected && currentQuestion === 0) {
-      // Wait a moment after connection, then start initial introduction
+    if (connected && setupComplete && currentQuestion === 0) {
+      console.log("✅ Session ready - starting interview...");
+      // Wait a moment after setup completion, then start initial introduction
       setTimeout(() => {
         client.send([
           {
             text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
           },
         ]);
-      }, 1000);
+      }, 500);
     }
-  }, [connected, client, currentQuestion]);
+  }, [connected, setupComplete, client, currentQuestion]);
 
   // Show completion screen when interview is done
   if (isComplete && Object.keys(reviewData).length > 0) {
