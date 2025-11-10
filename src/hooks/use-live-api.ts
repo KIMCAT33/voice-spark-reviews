@@ -115,16 +115,35 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     // CRITICAL: Resume audio context BEFORE connecting
     // This must happen in the user gesture handler (button click)
     if (audioStreamerRef.current) {
-      console.log("Audio context state before resume:", audioStreamerRef.current.context.state);
-      await audioStreamerRef.current.resume();
-      console.log("Audio context state after resume:", audioStreamerRef.current.context.state);
+      console.log("🔊 Audio context state before resume:", audioStreamerRef.current.context.state);
       
-      // Double-check and force resume if still suspended
-      if (audioStreamerRef.current.context.state === "suspended") {
-        console.warn("⚠️ Audio context still suspended, forcing resume...");
+      // Force resume multiple times to ensure activation
+      for (let i = 0; i < 3; i++) {
         await audioStreamerRef.current.context.resume();
-        console.log("Audio context state after force resume:", audioStreamerRef.current.context.state);
+        console.log(`🔊 Resume attempt ${i + 1}, state:`, audioStreamerRef.current.context.state);
+        
+        if (audioStreamerRef.current.context.state === "running") {
+          console.log("✅ Audio context successfully activated!");
+          break;
+        }
+        
+        // Wait a bit before next attempt
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
+      
+      // Final check
+      if (audioStreamerRef.current.context.state !== "running") {
+        console.error("❌ Failed to activate audio context. State:", audioStreamerRef.current.context.state);
+        throw new Error("오디오를 활성화할 수 없습니다. 페이지를 새로고침하고 다시 시도해주세요.");
+      }
+      
+      // Test audio by playing a short silent buffer
+      const testBuffer = audioStreamerRef.current.context.createBuffer(1, 1, audioStreamerRef.current.context.sampleRate);
+      const testSource = audioStreamerRef.current.context.createBufferSource();
+      testSource.buffer = testBuffer;
+      testSource.connect(audioStreamerRef.current.context.destination);
+      testSource.start();
+      console.log("✅ Test audio played successfully");
     }
     
     client.disconnect();
