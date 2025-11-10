@@ -103,7 +103,7 @@ function ReviewAgentComponent() {
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
-  const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
+  const { client, setConfig, setModel, connected, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
 
   // Initial setup: Beauty product review collection agent persona
@@ -274,20 +274,47 @@ After Question 5, warmly conclude:
     };
   }, [client, disconnect]);
 
-  // Send initial message when connected AND setup is complete
+  // Send initial message when connection is fully ready
   useEffect(() => {
-    if (connected && setupComplete && currentQuestion === 0) {
-      console.log("✅ Session ready - starting interview...");
-      // Wait a moment after setup completion, then start initial introduction
-      setTimeout(() => {
-        client.send([
-          {
-            text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
-          },
-        ]);
-      }, 500);
+    if (connected && currentQuestion === 0) {
+      console.log("🔍 Checking session readiness...");
+      console.log("Connected:", connected);
+      console.log("Client status:", client.status);
+      console.log("Has session:", !!client.session);
+      
+      let cancelled = false;
+      
+      // Wait for session to be fully initialized
+      const checkAndStart = () => {
+        if (cancelled) return;
+        
+        if (client.status === "connected" && client.session) {
+          console.log("✅ Session fully ready - starting interview...");
+          try {
+            client.send([
+              {
+                text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
+              },
+            ]);
+            console.log("✅ Initial message sent successfully");
+          } catch (error) {
+            console.error("Failed to send initial message:", error);
+          }
+        } else {
+          console.log("⏳ Session not ready yet, retrying in 500ms...");
+          setTimeout(checkAndStart, 500);
+        }
+      };
+      
+      // Start checking after a brief delay
+      const timer = setTimeout(checkAndStart, 1000);
+      
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
     }
-  }, [connected, setupComplete, client, currentQuestion]);
+  }, [connected, client, currentQuestion]);
 
   // Show completion screen when interview is done
   if (isComplete && Object.keys(reviewData).length > 0) {
