@@ -281,12 +281,23 @@ After Question 5, warmly conclude:
       console.log("Connected:", connected);
       console.log("Client status:", client.status);
       console.log("Has session:", !!client.session);
+      console.log("Current question:", currentQuestion);
       
       let cancelled = false;
+      let attemptCount = 0;
+      const maxAttempts = 10;
       
       // Wait for session to be fully initialized
       const checkAndStart = () => {
-        if (cancelled) return;
+        if (cancelled) {
+          console.log("❌ Cancelled - component unmounted");
+          return;
+        }
+        
+        attemptCount++;
+        console.log(`📊 Attempt ${attemptCount}/${maxAttempts}`);
+        console.log(`   - Status: ${client.status}`);
+        console.log(`   - Has session: ${!!client.session}`);
         
         if (client.status === "connected" && client.session) {
           console.log("✅ Session fully ready - starting interview...");
@@ -298,11 +309,15 @@ After Question 5, warmly conclude:
             ]);
             console.log("✅ Initial message sent successfully");
           } catch (error) {
-            console.error("Failed to send initial message:", error);
+            console.error("❌ Failed to send initial message:", error);
           }
-        } else {
+        } else if (attemptCount < maxAttempts) {
           console.log("⏳ Session not ready yet, retrying in 500ms...");
           setTimeout(checkAndStart, 500);
+        } else {
+          console.error("❌ Max attempts reached - session never became ready");
+          console.error("Final status:", client.status);
+          console.error("Has session:", !!client.session);
         }
       };
       
