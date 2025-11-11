@@ -146,7 +146,15 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
       console.log("✅ Test audio played successfully");
     }
     
-    client.disconnect();
+    // Properly disconnect and wait before reconnecting
+    if (client.status === "connected" || client.status === "connecting") {
+      console.log("🔌 Disconnecting existing session...");
+      client.disconnect();
+      // Wait for the WebSocket to fully close
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    console.log("🔌 Establishing new connection...");
     await client.connect(model, config);
     console.log("✅ Connection established");
   }, [client, config, model]);
