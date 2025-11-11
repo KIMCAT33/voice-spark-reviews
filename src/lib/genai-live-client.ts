@@ -113,7 +113,11 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   }
 
   async connect(model: string, config: LiveConnectConfig): Promise<boolean> {
+    console.log("🔗 Starting connection with model:", model);
+    console.log("Config:", config);
+    
     if (this._status === "connected" || this._status === "connecting") {
+      console.warn("Already connected or connecting, returning false");
       return false;
     }
 
@@ -129,18 +133,21 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     };
 
     try {
+      console.log("🚀 Calling client.live.connect...");
       this._session = await this.client.live.connect({
         model,
         config,
         callbacks,
       });
+      console.log("✅ Session created:", this._session ? "YES" : "NO");
     } catch (e) {
-      console.error("Error connecting to GenAI Live:", e);
+      console.error("❌ Error connecting to GenAI Live:", e);
       this._status = "disconnected";
       return false;
     }
 
     this._status = "connected";
+    console.log("✅ Status set to connected");
     return true;
   }
 
@@ -157,16 +164,24 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   }
 
   protected onopen() {
+    console.log("🌐 WebSocket OPENED");
     this.log("client.open", "Connected");
     this.emit("open");
   }
 
   protected onerror(e: ErrorEvent) {
+    console.error("❌ WebSocket ERROR:", e);
+    console.error("Error message:", e.message);
+    console.error("Error type:", e.type);
     this.log("server.error", e.message);
     this.emit("error", e);
   }
 
   protected onclose(e: CloseEvent) {
+    console.warn("🔌 WebSocket CLOSED");
+    console.warn("Close code:", e.code);
+    console.warn("Close reason:", e.reason);
+    console.warn("Was clean:", e.wasClean);
     this.log(
       `server.close`,
       `disconnected ${e.reason ? `with reason: ${e.reason}` : ``}`
@@ -175,7 +190,10 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   }
 
   protected async onmessage(message: LiveServerMessage) {
+    console.log("📨 Message received:", message);
+    
     if (message.setupComplete) {
+      console.log("✅ SETUP COMPLETE received!");
       this.log("server.send", "setupComplete");
       this.emit("setupcomplete");
       return;
