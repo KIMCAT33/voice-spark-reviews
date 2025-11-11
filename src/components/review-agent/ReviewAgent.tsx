@@ -103,7 +103,7 @@ function ReviewAgentComponent() {
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
-  const { client, setConfig, setModel, connected, disconnect } = useLiveAPIContext();
+  const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
   const messageAlreadySent = useRef(false);
 
@@ -275,33 +275,66 @@ After Question 5, warmly conclude:
     };
   }, [client, disconnect]);
 
-  // Send initial message when session is ready using setupcomplete event
+  // Send initial message when session is ready
   useEffect(() => {
-    const onSetupComplete = () => {
-      if (currentQuestion === 0 && !messageAlreadySent.current) {
-        console.log("🎉 Setup complete - starting interview!");
+    const sendInitialMessage = () => {
+      if (currentQuestion === 0 && !messageAlreadySent.current && connected && setupComplete) {
+        console.log("📝 Conditions met - sending initial greeting message...");
+        console.log("  - currentQuestion:", currentQuestion);
+        console.log("  - messageAlreadySent:", messageAlreadySent.current);
+        console.log("  - connected:", connected);
+        console.log("  - setupComplete:", setupComplete);
+        console.log("  - client status:", client.status);
+        
         messageAlreadySent.current = true;
         
-        try {
-          client.send([
-            {
-              text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
-            },
-          ]);
-          console.log("✅ Initial message sent successfully");
-        } catch (error) {
-          console.error("❌ Failed to send initial message:", error);
-          messageAlreadySent.current = false;
-        }
+        // Use a small delay to ensure the session is fully ready
+        setTimeout(() => {
+          try {
+            client.send([
+              {
+                text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
+              },
+            ]);
+            console.log("✅ Initial message sent successfully");
+          } catch (error) {
+            console.error("❌ Failed to send initial message:", error);
+            messageAlreadySent.current = false;
+          }
+        }, 500);
       }
     };
 
+    // Check if setup is already complete (handles race condition)
+    if (setupComplete && connected) {
+      console.log("🎉 Setup already complete - sending message immediately");
+      sendInitialMessage();
+    }
+
+    // Also listen for setupcomplete event
+    const onSetupComplete = () => {
+      console.log("🎉 Setup complete event received!");
+      sendInitialMessage();
+    };
+
+    console.log("🔧 Setting up setupcomplete listener");
+    console.log("  - connected:", connected);
+    console.log("  - setupComplete:", setupComplete);
     client.on("setupcomplete", onSetupComplete);
     
     return () => {
+      console.log("🧹 Cleaning up setupcomplete listener");
       client.off("setupcomplete", onSetupComplete);
     };
-  }, [client, currentQuestion]);
+  }, [client, currentQuestion, connected, setupComplete]);
+  
+  // Reset message flag when disconnected
+  useEffect(() => {
+    if (!connected) {
+      messageAlreadySent.current = false;
+      console.log("🔄 Connection lost - reset message flag");
+    }
+  }, [connected]);
 
   // Show completion screen when interview is done
   if (isComplete && Object.keys(reviewData).length > 0) {
