@@ -23,13 +23,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Support both VITE_ and REACT_APP_ prefixes for compatibility
-const API_KEY = (
-  import.meta.env.VITE_GEMINI_API_KEY || 
-  import.meta.env.REACT_APP_GEMINI_API_KEY ||
-  (typeof process !== "undefined" && process.env?.VITE_GEMINI_API_KEY) ||
-  (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY)
-) as string;
+// Vite only exposes environment variables prefixed with VITE_
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 
 console.log("🔑 API Key check:", API_KEY ? `Loaded (${API_KEY.substring(0, 10)}...)` : "NOT FOUND");
 
