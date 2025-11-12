@@ -106,7 +106,11 @@ export default function Shop() {
                 const image = product.node.images.edges[0]?.node;
 
                 return (
-                  <Card key={product.node.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={product.node.id} 
+                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/product/${product.node.handle}`)}
+                  >
                     <div className="aspect-square overflow-hidden bg-secondary/20">
                       {image ? (
                         <img
@@ -135,14 +139,27 @@ export default function Shop() {
                       </p>
                     </CardContent>
                     
-                    <CardFooter>
+                    <CardFooter className="flex gap-2">
                       <Button 
-                        className="w-full" 
-                        onClick={() => handleAddToCart(product)}
+                        className="flex-1" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/product/${product.node.handle}`);
+                        }}
+                      >
+                        자세히 보기
+                      </Button>
+                      <Button 
+                        className="flex-1" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
                         disabled={!variant?.availableForSale}
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        {variant?.availableForSale ? '장바구니에 담기' : '품절'}
+                        {variant?.availableForSale ? '담기' : '품절'}
                       </Button>
                     </CardFooter>
                   </Card>
