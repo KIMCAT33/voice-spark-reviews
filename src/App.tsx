@@ -9,6 +9,7 @@ import GeminiLiveChat from "./pages/GeminiLiveChat";
 import ProductPurchase from "./pages/ProductPurchase";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
+import Shop from "./pages/Shop";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/gemini-live" element={<GeminiLiveChat />} />
           <Route path="/voice-review" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
