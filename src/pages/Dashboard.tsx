@@ -174,10 +174,13 @@ const Dashboard = () => {
       setIsLoadingProducts(true);
       const productsData = await fetchProducts(100);
       
-      // Remove duplicates by keeping only the first occurrence of each unique handle
+      // Remove duplicates by product title (what users see)
       const uniqueProducts = productsData.filter((product, index, self) =>
-        index === self.findIndex((p) => p.node.handle === product.node.handle)
+        index === self.findIndex((p) => p.node.title === product.node.title)
       );
+      
+      console.log('Total products from Shopify:', productsData.length);
+      console.log('Unique products after filtering:', uniqueProducts.length);
       
       setProducts(uniqueProducts);
     } catch (error) {

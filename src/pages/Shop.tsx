@@ -21,8 +21,14 @@ export default function Shop() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await fetchProducts(20);
-      setProducts(data);
+      const data = await fetchProducts(100);
+      
+      // Remove duplicates by product title
+      const uniqueProducts = data.filter((product, index, self) =>
+        index === self.findIndex((p) => p.node.title === product.node.title)
+      );
+      
+      setProducts(uniqueProducts);
     } catch (error) {
       console.error('Failed to load products:', error);
       toast.error('Failed to load products.');
