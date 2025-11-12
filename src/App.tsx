@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import ProductInsights from "./pages/ProductInsights";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:handle" element={<ProductDetail />} />
+          <Route path="/insights/:handle" element={<ProductInsights />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>

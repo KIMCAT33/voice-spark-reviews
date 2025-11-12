@@ -482,7 +482,7 @@ const Dashboard = () => {
                   <Card 
                     key={product.node.id} 
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/product/${product.node.handle}`)}
+                    onClick={() => navigate(`/insights/${product.node.handle}`)}
                   >
                     <div className="aspect-square overflow-hidden bg-secondary/20">
                       {image ? (
