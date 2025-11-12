@@ -118,11 +118,11 @@ function ControlTray({
           setIsRecording(true);
         })
         .catch((error: Error) => {
-          console.error("마이크 권한 오류:", error);
+          console.error("Microphone permission error:", error);
           setIsRecording(false);
-          // 권한이 거부된 경우 사용자에게 알림
+          // Notify user if permission is denied
           if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-            alert("마이크 권한이 필요합니다. 브라우저 설정에서 마이크 권한을 허용해주세요.");
+            alert("Microphone permission is required. Please allow microphone access in your browser settings.");
           }
         });
     } else {

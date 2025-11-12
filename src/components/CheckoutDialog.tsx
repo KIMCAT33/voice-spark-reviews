@@ -134,10 +134,10 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    결제 처리 중...
+                    Processing...
                   </>
                 ) : (
-                  `${totalPrice.toFixed(2)} 결제하기`
+                  `Pay $${totalPrice.toFixed(2)}`
                 )}
               </Button>
             </form>
@@ -150,9 +150,9 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold">구매 완료!</h3>
+              <h3 className="text-2xl font-bold">Purchase Complete!</h3>
               <p className="text-muted-foreground">
-                곧 음성 리뷰 페이지로 이동합니다...
+                Redirecting to voice review page...
               </p>
             </div>
           </div>

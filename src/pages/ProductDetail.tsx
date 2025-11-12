@@ -120,10 +120,10 @@ export default function ProductDetail() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">제품을 찾을 수 없습니다</h2>
+          <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
           <Button onClick={() => navigate('/shop')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            스토어로 돌아가기
+            Return to Store
           </Button>
         </div>
       </div>

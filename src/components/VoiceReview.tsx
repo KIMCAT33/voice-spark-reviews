@@ -340,12 +340,12 @@ Guidelines:
             <h2 className="text-3xl font-bold mb-2">VOIX Voice Review</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "통화 버튼을 눌러 음성 리뷰를 시작하세요"
+                ? "Press the call button to start voice review"
                 : isConnecting
-                  ? "🎧 연결 중... 잠시만 기다려주세요"
+                  ? "🎧 Connecting... Please wait"
                   : !isRecording
-                    ? "🎧 AI가 인사하고 있습니다... 기다려주세요"
-                    : "🎤 연결됨 - 자유롭게 말씀하세요"}
+                    ? "🎧 AI is greeting you... Please wait"
+                    : "🎤 Connected - Speak freely"}
             </p>
             {sessionStarted && isRecording && (
               <p className="text-sm text-muted-foreground mt-2">

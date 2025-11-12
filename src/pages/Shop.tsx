@@ -82,22 +82,22 @@ export default function Shop() {
         {products.length === 0 ? (
           <div className="text-center py-20">
             <Package className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">제품이 없습니다</h2>
+            <h2 className="text-3xl font-bold mb-4">No Products Available</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              아직 스토어에 제품이 추가되지 않았습니다. 채팅에서 어떤 제품을 판매하고 싶은지 말씀해주시면 제품을 추가해드리겠습니다!
+              No products have been added to the store yet. Tell us in the chat what products you'd like to sell and we'll add them for you!
             </p>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">예시:</p>
+              <p className="text-sm text-muted-foreground">Example:</p>
               <p className="text-sm font-mono bg-secondary/20 inline-block px-4 py-2 rounded">
-                "빨간색 립스틱 제품을 $29.99에 추가해줘"
+                "Add red lipstick product for $29.99"
               </p>
             </div>
           </div>
         ) : (
           <>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">모든 제품</h2>
-              <p className="text-muted-foreground">{products.length}개의 제품</p>
+              <h2 className="text-3xl font-bold mb-2">All Products</h2>
+              <p className="text-muted-foreground">{products.length} products</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -128,7 +128,7 @@ export default function Shop() {
                     <CardHeader>
                       <CardTitle className="line-clamp-1">{product.node.title}</CardTitle>
                       <CardDescription className="line-clamp-2">
-                        {product.node.description || '설명 없음'}
+                        {product.node.description || 'No description'}
                       </CardDescription>
                     </CardHeader>
                     
@@ -148,7 +148,7 @@ export default function Shop() {
                           navigate(`/product/${product.node.handle}`);
                         }}
                       >
-                        자세히 보기
+                        View Details
                       </Button>
                       <Button 
                         className="flex-1" 
@@ -159,7 +159,7 @@ export default function Shop() {
                         disabled={!variant?.availableForSale}
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        {variant?.availableForSale ? '담기' : '품절'}
+                        {variant?.availableForSale ? 'Add' : 'Sold Out'}
                       </Button>
                     </CardFooter>
                   </Card>
