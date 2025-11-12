@@ -48,6 +48,13 @@ const Landing = () => {
             </div>
             <span className="text-base sm:text-lg md:text-xl font-bold">VOIX</span>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/shop")}
+            className="text-sm sm:text-base"
+          >
+            Shop
+          </Button>
         </div>
       </header>
 
