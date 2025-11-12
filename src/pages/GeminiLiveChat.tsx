@@ -21,7 +21,7 @@ import ControlTray from "../components/control-tray/ControlTray";
 import { LiveClientOptions } from "../types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Vite only exposes environment variables prefixed with VITE_
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
@@ -40,8 +40,12 @@ const apiOptions: LiveClientOptions = {
 
 function GeminiLiveChat() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  
+  // Get product name from URL parameter
+  const productName = searchParams.get('product') || 'VOIX Beauty Product';
 
   if (!trimmedAPIKey) {
     return (
