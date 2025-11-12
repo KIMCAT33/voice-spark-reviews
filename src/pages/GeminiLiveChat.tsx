@@ -115,7 +115,7 @@ function GeminiLiveChat() {
           <div className="flex-1 overflow-hidden">
             <div className="h-full flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500">
               <div className="w-full max-w-5xl">
-                <ReviewAgent />
+                <ReviewAgent productName={productName} />
               </div>
             </div>
           </div>
