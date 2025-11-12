@@ -134,7 +134,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
       // Final check
       if (audioStreamerRef.current.context.state !== "running") {
         console.error("❌ Failed to activate audio context. State:", audioStreamerRef.current.context.state);
-        throw new Error("오디오를 활성화할 수 없습니다. 페이지를 새로고침하고 다시 시도해주세요.");
+        throw new Error("Unable to activate audio. Please refresh the page and try again.");
       }
       
       // Test audio by playing a short silent buffer

@@ -283,8 +283,8 @@ Guidelines:
       }
 
       toast({
-        title: "연결 성공",
-        description: "AI가 곧 인사할 예정입니다. 인사가 들린 후 말씀해 주세요.",
+        title: "Connected Successfully",
+        description: "The AI will greet you shortly. Please speak after you hear the greeting.",
       });
 
     } catch (error) {
@@ -293,8 +293,8 @@ Guidelines:
       setIsConnecting(false);
       setSessionStarted(false);
       toast({
-        title: "연결 실패",
-        description: "음성 리뷰를 시작할 수 없습니다. 다시 시도해 주세요.",
+        title: "Connection Failed",
+        description: "Unable to start voice review. Please try again.",
         variant: "destructive",
       });
     }
@@ -340,21 +340,21 @@ Guidelines:
             <h2 className="text-3xl font-bold mb-2">VOIX Voice Review</h2>
             <p className="text-muted-foreground">
               {!sessionStarted 
-                ? "통화 버튼을 눌러 음성 리뷰를 시작하세요"
+                ? "Press the call button to start voice review"
                 : isConnecting
-                  ? "🎧 연결 중... 잠시만 기다려주세요"
+                  ? "🎧 Connecting... Please wait"
                   : !isRecording
-                    ? "🎧 AI가 인사하고 있습니다... 기다려주세요"
-                    : "🎤 연결됨 - 자유롭게 말씀하세요"}
+                    ? "🎧 AI is greeting you... Please wait"
+                    : "🎤 Connected - Speak freely"}
             </p>
             {sessionStarted && isRecording && (
               <p className="text-sm text-muted-foreground mt-2">
-                💬 AI가 질문을 하며 피드백을 듣고 있습니다
+                💬 AI is asking questions and listening to your feedback
               </p>
             )}
             {sessionStarted && (isConnecting || !isRecording) && (
               <p className="text-sm text-primary mt-2 font-medium animate-pulse">
-                ⏳ AI 인사를 기다려주세요...
+                ⏳ Waiting for AI greeting...
               </p>
             )}
           </div>

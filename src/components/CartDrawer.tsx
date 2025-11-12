@@ -51,9 +51,9 @@ export const CartDrawer = () => {
       
       <SheetContent className="w-full sm:max-w-lg flex flex-col h-full">
         <SheetHeader className="flex-shrink-0">
-          <SheetTitle>장바구니</SheetTitle>
+          <SheetTitle>Shopping Cart</SheetTitle>
           <SheetDescription>
-            {totalItems === 0 ? "장바구니가 비어있습니다" : `${totalItems}개 상품`}
+            {totalItems === 0 ? "Your cart is empty" : `${totalItems} items`}
           </SheetDescription>
         </SheetHeader>
         
@@ -62,7 +62,7 @@ export const CartDrawer = () => {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">장바구니가 비어있습니다</p>
+                <p className="text-muted-foreground">Your cart is empty</p>
               </div>
             </div>
           ) : (
@@ -128,7 +128,7 @@ export const CartDrawer = () => {
               
               <div className="flex-shrink-0 space-y-4 pt-4 border-t bg-background">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">총액</span>
+                  <span className="text-lg font-semibold">Total</span>
                   <span className="text-xl font-bold">
                     {items[0]?.price.currencyCode || 'USD'} {totalPrice.toFixed(2)}
                   </span>
@@ -141,7 +141,7 @@ export const CartDrawer = () => {
                   disabled={items.length === 0}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  결제하기
+                  Checkout
                 </Button>
               </div>
             </>

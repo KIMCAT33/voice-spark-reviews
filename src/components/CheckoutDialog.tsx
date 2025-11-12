@@ -35,28 +35,28 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
     e.preventDefault();
     
     if (!email || !email.includes('@')) {
-      toast.error('올바른 이메일 주소를 입력해주세요.');
+      toast.error('Please enter a valid email address.');
       return;
     }
 
     setIsProcessing(true);
 
-    // 구매 처리 시뮬레이션 (1.5초)
+    // Simulate purchase processing (1.5 seconds)
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     setIsProcessing(false);
     setIsPurchaseComplete(true);
 
-    // 구매 완료 메시지 표시 후 음성 리뷰로 이동
+    // Show purchase complete message then redirect to voice review
     setTimeout(() => {
       clearCart();
       onOpenChange(false);
-      toast.success('구매가 완료되었습니다! 음성으로 리뷰를 남겨주세요.', {
+      toast.success('Purchase complete! Please leave a voice review.', {
         duration: 5000,
       });
       
-      // 제품 정보를 쿼리 파라미터로 전달
-      const productName = items[0]?.product.node.title || 'VOIX Beauty 제품';
+      // Pass product info as query parameter
+      const productName = items[0]?.product.node.title || 'VOIX Beauty Product';
       navigate(`/gemini-live?product=${encodeURIComponent(productName)}`);
     }, 2000);
   };
@@ -81,16 +81,16 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
         {!isPurchaseComplete ? (
           <>
             <DialogHeader>
-              <DialogTitle>주문 정보 입력</DialogTitle>
+              <DialogTitle>Enter Order Information</DialogTitle>
               <DialogDescription>
-                구매 완료 후 음성 리뷰를 남기실 수 있습니다
+                You can leave a voice review after purchase
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleCheckout} className="space-y-4">
               <div className="space-y-4">
                 <div className="bg-secondary/20 rounded-lg p-4 space-y-2">
-                  <h4 className="font-semibold text-sm">주문 요약</h4>
+                  <h4 className="font-semibold text-sm">Order Summary</h4>
                   {items.map((item) => (
                     <div key={item.variantId} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
@@ -102,7 +102,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                     </div>
                   ))}
                   <div className="flex justify-between pt-2 border-t">
-                    <span className="font-semibold">총액</span>
+                    <span className="font-semibold">Total</span>
                     <span className="font-bold text-primary">
                       ${totalPrice.toFixed(2)}
                     </span>
@@ -110,7 +110,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">이메일 주소</Label>
+                  <Label htmlFor="email">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -121,7 +121,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                     disabled={isProcessing}
                   />
                   <p className="text-xs text-muted-foreground">
-                    구매 확인 및 음성 리뷰 링크를 받으실 이메일 주소입니다
+                    Email address to receive purchase confirmation and voice review link
                   </p>
                 </div>
               </div>
@@ -134,10 +134,10 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    결제 처리 중...
+                    Processing...
                   </>
                 ) : (
-                  `${totalPrice.toFixed(2)} 결제하기`
+                  `Pay $${totalPrice.toFixed(2)}`
                 )}
               </Button>
             </form>
@@ -150,9 +150,9 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold">구매 완료!</h3>
+              <h3 className="text-2xl font-bold">Purchase Complete!</h3>
               <p className="text-muted-foreground">
-                곧 음성 리뷰 페이지로 이동합니다...
+                Redirecting to voice review page...
               </p>
             </div>
           </div>

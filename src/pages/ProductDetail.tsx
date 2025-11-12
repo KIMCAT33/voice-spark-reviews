@@ -74,7 +74,7 @@ export default function ProductDetail() {
       setProduct(data.data.product);
     } catch (error) {
       console.error('Failed to load product:', error);
-      toast.error('제품을 불러오는데 실패했습니다.');
+      toast.error('Failed to load product.');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function ProductDetail() {
     
     const variant = product.variants.edges[selectedVariant]?.node;
     if (!variant) {
-      toast.error('이 제품은 현재 구매할 수 없습니다.');
+      toast.error('This product is currently unavailable.');
       return;
     }
 
@@ -99,7 +99,7 @@ export default function ProductDetail() {
     };
     
     addItem(cartItem);
-    toast.success('장바구니에 추가되었습니다!', {
+    toast.success('Added to cart!', {
       position: 'top-center'
     });
   };
@@ -109,7 +109,7 @@ export default function ProductDetail() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Package className="h-12 w-12 animate-pulse mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">제품 정보를 불러오는 중...</p>
+          <p className="text-muted-foreground">Loading product information...</p>
         </div>
       </div>
     );
@@ -120,10 +120,10 @@ export default function ProductDetail() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">제품을 찾을 수 없습니다</h2>
+          <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
           <Button onClick={() => navigate('/shop')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            스토어로 돌아가기
+            Return to Store
           </Button>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function ProductDetail() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate('/shop')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            스토어로
+            Back to Store
           </Button>
           <CartDrawer />
         </div>
@@ -192,13 +192,13 @@ export default function ProductDetail() {
 
             <div className="border-t border-b py-4">
               <p className="text-muted-foreground leading-relaxed">
-                {product.description || '제품 설명이 없습니다.'}
+                {product.description || 'No product description available.'}
               </p>
             </div>
 
             {product.variants.edges.length > 1 && (
               <div>
-                <h3 className="font-semibold mb-3">옵션 선택</h3>
+                <h3 className="font-semibold mb-3">Select Options</h3>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.edges.map((edge, idx) => (
                     <Button
@@ -218,15 +218,15 @@ export default function ProductDetail() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>무료 배송</span>
+                  <span>Free Shipping</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>30일 환불 보장</span>
+                  <span>30-Day Money Back Guarantee</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>구매 후 음성 리뷰로 피드백 제공</span>
+                  <span>Provide Feedback via Voice Review After Purchase</span>
                 </div>
               </CardContent>
             </Card>
@@ -239,11 +239,11 @@ export default function ProductDetail() {
                 disabled={!currentVariant?.availableForSale}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {currentVariant?.availableForSale ? '장바구니에 담기' : '품절'}
+                {currentVariant?.availableForSale ? 'Add to Cart' : 'Out of Stock'}
               </Button>
               
               <p className="text-sm text-center text-muted-foreground">
-                구매 후 음성으로 리뷰를 남기고 브랜드 개선에 참여하세요
+                Leave a voice review after purchase and help improve the brand
               </p>
             </div>
           </div>
