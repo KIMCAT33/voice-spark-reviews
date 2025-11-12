@@ -83,7 +83,15 @@ const Landing = () => {
               onClick={() => navigate("/purchase")}
             >
               <Sparkles className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-              Try Our Demo
+              Try Voice Review Demo
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
+              onClick={() => navigate("/shop")}
+            >
+              View Sample Store
             </Button>
           </div>
 
