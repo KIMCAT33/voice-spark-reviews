@@ -7,6 +7,7 @@ import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Pac
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
 
 // Extended mock data - 10 Beauty products reviews
 const initialMockReviews = [
@@ -131,6 +132,8 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchExplanation, setSearchExplanation] = useState("");
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const exampleQueries = [
     "Show unhappy customers",
@@ -142,6 +145,7 @@ const Dashboard = () => {
   // Fetch reviews from database
   useEffect(() => {
     fetchReviews();
+    loadProducts();
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -164,6 +168,23 @@ const Dashboard = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const loadProducts = async () => {
+    try {
+      setIsLoadingProducts(true);
+      const productsData = await fetchProducts(100);
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast({
+        title: "Error loading products",
+        description: "Failed to fetch products from Shopify.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -429,6 +450,69 @@ const Dashboard = () => {
             </div>
           </Card>
         </div>
+
+        {/* Products Section */}
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Products</h2>
+            <Button 
+              variant="outline"
+              onClick={() => navigate("/shop")}
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              View Shop
+            </Button>
+          </div>
+          {isLoadingProducts ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4" />
+              <p>No products found in your store.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {products.map((product) => {
+                const image = product.node.images?.edges?.[0]?.node;
+                const price = parseFloat(product.node.priceRange.minVariantPrice.amount);
+                
+                return (
+                  <Card 
+                    key={product.node.id} 
+                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/product/${product.node.handle}`)}
+                  >
+                    <div className="aspect-square overflow-hidden bg-secondary/20">
+                      {image ? (
+                        <img
+                          src={image.url}
+                          alt={product.node.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="h-12 w-12 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4">
+                      <h3 className="font-semibold line-clamp-1 mb-2">{product.node.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {product.node.description || 'No description'}
+                      </p>
+                      <p className="text-lg font-bold">
+                        {product.node.priceRange.minVariantPrice.currencyCode} ${price.toFixed(2)}
+                      </p>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </Card>
 
         {/* Recent Voice Reviews */}
         <Card className="p-6 shadow-card">
