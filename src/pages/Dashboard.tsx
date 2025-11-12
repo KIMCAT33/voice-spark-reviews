@@ -173,7 +173,13 @@ const Dashboard = () => {
     try {
       setIsLoadingProducts(true);
       const productsData = await fetchProducts(100);
-      setProducts(productsData);
+      
+      // Remove duplicates by keeping only the first occurrence of each unique handle
+      const uniqueProducts = productsData.filter((product, index, self) =>
+        index === self.findIndex((p) => p.node.handle === product.node.handle)
+      );
+      
+      setProducts(uniqueProducts);
     } catch (error) {
       console.error('Error loading products:', error);
       toast({
