@@ -55,9 +55,12 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
         duration: 5000,
       });
       
-      // Pass product info as query parameter
-      const productName = items[0]?.product.node.title || 'VOIX Beauty Product';
-      navigate(`/gemini-live?product=${encodeURIComponent(productName)}`);
+      // Pass all products as query parameter
+      const products = items.map(item => ({
+        name: item.product.node.title,
+        price: item.price.amount,
+      }));
+      navigate(`/gemini-live?products=${encodeURIComponent(JSON.stringify(products))}`);
     }, 2000);
   };
 

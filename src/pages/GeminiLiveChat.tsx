@@ -44,8 +44,11 @@ function GeminiLiveChat() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   
-  // Get product name from URL parameter
-  const productName = searchParams.get('product') || 'VOIX Beauty Product';
+  // Get products from URL parameter
+  const productsParam = searchParams.get('products');
+  const products = productsParam 
+    ? JSON.parse(decodeURIComponent(productsParam))
+    : [{ name: 'VOIX Beauty Product', price: '0' }];
 
   if (!trimmedAPIKey) {
     return (
@@ -115,7 +118,7 @@ function GeminiLiveChat() {
           <div className="flex-1 overflow-hidden">
             <div className="h-full flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500">
               <div className="w-full max-w-5xl">
-                <ReviewAgent productName={productName} />
+                <ReviewAgent products={products} />
               </div>
             </div>
           </div>

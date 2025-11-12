@@ -99,13 +99,17 @@ const saveReviewDeclaration: FunctionDeclaration = {
   },
 };
 
-function ReviewAgentComponent({ productName = "VOIX Beauty Product" }: { productName?: string }) {
+function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price: "0" }] }: { products?: Array<{name: string, price: string}> }) {
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
   const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
   const messageAlreadySent = useRef(false);
+
+  // Format product list for the prompt
+  const productList = products.map(p => p.name).join(", ");
+  const productCount = products.length;
 
   // Initial setup: Beauty product review collection agent persona
   useEffect(() => {
@@ -122,9 +126,10 @@ function ReviewAgentComponent({ productName = "VOIX Beauty Product" }: { product
 
 **Customer & Purchase Context:**
 - Customer Name: Valued Customer
-- Product Purchased: ${productName}
+- Products Purchased: ${productList}
+- Total Items: ${productCount}
 
-You already know the product they purchased. Start the conversation immediately by acknowledging the specific product and asking your first question.
+You already know the product${productCount > 1 ? 's' : ''} they purchased. Start the conversation immediately by acknowledging the specific product${productCount > 1 ? 's' : ''} and asking your first question.
 
 **Your Core Philosophy:**
 People often struggle to express their thoughts about products. Your role is to guide them gently, validate their feelings, and help them discover insights they didn't know they had.
@@ -132,7 +137,7 @@ People often struggle to express their thoughts about products. Your role is to 
 **Interview Techniques:**
 
 1. **Opening (Question 1):**
-   - Start with: "Hi! Thank you so much for taking time to share your experience with ${productName}. This really helps us create better products. First, roughly how long have you been using it?"
+   - Start with: "Hi! Thank you so much for taking time to share your experience with ${productList}. This really helps us create better products. ${productCount > 1 ? "Let's go through each product. Starting with " + products[0].name + ", roughly" : "First, roughly"} how long have you been using it?"
    - Listen to their answer about usage duration.
 
 2. **Overall Experience (Question 2):**
@@ -184,10 +189,11 @@ BRIEF answers that need follow-up: "It's good", "I like it", "Nothing really"
 **Data Collection:**
 
 After each substantial answer, call save_review_data:
-- Always set productName to "${productName}"
+- Always set productName to the product being discussed (from: ${productList})
 - Extract SPECIFIC positive points (not just "good color" but "beautiful color that matches my skin tone")
 - Note negative points with context ("slightly drying after 6+ hours of wear")
 - Capture emotional language for sentiment analysis
+${productCount > 1 ? "- Ask about each product separately, going through the 5 questions for each one\n- After completing questions for one product, move to the next product naturally" : ""}
 - Question 1: Basic info (usage duration) - set productName
 - Question 2: Rating (aim for specific rating 1-5)
 - Question 3: Deep dive on positives (aim for 3-5 specific points)
@@ -196,8 +202,8 @@ After each substantial answer, call save_review_data:
 
 **Closing:**
 
-After Question 5, warmly conclude:
-"Thank you so much for sharing such thoughtful feedback about ${productName}! Your insights about [mention 1-2 specific things they said] are incredibly valuable. We'll make sure our product team sees this. As a thank you, you'll receive a special discount code via email shortly. Have a wonderful day!"`,
+After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
+"Thank you so much for sharing such thoughtful feedback about ${productList}! Your insights about [mention 1-2 specific things they said] are incredibly valuable. We'll make sure our product team sees this. As a thank you, you'll receive a special discount code via email shortly. Have a wonderful day!"`,
           },
         ],
       },
@@ -205,7 +211,7 @@ After Question 5, warmly conclude:
         { functionDeclarations: [saveReviewDeclaration] },
       ],
     });
-  }, [setConfig, setModel, productName]);
+  }, [setConfig, setModel, products]);
 
   // Tool Call handler: Collect review data
   useEffect(() => {
