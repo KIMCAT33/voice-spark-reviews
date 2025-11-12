@@ -25,7 +25,7 @@ export default function Shop() {
       setProducts(data);
     } catch (error) {
       console.error('Failed to load products:', error);
-      toast.error('제품을 불러오는데 실패했습니다.');
+      toast.error('Failed to load products.');
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ export default function Shop() {
   const handleAddToCart = (product: ShopifyProduct) => {
     const variant = product.node.variants.edges[0]?.node;
     if (!variant) {
-      toast.error('이 제품은 현재 구매할 수 없습니다.');
+      toast.error('This product is currently unavailable.');
       return;
     }
 
@@ -48,7 +48,7 @@ export default function Shop() {
     };
     
     addItem(cartItem);
-    toast.success('장바구니에 추가되었습니다!', {
+    toast.success('Added to cart!', {
       position: 'top-center'
     });
   };
@@ -58,7 +58,7 @@ export default function Shop() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">제품을 불러오는 중...</p>
+          <p className="text-muted-foreground">Loading products...</p>
         </div>
       </div>
     );
@@ -70,7 +70,7 @@ export default function Shop() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate('/')}>
-              ← 홈으로
+              ← Back to Home
             </Button>
             <h1 className="text-2xl font-bold">VOIX Shop</h1>
           </div>

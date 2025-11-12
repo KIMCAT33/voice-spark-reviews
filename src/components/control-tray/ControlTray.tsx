@@ -196,7 +196,7 @@ function ControlTray({
               muted: muted 
             })}
             onClick={() => setMuted(!muted)}
-            title={muted ? "마이크 음소거 해제" : "마이크 음소거"}
+            title={muted ? "Unmute microphone" : "Mute microphone"}
           >
             {!muted ? (
               <Mic size={20} />
