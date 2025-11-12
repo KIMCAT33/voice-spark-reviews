@@ -464,13 +464,22 @@ const Dashboard = () => {
         <Card className="p-6 shadow-card">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Products</h2>
-            <Button 
-              variant="outline"
-              onClick={() => navigate("/shop")}
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              View Shop
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/generate-images")}
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Generate Images
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/shop")}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                View Shop
+              </Button>
+            </div>
           </div>
           {isLoadingProducts ? (
             <div className="flex items-center justify-center py-12">

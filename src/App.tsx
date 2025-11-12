@@ -12,6 +12,7 @@ import Landing from "./pages/Landing";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import ProductInsights from "./pages/ProductInsights";
+import GenerateProductImages from "./pages/GenerateProductImages";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:handle" element={<ProductDetail />} />
           <Route path="/insights/:handle" element={<ProductInsights />} />
+          <Route path="/generate-images" element={<GenerateProductImages />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
