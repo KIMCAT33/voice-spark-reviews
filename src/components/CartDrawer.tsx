@@ -9,39 +9,35 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
-import { toast } from "sonner";
+import { CheckoutDialog } from "./CheckoutDialog";
 
 export const CartDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false);
   const { 
     items, 
-    isLoading, 
     updateQuantity, 
-    removeItem, 
-    createCheckout 
+    removeItem
   } = useCartStore();
   
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
 
-  const handleCheckout = async () => {
-    try {
-      await createCheckout();
-      const checkoutUrl = useCartStore.getState().checkoutUrl;
-      if (checkoutUrl) {
-        window.open(checkoutUrl, '_blank');
-        setIsOpen(false);
-      }
-    } catch (error) {
-      console.error('Checkout failed:', error);
-      toast.error('결제 페이지를 생성하는데 실패했습니다.');
-    }
+  const handleCheckout = () => {
+    setIsOpen(false);
+    setCheckoutDialogOpen(true);
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <>
+      <CheckoutDialog 
+        open={checkoutDialogOpen} 
+        onOpenChange={setCheckoutDialogOpen}
+      />
+      
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
@@ -142,19 +138,10 @@ export const CartDrawer = () => {
                   onClick={handleCheckout}
                   className="w-full" 
                   size="lg"
-                  disabled={items.length === 0 || isLoading}
+                  disabled={items.length === 0}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      결제 페이지 생성 중...
-                    </>
-                  ) : (
-                    <>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Shopify 결제하기
-                    </>
-                  )}
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  결제하기
                 </Button>
               </div>
             </>
@@ -162,5 +149,6 @@ export const CartDrawer = () => {
         </div>
       </SheetContent>
     </Sheet>
+    </>
   );
 };
