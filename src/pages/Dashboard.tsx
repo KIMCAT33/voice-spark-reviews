@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Package, DollarSign, Users, ShoppingCart, Search, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
@@ -125,6 +125,7 @@ const initialMockReviews = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -134,6 +135,8 @@ const Dashboard = () => {
   const [searchExplanation, setSearchExplanation] = useState("");
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
 
   const exampleQueries = [
     "Show unhappy customers",
@@ -141,6 +144,35 @@ const Dashboard = () => {
     "5-star reviews",
     "What products have drying issues?",
   ];
+
+  // Check for highlight review ID from URL
+  useEffect(() => {
+    const highlightId = searchParams.get('highlightReview');
+    if (highlightId) {
+      setHighlightReviewId(highlightId);
+      // Remove query parameter after reading
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('highlightReview');
+      navigate(`/dashboard${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ''}`, { replace: true });
+    }
+  }, [searchParams, navigate]);
+
+  // Scroll to highlighted review when reviews are loaded
+  useEffect(() => {
+    if (highlightReviewId && reviews.length > 0 && !isLoading) {
+      setTimeout(() => {
+        const element = document.getElementById(`review-${highlightReviewId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add highlight animation
+          element.classList.add('animate-pulse', 'ring-4', 'ring-primary', 'rounded-lg');
+          setTimeout(() => {
+            element.classList.remove('animate-pulse', 'ring-4', 'ring-primary');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [highlightReviewId, reviews, isLoading]);
 
   // Fetch reviews from database
   useEffect(() => {
@@ -548,8 +580,14 @@ const Dashboard = () => {
               {reviews.map((review) => (
               <div
                 key={review.id}
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                id={`review-${review.id}`}
+                className={`border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                  highlightReviewId === review.id 
+                    ? 'bg-primary/10 border-primary border-2 shadow-lg' 
+                    : ''
+                }`}
                 onClick={() => setSelectedReview(selectedReview === review.id ? null : review.id)}
+                ref={highlightReviewId === review.id ? highlightRef : null}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">

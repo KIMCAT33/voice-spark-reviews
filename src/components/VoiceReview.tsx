@@ -210,9 +210,11 @@ Guidelines:
               const { reviewSchema } = await import("@/lib/validation");
               const validatedData = reviewSchema.parse(reviewDataToSave);
 
-              const { error } = await supabase
+              const { data, error } = await supabase
                 .from("reviews")
-                .insert(validatedData);
+                .insert(validatedData)
+                .select()
+                .single();
 
               if (error) {
                 console.error("Error saving review:", error);
@@ -222,14 +224,20 @@ Guidelines:
                   variant: "destructive",
                 });
               } else {
-                console.log("Review saved successfully");
+                console.log("Review saved successfully:", data);
                 toast({
                   title: "Review saved!",
                   description: "Your feedback has been recorded.",
                 });
+                
+                // Store review ID for navigation
+                setReviewData({ ...reviewDataToSave, id: data.id });
+                
+                // Navigate to dashboard with highlight after a short delay
+                setTimeout(() => {
+                  navigate(`/dashboard?highlightReview=${data.id}`);
+                }, 2000);
               }
-
-              setReviewData(reviewDataToSave);
             } catch (error: any) {
               console.error("Error saving review:", error);
               
@@ -319,7 +327,14 @@ Guidelines:
         setMessages([]);
         setSessionStarted(false);
       }} 
-      onBack={() => navigate("/dashboard")} 
+      onBack={() => {
+        const reviewId = (reviewData as any).id;
+        if (reviewId) {
+          navigate(`/dashboard?highlightReview=${reviewId}`);
+        } else {
+          navigate("/dashboard");
+        }
+      }} 
     />;
   }
 

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, TrendingUp, Package, ArrowRight } from "lucide-react";
+import { CheckCircle, Star, TrendingUp, Package, ArrowRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ReviewCompletionProps {
@@ -12,9 +12,11 @@ interface ReviewCompletionProps {
     negativePoints?: string[];
     sentiment?: "positive" | "neutral" | "negative";
   };
+  isSaving?: boolean;
+  savedReviewId?: string | null;
 }
 
-export const ReviewCompletion = ({ reviewData }: ReviewCompletionProps) => {
+export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId = null }: ReviewCompletionProps) => {
   const navigate = useNavigate();
 
   const productInsights = [
@@ -45,7 +47,16 @@ export const ReviewCompletion = ({ reviewData }: ReviewCompletionProps) => {
         </div>
         <h2 className="text-3xl font-bold mb-2">Thank You for Your Review!</h2>
         <p className="text-muted-foreground text-lg">
-          Your feedback has been recorded and will help us serve you better.
+          {isSaving ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Saving your feedback...
+            </span>
+          ) : savedReviewId ? (
+            "Your feedback has been recorded and will help us serve you better. Redirecting to dashboard..."
+          ) : (
+            "Your feedback has been recorded and will help us serve you better."
+          )}
         </p>
       </Card>
 

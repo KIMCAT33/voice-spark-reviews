@@ -22,6 +22,8 @@ import { LiveClientOptions } from "../types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { StepProgressBar } from "@/components/StepProgressBar";
+import { Card } from "@/components/ui/card";
 
 // Vite only exposes environment variables prefixed with VITE_
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
@@ -44,10 +46,16 @@ function GeminiLiveChat() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   
-  // Get products from URL parameter
+  // Get products and customer info from URL parameters
   const productsParam = searchParams.get('products');
+  const productParam = searchParams.get('product'); // Backward compatibility
+  const customerName = searchParams.get('customer') || 'Customer';
+  
+  // Parse products from URL or use single product (backward compatibility)
   const products = productsParam 
     ? JSON.parse(decodeURIComponent(productsParam))
+    : productParam
+    ? [{ name: productParam, price: '0' }]
     : [{ name: 'VOIX Beauty Product', price: '0' }];
 
   if (!trimmedAPIKey) {
@@ -79,17 +87,17 @@ function GeminiLiveChat() {
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
           <div className="p-3 xs:p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
-            <div className="container mx-auto">
+            <div className="container mx-auto space-y-3">
               {/* Mobile Layout */}
               <div className="flex md:hidden items-center justify-between gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/purchase")}
                   className="hover:bg-primary/10 transition-colors flex-shrink-0 px-2"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span className="text-xs xs:text-sm">Back to Purchase</span>
+                  <span className="text-xs xs:text-sm">Back</span>
                 </Button>
                 <h1 className="text-xs xs:text-sm font-bold text-primary text-right leading-tight flex-1 min-w-0 break-words">
                   Customer Service Review Call
@@ -100,7 +108,7 @@ function GeminiLiveChat() {
               <div className="hidden md:flex items-center justify-between">
                 <Button
                   variant="ghost"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/purchase")}
                   className="hover:bg-primary/10 transition-colors"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -111,6 +119,16 @@ function GeminiLiveChat() {
                 </h1>
                 <div className="w-32"></div>
               </div>
+
+              {/* Progress Bar */}
+              <Card className="p-4 bg-background/80 backdrop-blur-sm">
+                <StepProgressBar 
+                  current={2} 
+                  total={3} 
+                  label="Step 2/3: Sharing Your Feedback"
+                  steps={["Purchase Complete", "Sharing Your Feedback", "View Dashboard"]}
+                />
+              </Card>
             </div>
           </div>
 

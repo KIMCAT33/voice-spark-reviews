@@ -24,6 +24,9 @@ import {
 import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
 import { Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 // Review data structure
 export interface ReviewData {
@@ -100,9 +103,13 @@ const saveReviewDeclaration: FunctionDeclaration = {
 };
 
 function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price: "0" }] }: { products?: Array<{name: string, price: string}> }) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedReviewId, setSavedReviewId] = useState<string | null>(null);
   const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
   const messageAlreadySent = useRef(false);
@@ -110,6 +117,87 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
   // Format product list for the prompt
   const productList = products.map(p => p.name).join(", ");
   const productCount = products.length;
+
+  // Save review to Supabase database
+  const saveReviewToDatabase = async (finalReviewData: ReviewData) => {
+    try {
+      setIsSaving(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // For demo purposes, allow saving without auth
+        console.warn("User not authenticated, saving without user_id");
+      }
+
+      // Map ReviewData to database schema
+      const reviewDataToSave = {
+        product_name: finalReviewData.productName || products[0]?.name || "VOIX Beauty Product",
+        customer_name: null, // Can be added from URL params if needed
+        customer_emotion: finalReviewData.sentiment === "positive" 
+          ? "happy" 
+          : finalReviewData.sentiment === "negative" 
+          ? "frustrated" 
+          : "neutral",
+        recommendation_score: finalReviewData.overallRating || 3,
+        review_summary: finalReviewData.additionalComments || 
+          `Rating: ${finalReviewData.overallRating}/5. ${finalReviewData.positivePoints?.join(", ") || ""}`,
+        key_positive_points: finalReviewData.positivePoints || [],
+        key_negative_points: finalReviewData.negativePoints || [],
+        improvement_suggestions: finalReviewData.improvementSuggestions || [],
+        user_id: user?.id || null,
+      };
+
+      // Validate with zod schema
+      const { reviewSchema } = await import("@/lib/validation");
+      const validatedData = reviewSchema.parse(reviewDataToSave);
+
+      const { data, error } = await supabase
+        .from("reviews")
+        .insert(validatedData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error saving review:", error);
+        toast({
+          title: "Error saving review",
+          description: "Your review couldn't be saved. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Review saved successfully:", data);
+      setSavedReviewId(data.id);
+      
+      toast({
+        title: "Review saved!",
+        description: "Your feedback has been recorded.",
+      });
+
+      // Navigate to dashboard with highlight after a short delay
+      setTimeout(() => {
+        navigate(`/dashboard?highlightReview=${data.id}`);
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error("Error saving review:", error);
+      
+      const errorMessage = error.name === "ZodError" 
+        ? "The review data didn't meet our requirements. Please try again with valid information."
+        : error.message || "Failed to save review";
+      
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Initial setup: Beauty product review collection agent persona
   useEffect(() => {
@@ -251,6 +339,15 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
           setTimeout(() => {
             disconnect();
           }, 2000);
+          
+          // Save review to database
+          saveReviewToDatabase({
+            ...reviewData,
+            ...newReviewData,
+            positivePoints: newReviewData.positivePoints || reviewData.positivePoints,
+            negativePoints: newReviewData.negativePoints || reviewData.negativePoints,
+            improvementSuggestions: newReviewData.improvementSuggestions || reviewData.improvementSuggestions,
+          });
         }
 
         // Send Tool Response
@@ -295,9 +392,10 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         // Use a small delay to ensure the session is fully ready
         setTimeout(() => {
           try {
+            const productName = products[0]?.name || 'the product';
             client.send([
               {
-                text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
+                text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
               },
             ]);
             console.log("✅ Initial message sent successfully");
@@ -344,7 +442,11 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   if (isComplete && Object.keys(reviewData).length > 0) {
     return (
       <div className="review-agent-container" ref={reviewContainerRef}>
-        <ReviewCompletion reviewData={reviewData} />
+        <ReviewCompletion 
+          reviewData={reviewData} 
+          isSaving={isSaving}
+          savedReviewId={savedReviewId}
+        />
       </div>
     );
   }
