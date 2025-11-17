@@ -13,7 +13,7 @@
  * See the License for the specific License.
  */
 
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo, useCallback } from "react";
 import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
 import {
   FunctionDeclaration,
@@ -119,7 +119,7 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
   const productCount = products.length;
 
   // Save review to Supabase database
-  const saveReviewToDatabase = async (finalReviewData: ReviewData) => {
+  const saveReviewToDatabase = useCallback(async (finalReviewData: ReviewData) => {
     try {
       setIsSaving(true);
       
@@ -197,7 +197,7 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [products, toast, navigate]);
 
   // Initial setup: Beauty product review collection agent persona
   useEffect(() => {
@@ -323,32 +323,31 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         });
 
         // Accumulate review data instead of replacing
-        setReviewData(prev => ({
-          ...prev,
-          ...newReviewData,
-          positivePoints: newReviewData.positivePoints || prev.positivePoints,
-          negativePoints: newReviewData.negativePoints || prev.negativePoints,
-          improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
-        }));
-        setCurrentQuestion(questionNumber);
-
-        // Check if all questions are complete (5 questions completed)
-        if (questionNumber >= 5) {
-          setIsComplete(true);
-          // Disconnect the call after finishing interview
-          setTimeout(() => {
-            disconnect();
-          }, 2000);
-          
-          // Save review to database
-          saveReviewToDatabase({
-            ...reviewData,
+        setReviewData(prev => {
+          const updatedReviewData = {
+            ...prev,
             ...newReviewData,
-            positivePoints: newReviewData.positivePoints || reviewData.positivePoints,
-            negativePoints: newReviewData.negativePoints || reviewData.negativePoints,
-            improvementSuggestions: newReviewData.improvementSuggestions || reviewData.improvementSuggestions,
-          });
-        }
+            positivePoints: newReviewData.positivePoints || prev.positivePoints,
+            negativePoints: newReviewData.negativePoints || prev.negativePoints,
+            improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
+          };
+
+          // Check if all questions are complete (5 questions completed)
+          if (questionNumber >= 5) {
+            setIsComplete(true);
+            // Disconnect the call after finishing interview
+            setTimeout(() => {
+              disconnect();
+            }, 2000);
+            
+            // Save review to database using the updated review data
+            // Use the updatedReviewData we just computed to avoid stale closure
+            saveReviewToDatabase(updatedReviewData);
+          }
+
+          return updatedReviewData;
+        });
+        setCurrentQuestion(questionNumber);
 
         // Send Tool Response
         setTimeout(
@@ -374,7 +373,7 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
     return () => {
       client.off("toolcall", onToolCall);
     };
-  }, [client, disconnect]);
+  }, [client, disconnect, saveReviewToDatabase]);
 
   // Send initial message when session is ready
   useEffect(() => {

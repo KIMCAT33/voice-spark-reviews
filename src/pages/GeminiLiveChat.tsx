@@ -52,11 +52,17 @@ function GeminiLiveChat() {
   const customerName = searchParams.get('customer') || 'Customer';
   
   // Parse products from URL or use single product (backward compatibility)
-  const products = productsParam 
-    ? JSON.parse(decodeURIComponent(productsParam))
-    : productParam
-    ? [{ name: productParam, price: '0' }]
-    : [{ name: 'VOIX Beauty Product', price: '0' }];
+  let products = [{ name: 'VOIX Beauty Product', price: '0' }];
+  if (productsParam) {
+    try {
+      products = JSON.parse(decodeURIComponent(productsParam));
+    } catch (error) {
+      console.error("Failed to parse products from URL:", error);
+      // Use default products on parse error
+    }
+  } else if (productParam) {
+    products = [{ name: productParam, price: '0' }];
+  }
 
   if (!trimmedAPIKey) {
     return (

@@ -22,14 +22,20 @@ const ProductPurchase = () => {
   const emailFromUrl = searchParams.get('email');
 
   // Parse products from URL or use default
-  const products: Product[] = productsParam 
-    ? JSON.parse(decodeURIComponent(productsParam))
-    : [{ name: "Rouge Velvet Matte Lipstick", price: "0", quantity: 1, image: null }];
+  let products: Product[] = [{ name: "Rouge Velvet Matte Lipstick", price: "0", quantity: 1, image: null }];
+  if (productsParam) {
+    try {
+      products = JSON.parse(decodeURIComponent(productsParam));
+    } catch (error) {
+      console.error("Failed to parse products from URL:", error);
+      // Use default products on parse error
+    }
+  }
 
   // Customer data
   const customerName = customerNameFromUrl || "Sarah Johnson";
   const email = emailFromUrl || "sarah.j@example.com";
-  const orderNumber = "ORD-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+  const orderNumber = "ORD-" + Math.random().toString(36).substring(2, 11).toUpperCase();
 
 
   return (
