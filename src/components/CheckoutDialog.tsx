@@ -34,6 +34,12 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (items.length === 0) {
+      toast.error('Your cart is empty. Please add items before checkout.');
+      onOpenChange(false);
+      return;
+    }
+    
     if (!email || !email.includes('@')) {
       toast.error('Please enter a valid email address.');
       return;
