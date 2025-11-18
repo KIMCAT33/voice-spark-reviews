@@ -187,11 +187,12 @@ Guidelines:
             const args = fc.args;
 
             try {
-              // Get current user
+              // Get current user (for demo purposes, allow saving without auth)
               const { data: { user } } = await supabase.auth.getUser();
               
               if (!user) {
-                throw new Error("User not authenticated");
+                // For demo purposes, allow saving without auth
+                console.warn("User not authenticated, saving without user_id");
               }
 
               const reviewDataToSave = {
@@ -203,7 +204,7 @@ Guidelines:
                 key_positive_points: args.key_positive_points || [],
                 key_negative_points: args.key_negative_points || [],
                 improvement_suggestions: args.improvement_suggestions || [],
-                user_id: user.id,
+                user_id: user?.id || null,
               };
 
               // Validate with zod schema

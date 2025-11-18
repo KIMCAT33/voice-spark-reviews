@@ -32,9 +32,18 @@ const ProductPurchase = () => {
     }
   }
 
-  // Customer data
-  const customerName = customerNameFromUrl || "Sarah Johnson";
-  const email = emailFromUrl || "sarah.j@example.com";
+  // Customer data - Generate guest name if not provided (for demo purposes)
+  const generateGuestName = () => {
+    const guestNames = [
+      'Alex', 'Sam', 'Jordan', 'Casey', 'Riley', 'Taylor', 'Morgan', 'Avery',
+      'Jamie', 'Quinn', 'Dakota', 'Skylar', 'Cameron', 'Blake', 'Reese', 'Sage'
+    ];
+    const randomIndex = Math.floor(Math.random() * guestNames.length);
+    return `Guest ${guestNames[randomIndex]}`;
+  };
+  
+  const customerName = customerNameFromUrl || generateGuestName();
+  const email = emailFromUrl || `${customerName.toLowerCase().replace(/\s+/g, '.')}@demo.com`;
   const orderNumber = "ORD-" + Math.random().toString(36).substring(2, 11).toUpperCase();
 
 

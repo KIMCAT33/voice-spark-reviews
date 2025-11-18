@@ -14,22 +14,47 @@
  * limitations under the License.
  */
 
-import { createContext, FC, ReactNode, useContext } from "react";
+import { createContext, FC, ReactNode, useContext, useMemo } from "react";
 import { useLiveAPI, UseLiveAPIResults } from "../hooks/use-live-api";
+import { useOpenAIRealtime, UseOpenAIRealtimeResults } from "../hooks/use-openai-realtime";
 import { LiveClientOptions } from "../types";
 
-const LiveAPIContext = createContext<UseLiveAPIResults | undefined>(undefined);
+// 통합 인터페이스 타입 (Gemini와 OpenAI 모두 지원)
+type UnifiedLiveAPIResults = UseLiveAPIResults | UseOpenAIRealtimeResults;
+
+const LiveAPIContext = createContext<UnifiedLiveAPIResults | undefined>(undefined);
+
+export type AIModel = "gemini" | "openai";
 
 export type LiveAPIProviderProps = {
   children: ReactNode;
   options: LiveClientOptions;
+  modelType?: AIModel;
+  openAIApiKey?: string;
 };
 
 export const LiveAPIProvider: FC<LiveAPIProviderProps> = ({
   options,
   children,
+  modelType = "gemini",
+  openAIApiKey,
 }) => {
-  const liveAPI = useLiveAPI(options);
+  // 모델 타입에 따라 적절한 Hook 사용
+  const geminiAPI = useLiveAPI(options);
+  const openAIAPI = useOpenAIRealtime(openAIApiKey);
+
+  // 선택한 모델에 따라 적절한 API 반환
+  const liveAPI = useMemo(() => {
+    if (modelType === "openai") {
+      // OpenAI API를 Gemini 스타일로 래핑 (호환성 유지)
+      return {
+        ...openAIAPI,
+        // Gemini 인터페이스와 호환되도록 필요한 경우 변환
+        client: openAIAPI.client as any,
+      } as any;
+    }
+    return geminiAPI;
+  }, [modelType, geminiAPI, openAIAPI]);
 
   return (
     <LiveAPIContext.Provider value={liveAPI}>

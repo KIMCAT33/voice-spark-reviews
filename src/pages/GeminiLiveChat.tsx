@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { LiveAPIProvider } from "../contexts/LiveAPIContext";
 import { ReviewAgent } from "../components/review-agent/ReviewAgent";
 import ControlTray from "../components/control-tray/ControlTray";
@@ -24,31 +24,70 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { StepProgressBar } from "@/components/StepProgressBar";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY as string;
 
 // Check API key existence without logging sensitive information
-if (!API_KEY || typeof API_KEY !== "string" || API_KEY.trim() === "") {
-  console.error("API Key not configured");
+if (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== "string" || GEMINI_API_KEY.trim() === "") {
+  console.error("Gemini API Key not configured");
 }
 
-const trimmedAPIKey = API_KEY?.trim() || "";
+export type AIModel = "gemini" | "openai";
 
-const apiOptions: LiveClientOptions = {
-  apiKey: trimmedAPIKey,
+const trimmedGeminiKey = GEMINI_API_KEY?.trim() || "";
+const trimmedOpenAIKey = OPENAI_API_KEY?.trim() || "";
+
+const geminiApiOptions: LiveClientOptions = {
+  apiKey: trimmedGeminiKey,
 };
 
 function GeminiLiveChat() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  
+  // Get selected model from URL or default to "gemini"
+  const modelParam = searchParams.get('model') as AIModel;
+  const [selectedModel, setSelectedModel] = useState<AIModel>(
+    (modelParam === "gemini" || modelParam === "openai") ? modelParam : "gemini"
+  );
+
+  // Update URL when model changes
+  useEffect(() => {
+    if (selectedModel !== modelParam) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('model', selectedModel);
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [selectedModel, modelParam, searchParams, setSearchParams]);
   
   // Get products and customer info from URL parameters
   const productsParam = searchParams.get('products');
   const productParam = searchParams.get('product'); // Backward compatibility
-  const customerName = searchParams.get('customer') || 'Customer';
+  const customerParam = searchParams.get('customer');
+  
+  // Generate a random guest name if customer name is not provided (for demo purposes)
+  const generateGuestName = () => {
+    const guestNames = [
+      'Alex', 'Sam', 'Jordan', 'Casey', 'Riley', 'Taylor', 'Morgan', 'Avery',
+      'Jamie', 'Quinn', 'Dakota', 'Skylar', 'Cameron', 'Blake', 'Reese', 'Sage'
+    ];
+    const randomIndex = Math.floor(Math.random() * guestNames.length);
+    return `Guest ${guestNames[randomIndex]}`;
+  };
+  
+  const customerName = customerParam || generateGuestName();
   
   // Parse products from URL or use single product (backward compatibility)
   let products = [{ name: 'VOIX Beauty Product', price: '0' }];
@@ -63,18 +102,28 @@ function GeminiLiveChat() {
     products = [{ name: productParam, price: '0' }];
   }
 
-  if (!trimmedAPIKey) {
+  // Check if API key is available for selected model
+  const hasRequiredAPIKey = selectedModel === "gemini" 
+    ? !!trimmedGeminiKey 
+    : !!trimmedOpenAIKey;
+
+  if (!hasRequiredAPIKey) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-destructive">API Key Missing</h1>
           <p className="text-muted-foreground">
-            Please add your Gemini API key to the .env file
+            Please add your {selectedModel === "gemini" ? "Gemini" : "OpenAI"} API key to the .env file
           </p>
-          <Button onClick={() => navigate("/")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => setSelectedModel(selectedModel === "gemini" ? "openai" : "gemini")}>
+              Switch to {selectedModel === "gemini" ? "OpenAI" : "Gemini"}
+            </Button>
+            <Button onClick={() => navigate("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -88,7 +137,11 @@ function GeminiLiveChat() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <LiveAPIProvider options={apiOptions}>
+      <LiveAPIProvider 
+        options={geminiApiOptions}
+        modelType={selectedModel}
+        openAIApiKey={trimmedOpenAIKey}
+      >
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
           <div className="p-3 xs:p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
@@ -125,6 +178,29 @@ function GeminiLiveChat() {
                 <div className="w-32"></div>
               </div>
 
+              {/* Model Selection */}
+              <div className="flex items-center gap-3">
+                <Label htmlFor="model-select" className="text-sm font-medium whitespace-nowrap">
+                  AI Model:
+                </Label>
+                <Select
+                  value={selectedModel}
+                  onValueChange={(value) => setSelectedModel(value as AIModel)}
+                >
+                  <SelectTrigger id="model-select" className="w-[180px]">
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gemini" disabled={!trimmedGeminiKey}>
+                      {trimmedGeminiKey ? "🤖 Gemini" : "🤖 Gemini (API key missing)"}
+                    </SelectItem>
+                    <SelectItem value="openai" disabled={!trimmedOpenAIKey}>
+                      {trimmedOpenAIKey ? "⚡ OpenAI" : "⚡ OpenAI (API key missing)"}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Progress Bar */}
               <Card className="p-4 bg-background/80 backdrop-blur-sm">
                 <StepProgressBar 
@@ -141,7 +217,7 @@ function GeminiLiveChat() {
           <div className="flex-1 overflow-hidden">
             <div className="h-full flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500">
               <div className="w-full max-w-5xl">
-                <ReviewAgent products={products} />
+                <ReviewAgent products={products} customerName={customerName} />
               </div>
             </div>
           </div>

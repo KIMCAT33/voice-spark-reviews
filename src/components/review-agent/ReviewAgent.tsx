@@ -102,7 +102,13 @@ const saveReviewDeclaration: FunctionDeclaration = {
   },
 };
 
-function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price: "0" }] }: { products?: Array<{name: string, price: string}> }) {
+function ReviewAgentComponent({ 
+  products = [{ name: "VOIX Beauty Product", price: "0" }],
+  customerName
+}: { 
+  products?: Array<{name: string, price: string}>;
+  customerName?: string;
+}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [reviewData, setReviewData] = useState<ReviewData>({});
@@ -132,9 +138,19 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
       }
 
       // Map ReviewData to database schema
+      // Generate a guest name if customer name is not provided (for demo purposes)
+      const finalCustomerName = customerName || (() => {
+        const guestNames = [
+          'Alex', 'Sam', 'Jordan', 'Casey', 'Riley', 'Taylor', 'Morgan', 'Avery',
+          'Jamie', 'Quinn', 'Dakota', 'Skylar', 'Cameron', 'Blake', 'Reese', 'Sage'
+        ];
+        const randomIndex = Math.floor(Math.random() * guestNames.length);
+        return `Guest ${guestNames[randomIndex]}`;
+      })();
+      
       const reviewDataToSave = {
         product_name: finalReviewData.productName || products[0]?.name || "VOIX Beauty Product",
-        customer_name: null, // Can be added from URL params if needed
+        customer_name: finalCustomerName,
         customer_emotion: finalReviewData.sentiment === "positive" 
           ? "happy" 
           : finalReviewData.sentiment === "negative" 
@@ -197,7 +213,7 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
     } finally {
       setIsSaving(false);
     }
-  }, [products, toast, navigate]);
+  }, [products, toast, navigate, customerName]);
 
   // Initial setup: Beauty product review collection agent persona
   useEffect(() => {
@@ -217,7 +233,9 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
 - Products Purchased: ${productList}
 - Total Items: ${productCount}
 
-You already know the product${productCount > 1 ? 's' : ''} they purchased. Start the conversation immediately by acknowledging the specific product${productCount > 1 ? 's' : ''} and asking your first question.
+**CRITICAL: You MUST start the conversation IMMEDIATELY without waiting for user input. Begin speaking right away.**
+
+You already know the product${productCount > 1 ? 's' : ''} they purchased. Start the conversation immediately by acknowledging the specific product${productCount > 1 ? 's' : ''} and asking your first question. DO NOT wait for the user to speak first - you initiate the conversation.
 
 **Your Core Philosophy:**
 People often struggle to express their thoughts about products. Your role is to guide them gently, validate their feelings, and help them discover insights they didn't know they had.
