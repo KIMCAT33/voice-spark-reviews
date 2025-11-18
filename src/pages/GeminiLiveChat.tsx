@@ -28,8 +28,7 @@ import { Card } from "@/components/ui/card";
 // Vite only exposes environment variables prefixed with VITE_
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 
-console.log("🔑 API Key check:", API_KEY ? `Loaded (${API_KEY.substring(0, 10)}...)` : "NOT FOUND");
-
+// Check API key existence without logging sensitive information
 if (!API_KEY || typeof API_KEY !== "string" || API_KEY.trim() === "") {
   console.error("API Key not configured");
 }
