@@ -8,12 +8,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // .env 파일에서 환경 변수를 명시적으로 로드
-  // loadEnv는 .env 파일과 process.env에서 환경 변수를 읽어옵니다
-  // .env 파일이 Git에 포함되어 있으므로 빌드 시 자동으로 로드됨
+  // Lovable Secrets를 환경 변수로 로드
+  // loadEnv는 로컬 .env 파일(있다면)과 process.env에서 환경 변수를 읽음
+  // Lovable 빌드 환경에서는 Secrets가 자동으로 process.env에 주입됨
   const env = loadEnv(mode, process.cwd(), '');
   
-  // 러버블 빌드 환경에서 환경 변수 디버깅 (빌드 타임에만 출력)
+  // 빌드 환경에서 Lovable Secrets 디버깅 (빌드 타임에만 출력)
   if (mode === 'production') {
     const hasGeminiKey = !!(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY);
     const hasOpenAIKey = !!(env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY);
@@ -43,11 +43,11 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
       sourcemap: true,
     },
-    // 러버블 Secrets를 Vite 환경 변수로 명시적으로 매핑
-    // 러버블이 process.env로 주입하는 경우를 대비하여 명시적으로 처리
+    // Lovable Secrets를 Vite 환경 변수로 명시적으로 매핑
+    // Lovable이 빌드 시 process.env로 Secrets를 주입함
     define: {
-      // import.meta.env.VITE_GEMINI_API_KEY는 loadEnv에서 자동으로 처리되지만,
-      // 러버블이 process.env로만 주입하는 경우를 대비하여 명시적으로 매핑
+      // import.meta.env.VITE_GEMINI_API_KEY를 빌드 타임에 주입
+      // 로컬 .env 파일 또는 Lovable Secrets(process.env)에서 읽음
       'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
         env.VITE_GEMINI_API_KEY || 
         env.GEMINI_API_KEY || 

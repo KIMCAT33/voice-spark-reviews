@@ -34,10 +34,10 @@ import {
 import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
-// .env 파일이 Git에 포함되어 있으므로 빌드 타임에 자동으로 로드됨
-// Vite는 빌드 시 .env 파일을 자동으로 읽어 import.meta.env에 주입함
+// Lovable Secrets가 빌드 시 자동으로 process.env에 주입됨
+// vite.config.ts에서 이를 import.meta.env로 매핑함
 
-// .env 파일에서 환경 변수 읽기 (빈 문자열 체크 포함)
+// Lovable Secrets에서 환경 변수 읽기 (빈 문자열 체크 포함)
 const GEMINI_API_KEY = 
   (import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim()) || 
   (import.meta.env.GEMINI_API_KEY && import.meta.env.GEMINI_API_KEY.trim()) ||
@@ -48,7 +48,7 @@ const OPENAI_API_KEY =
   (import.meta.env.OPENAI_API_KEY && import.meta.env.OPENAI_API_KEY.trim()) ||
   null;
 
-// 프로덕션 및 개발 환경에서 디버깅 (러버블에서 환경 변수가 제대로 주입되는지 확인)
+// 프로덕션 및 개발 환경에서 디버깅 (Lovable Secrets가 제대로 주입되는지 확인)
 if (typeof window !== 'undefined') {
   const hasGemini = !!GEMINI_API_KEY;
   const hasOpenAI = !!OPENAI_API_KEY;
@@ -76,7 +76,7 @@ if (typeof window !== 'undefined') {
       mode: import.meta.env.MODE,
       prod: import.meta.env.PROD,
       dev: import.meta.env.DEV,
-      // 러버블 빌드 환경 확인을 위한 추가 정보
+      // Lovable 빌드 환경 확인을 위한 추가 정보
       baseUrl: import.meta.env.BASE_URL,
       viteVersion: import.meta.env.VITE_VERSION,
       // 환경 변수 값 상태 확인 (실제 값은 노출하지 않음)
@@ -88,10 +88,10 @@ if (typeof window !== 'undefined') {
       openAIKeyIsEmpty: openAIKeyValue === '',
     });
     
-    // 러버블 Secrets가 제대로 주입되지 않을 경우를 위한 안내
+    // Lovable Secrets가 제대로 주입되지 않을 경우를 위한 안내
     if (import.meta.env.PROD) {
-      console.error('❌ 러버블에서 환경 변수가 주입되지 않았습니다.', {
-        suggestion: '러버블 프로젝트 설정 → Secrets에서 VITE_GEMINI_API_KEY와 VITE_OPENAI_API_KEY를 확인하세요.',
+      console.error('❌ Lovable Secrets가 주입되지 않았습니다.', {
+        suggestion: 'Lovable 프로젝트 설정 → Secrets에서 VITE_GEMINI_API_KEY와 VITE_OPENAI_API_KEY를 확인하세요.',
         note: '빌드 타임에 주입되어야 하므로, Secrets 변경 후 재배포가 필요합니다.',
       });
     }
@@ -115,14 +115,14 @@ function GeminiLiveChat() {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [runtimeApiKeys, setRuntimeApiKeys] = useState<{ gemini?: string; openai?: string } | null>(null);
   
-  // 러버블 Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에 확인
-  // 러버블이 window 객체에 환경 변수를 주입하는지 확인
+  // Lovable Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에 확인
+  // Lovable이 window 객체에 환경 변수를 주입하는지 확인 (fallback)
   useEffect(() => {
-    // 러버블이 window.__LOVABLE_ENV__ 같은 객체로 환경 변수를 주입할 수 있음
+    // Lovable이 window.__LOVABLE_ENV__ 같은 객체로 환경 변수를 주입할 수 있음
     const lovableEnv = (window as any).__LOVABLE_ENV__ || (window as any).__ENV__ || {};
     
     if (!GEMINI_API_KEY || !OPENAI_API_KEY) {
-      // 러버블 런타임 환경 변수 확인
+      // Lovable 런타임 환경 변수 확인
       const runtimeGemini = (lovableEnv.VITE_GEMINI_API_KEY && lovableEnv.VITE_GEMINI_API_KEY.trim()) || 
                             (lovableEnv.GEMINI_API_KEY && lovableEnv.GEMINI_API_KEY.trim());
       const runtimeOpenAI = (lovableEnv.VITE_OPENAI_API_KEY && lovableEnv.VITE_OPENAI_API_KEY.trim()) || 
@@ -133,7 +133,7 @@ function GeminiLiveChat() {
           gemini: runtimeGemini || undefined,
           openai: runtimeOpenAI || undefined,
         });
-        console.log('✅ 러버블 런타임 환경 변수에서 API 키를 찾았습니다.');
+        console.log('✅ Lovable 런타임 환경 변수에서 API 키를 찾았습니다.');
       }
     }
   }, []);
@@ -183,7 +183,7 @@ function GeminiLiveChat() {
     products = [{ name: productParam, price: '0' }];
   }
 
-  // 런타임 API 키가 있으면 사용, 없으면 빌드 타임 환경 변수 사용
+  // 런타임 API 키가 있으면 사용, 없으면 Lovable Secrets에서 주입된 환경 변수 사용
   const finalGeminiKey = runtimeApiKeys?.gemini || trimmedGeminiKey;
   const finalOpenAIKey = runtimeApiKeys?.openai || trimmedOpenAIKey;
   
@@ -235,10 +235,10 @@ function GeminiLiveChat() {
       <LiveAPIProvider 
         options={{
           ...geminiApiOptions,
-          apiKey: finalGeminiKey, // 런타임 API 키 우선 사용
+          apiKey: finalGeminiKey, // Lovable Secrets에서 주입된 API 키 사용
         }}
         modelType={selectedModel}
-        openAIApiKey={finalOpenAIKey} // 런타임 API 키 우선 사용
+        openAIApiKey={finalOpenAIKey} // Lovable Secrets에서 주입된 API 키 사용
       >
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
