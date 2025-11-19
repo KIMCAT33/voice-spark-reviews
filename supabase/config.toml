@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.gemini-proxy]
 verify_jwt = true
+
+[functions.get-gemini-key]
+verify_jwt = true
