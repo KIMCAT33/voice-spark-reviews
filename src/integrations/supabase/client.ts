@@ -2,21 +2,25 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Get environment variables with fallbacks for Lovable
-// 러버블에서 환경 변수가 설정되지 않았을 때 기본값 사용
+// Hardcoded values for Lovable deployment (since env vars may not be available at build time)
+// 러버블에서 환경 변수가 빌드 타임에 주입되지 않을 수 있으므로 기본값을 직접 사용
+const DEFAULT_SUPABASE_URL = 'https://thcjqiazqyrtljcmktii.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoY2pxaWF6cXlydGxqY21rdGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjM3OTksImV4cCI6MjA3ODIzOTc5OX0.g6FGep12FNnQT_J02w82JPQC4hnoAq3yrk8_l8N5oVQ';
+
+// Get environment variables with fallbacks
 const SUPABASE_URL = 
   import.meta.env.VITE_SUPABASE_URL || 
   import.meta.env.SUPABASE_URL ||
-  'https://thcjqiazqyrtljcmktii.supabase.co';
+  DEFAULT_SUPABASE_URL;
 
 const SUPABASE_PUBLISHABLE_KEY = 
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
   import.meta.env.SUPABASE_PUBLISHABLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoY2pxaWF6cXlydGxqY21rdGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjM3OTksImV4cCI6MjA3ODIzOTc5OX0.g6FGep12FNnQT_J02w82JPQC4hnoAq3yrk8_l8N5oVQ';
+  DEFAULT_SUPABASE_KEY;
 
-// Ensure values are strings (not undefined)
-const finalUrl = String(SUPABASE_URL || 'https://thcjqiazqyrtljcmktii.supabase.co');
-const finalKey = String(SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoY2pxaWF6cXlydGxqY21rdGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjM3OTksImV4cCI6MjA3ODIzOTc5OX0.g6FGep12FNnQT_J02w82JPQC4hnoAq3yrk8_l8N5oVQ');
+// Always use string values (never undefined)
+const finalUrl: string = SUPABASE_URL ? String(SUPABASE_URL) : DEFAULT_SUPABASE_URL;
+const finalKey: string = SUPABASE_PUBLISHABLE_KEY ? String(SUPABASE_PUBLISHABLE_KEY) : DEFAULT_SUPABASE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
