@@ -8,9 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // 러버블 빌드 환경에서 환경 변수를 명시적으로 로드
+  // .env 파일에서 환경 변수를 명시적으로 로드
   // loadEnv는 .env 파일과 process.env에서 환경 변수를 읽어옵니다
-  // 러버블 Secrets가 process.env로 주입되면 여기서 읽을 수 있습니다
+  // .env 파일이 Git에 포함되어 있으므로 빌드 시 자동으로 로드됨
   const env = loadEnv(mode, process.cwd(), '');
   
   // 러버블 빌드 환경에서 환경 변수 디버깅 (빌드 타임에만 출력)

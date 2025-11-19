@@ -34,11 +34,10 @@ import {
 import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
-// 러버블에서는 Secrets를 프로젝트 설정에서 추가해야 합니다
-// 러버블 Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에도 확인
+// .env 파일이 Git에 포함되어 있으므로 빌드 타임에 자동으로 로드됨
+// Vite는 빌드 시 .env 파일을 자동으로 읽어 import.meta.env에 주입함
 
-// 러버블 빌드 환경에서 사용 가능한 모든 환경 변수 소스 확인
-// 빈 문자열 체크도 포함 (러버블 Secrets가 빈 값으로 주입될 수 있음)
+// .env 파일에서 환경 변수 읽기 (빈 문자열 체크 포함)
 const GEMINI_API_KEY = 
   (import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim()) || 
   (import.meta.env.GEMINI_API_KEY && import.meta.env.GEMINI_API_KEY.trim()) ||
