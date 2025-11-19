@@ -13,7 +13,7 @@
  * See the License for the specific License.
  */
 
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo, useCallback } from "react";
 import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
 import {
   FunctionDeclaration,
@@ -24,6 +24,9 @@ import {
 import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
 import { Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 // Review data structure
 export interface ReviewData {
@@ -99,10 +102,20 @@ const saveReviewDeclaration: FunctionDeclaration = {
   },
 };
 
-function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price: "0" }] }: { products?: Array<{name: string, price: string}> }) {
+function ReviewAgentComponent({ 
+  products = [{ name: "VOIX Beauty Product", price: "0" }],
+  customerName
+}: { 
+  products?: Array<{name: string, price: string}>;
+  customerName?: string;
+}) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedReviewId, setSavedReviewId] = useState<string | null>(null);
   const { client, setConfig, setModel, connected, setupComplete, disconnect } = useLiveAPIContext();
   const reviewContainerRef = useRef<HTMLDivElement>(null);
   const messageAlreadySent = useRef(false);
@@ -110,6 +123,97 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
   // Format product list for the prompt
   const productList = products.map(p => p.name).join(", ");
   const productCount = products.length;
+
+  // Save review to Supabase database
+  const saveReviewToDatabase = useCallback(async (finalReviewData: ReviewData) => {
+    try {
+      setIsSaving(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // For demo purposes, allow saving without auth
+        console.warn("User not authenticated, saving without user_id");
+      }
+
+      // Map ReviewData to database schema
+      // Generate a guest name if customer name is not provided (for demo purposes)
+      const finalCustomerName = customerName || (() => {
+        const guestNames = [
+          'Alex', 'Sam', 'Jordan', 'Casey', 'Riley', 'Taylor', 'Morgan', 'Avery',
+          'Jamie', 'Quinn', 'Dakota', 'Skylar', 'Cameron', 'Blake', 'Reese', 'Sage'
+        ];
+        const randomIndex = Math.floor(Math.random() * guestNames.length);
+        return `Guest ${guestNames[randomIndex]}`;
+      })();
+      
+      const reviewDataToSave = {
+        product_name: finalReviewData.productName || products[0]?.name || "VOIX Beauty Product",
+        customer_name: finalCustomerName,
+        customer_emotion: finalReviewData.sentiment === "positive" 
+          ? "happy" 
+          : finalReviewData.sentiment === "negative" 
+          ? "frustrated" 
+          : "neutral",
+        recommendation_score: finalReviewData.overallRating || 3,
+        review_summary: finalReviewData.additionalComments || 
+          `Rating: ${finalReviewData.overallRating}/5. ${finalReviewData.positivePoints?.join(", ") || ""}`,
+        key_positive_points: finalReviewData.positivePoints || [],
+        key_negative_points: finalReviewData.negativePoints || [],
+        improvement_suggestions: finalReviewData.improvementSuggestions || [],
+        user_id: user?.id || null,
+      };
+
+      // Validate with zod schema
+      const { reviewSchema } = await import("@/lib/validation");
+      const validatedData = reviewSchema.parse(reviewDataToSave);
+
+      const { data, error } = await supabase
+        .from("reviews")
+        .insert(validatedData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error saving review:", error);
+        toast({
+          title: "Error saving review",
+          description: "Your review couldn't be saved. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Review saved successfully:", data);
+      setSavedReviewId(data.id);
+      
+      toast({
+        title: "Review saved!",
+        description: "Your feedback has been recorded.",
+      });
+
+      // Navigate to dashboard with highlight after a short delay
+      setTimeout(() => {
+        navigate(`/dashboard?highlightReview=${data.id}`);
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error("Error saving review:", error);
+      
+      const errorMessage = error.name === "ZodError" 
+        ? "The review data didn't meet our requirements. Please try again with valid information."
+        : error.message || "Failed to save review";
+      
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [products, toast, navigate, customerName]);
 
   // Initial setup: Beauty product review collection agent persona
   useEffect(() => {
@@ -129,7 +233,9 @@ function ReviewAgentComponent({ products = [{ name: "VOIX Beauty Product", price
 - Products Purchased: ${productList}
 - Total Items: ${productCount}
 
-You already know the product${productCount > 1 ? 's' : ''} they purchased. Start the conversation immediately by acknowledging the specific product${productCount > 1 ? 's' : ''} and asking your first question.
+**CRITICAL: You MUST start the conversation IMMEDIATELY without waiting for user input. Begin speaking right away.**
+
+You already know the product${productCount > 1 ? 's' : ''} they purchased. Start the conversation immediately by acknowledging the specific product${productCount > 1 ? 's' : ''} and asking your first question. DO NOT wait for the user to speak first - you initiate the conversation.
 
 **Your Core Philosophy:**
 People often struggle to express their thoughts about products. Your role is to guide them gently, validate their feelings, and help them discover insights they didn't know they had.
@@ -235,23 +341,31 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         });
 
         // Accumulate review data instead of replacing
-        setReviewData(prev => ({
-          ...prev,
-          ...newReviewData,
-          positivePoints: newReviewData.positivePoints || prev.positivePoints,
-          negativePoints: newReviewData.negativePoints || prev.negativePoints,
-          improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
-        }));
-        setCurrentQuestion(questionNumber);
+        setReviewData(prev => {
+          const updatedReviewData = {
+            ...prev,
+            ...newReviewData,
+            positivePoints: newReviewData.positivePoints || prev.positivePoints,
+            negativePoints: newReviewData.negativePoints || prev.negativePoints,
+            improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
+          };
 
-        // Check if all questions are complete (5 questions completed)
-        if (questionNumber >= 5) {
-          setIsComplete(true);
-          // Disconnect the call after finishing interview
-          setTimeout(() => {
-            disconnect();
-          }, 2000);
-        }
+          // Check if all questions are complete (5 questions completed)
+          if (questionNumber >= 5) {
+            setIsComplete(true);
+            // Disconnect the call after finishing interview
+            setTimeout(() => {
+              disconnect();
+            }, 2000);
+            
+            // Save review to database using the updated review data
+            // Use the updatedReviewData we just computed to avoid stale closure
+            saveReviewToDatabase(updatedReviewData);
+          }
+
+          return updatedReviewData;
+        });
+        setCurrentQuestion(questionNumber);
 
         // Send Tool Response
         setTimeout(
@@ -277,7 +391,7 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
     return () => {
       client.off("toolcall", onToolCall);
     };
-  }, [client, disconnect]);
+  }, [client, disconnect, saveReviewToDatabase]);
 
   // Send initial message when session is ready
   useEffect(() => {
@@ -295,9 +409,10 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         // Use a small delay to ensure the session is fully ready
         setTimeout(() => {
           try {
+            const productName = products[0]?.name || 'the product';
             client.send([
               {
-                text: "Start the interview by greeting Sarah and asking about her experience with the Rouge Velvet Matte Lipstick in Cherry Red #05.",
+                text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
               },
             ]);
             console.log("✅ Initial message sent successfully");
@@ -344,7 +459,11 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   if (isComplete && Object.keys(reviewData).length > 0) {
     return (
       <div className="review-agent-container" ref={reviewContainerRef}>
-        <ReviewCompletion reviewData={reviewData} />
+        <ReviewCompletion 
+          reviewData={reviewData} 
+          isSaving={isSaving}
+          savedReviewId={savedReviewId}
+        />
       </div>
     );
   }

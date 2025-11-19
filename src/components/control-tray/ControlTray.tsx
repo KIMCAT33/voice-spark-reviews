@@ -97,17 +97,25 @@ function ControlTray({
   }, [inVolume]);
 
   useEffect(() => {
+    // client 객체가 매번 새로 생성될 수 있어서 ref로 안정화
+    const clientRef = client;
+    const setupCompleteRef = setupComplete;
+    
     const onData = (base64: string) => {
       // Only send audio if setup is complete and session exists
-      if (setupComplete && client.session) {
-        client.sendRealtimeInput([
-          {
-            mimeType: "audio/pcm;rate=16000",
-            data: base64,
-          },
-        ]);
+      if (setupCompleteRef && clientRef?.session) {
+        // OpenAI와 Gemini 모두 지원
+        if (typeof clientRef.sendRealtimeInput === 'function') {
+          clientRef.sendRealtimeInput([
+            {
+              mimeType: "audio/pcm;rate=16000",
+              data: base64,
+            },
+          ]);
+        }
       }
     };
+    
     if (connected && setupComplete && !muted && audioRecorder) {
       setIsRecording(true);
       audioRecorder
@@ -126,14 +134,19 @@ function ControlTray({
           }
         });
     } else {
-      audioRecorder.stop();
+      if (audioRecorder) {
+        audioRecorder.stop();
+      }
       setIsRecording(false);
     }
+    
     return () => {
-      audioRecorder.off("data", onData).off("volume", setInVolume);
+      if (audioRecorder) {
+        audioRecorder.off("data", onData).off("volume", setInVolume);
+      }
       setIsRecording(false);
     };
-  }, [connected, setupComplete, client, muted, audioRecorder]);
+  }, [connected, setupComplete, muted, audioRecorder]); // client를 의존성에서 제거하고 ref 사용
 
   useEffect(() => {
     if (videoRef.current) {

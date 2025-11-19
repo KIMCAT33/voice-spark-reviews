@@ -9,7 +9,7 @@ export const reviewSchema = z.object({
   key_positive_points: z.array(z.string().max(500)).max(20, "Too many positive points"),
   key_negative_points: z.array(z.string().max(500)).max(20, "Too many negative points"),
   improvement_suggestions: z.array(z.string().max(500)).max(20, "Too many suggestions"),
-  user_id: z.string().uuid(),
+  user_id: z.string().uuid().optional().nullable(),
 });
 
 export type ReviewData = z.infer<typeof reviewSchema>;

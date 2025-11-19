@@ -34,6 +34,12 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (items.length === 0) {
+      toast.error('Your cart is empty. Please add items before checkout.');
+      onOpenChange(false);
+      return;
+    }
+    
     if (!email || !email.includes('@')) {
       toast.error('Please enter a valid email address.');
       return;
@@ -47,20 +53,25 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
     setIsProcessing(false);
     setIsPurchaseComplete(true);
 
-    // Show purchase complete message then redirect to voice review
+    // Show purchase complete message then redirect to purchase confirmation page
     setTimeout(() => {
       clearCart();
       onOpenChange(false);
-      toast.success('Purchase complete! Please leave a voice review.', {
-        duration: 5000,
+      toast.success('Purchase complete! Redirecting to order confirmation...', {
+        duration: 3000,
       });
       
-      // Pass all products as query parameter
+      // Get all products for display
       const products = items.map(item => ({
         name: item.product.node.title,
         price: item.price.amount,
+        quantity: item.quantity,
+        image: item.product.node.images?.edges?.[0]?.node?.url || null,
       }));
-      navigate(`/gemini-live?products=${encodeURIComponent(JSON.stringify(products))}`);
+      const customerName = email.split('@')[0] || "Customer"; // Use email username as customer name
+      
+      // Redirect to purchase confirmation page with all product info
+      navigate(`/purchase?products=${encodeURIComponent(JSON.stringify(products))}&customer=${encodeURIComponent(customerName)}&email=${encodeURIComponent(email)}`);
     }, 2000);
   };
 
@@ -155,7 +166,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
             <div className="space-y-2">
               <h3 className="text-2xl font-bold">Purchase Complete!</h3>
               <p className="text-muted-foreground">
-                Redirecting to voice review page...
+                Redirecting to order confirmation...
               </p>
             </div>
           </div>

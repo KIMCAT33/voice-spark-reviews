@@ -76,27 +76,41 @@ const Landing = () => {
             Collect authentic insights, boost engagement, and make data-driven decisions.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 sm:pt-4 md:pt-6 lg:pt-8 px-2 sm:px-4 animate-fade-in">
+          <div className="flex flex-col gap-3 justify-center pt-2 sm:pt-4 md:pt-6 lg:pt-8 px-2 sm:px-4 animate-fade-in">
+            {/* Primary CTA - Quick Demo */}
             <Button 
               size="lg" 
-              className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 gradient-primary shadow-glow hover:opacity-90 transition-all font-semibold"
+              className="w-full sm:w-auto mx-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 gradient-primary shadow-glow hover:opacity-90 transition-all font-semibold"
               onClick={() => navigate("/purchase")}
             >
               <Sparkles className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-              Try Voice Review Demo
+              Quick Demo (2-3 min)
             </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
-              onClick={() => navigate("/shop")}
-            >
-              View Sample Store
-            </Button>
+            
+            {/* Secondary CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
+                onClick={() => navigate("/shop")}
+              >
+                Full Experience (5-7 min)
+              </Button>
+              <Button 
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
+                onClick={() => navigate("/dashboard")}
+              >
+                <BarChart3 className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+                View Dashboard
+              </Button>
+            </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 animate-fade-in">
-            Experience a real customer review flow in under 2 minutes
+          <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 animate-fade-in text-center">
+            Choose your demo experience above
           </p>
         </div>
       </section>
@@ -208,15 +222,26 @@ const Landing = () => {
           <p className="text-sm xs:text-base sm:text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto px-2 sm:px-4 leading-relaxed">
             Experience the future of customer feedback with our interactive demo
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary"
-            className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 mt-1 xs:mt-2 sm:mt-4 md:mt-6 font-semibold shadow-elegant"
-            onClick={() => navigate("/purchase")}
-          >
-            <Mic className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-            Start Demo Now
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 mt-1 xs:mt-2 sm:mt-4 md:mt-6 font-semibold shadow-elegant"
+              onClick={() => navigate("/purchase")}
+            >
+              <Mic className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+              Quick Demo (2-3 min)
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 mt-1 xs:mt-2 sm:mt-4 md:mt-6 font-semibold border-2"
+              onClick={() => navigate("/dashboard")}
+            >
+              <BarChart3 className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+              View Dashboard
+            </Button>
+          </div>
         </Card>
       </section>
     </div>
