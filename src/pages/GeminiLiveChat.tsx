@@ -38,14 +38,15 @@ import { Label } from "@/components/ui/label";
 // 러버블 Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에도 확인
 
 // 러버블 빌드 환경에서 사용 가능한 모든 환경 변수 소스 확인
+// 빈 문자열 체크도 포함 (러버블 Secrets가 빈 값으로 주입될 수 있음)
 const GEMINI_API_KEY = 
-  import.meta.env.VITE_GEMINI_API_KEY || 
-  import.meta.env.GEMINI_API_KEY ||
+  (import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim()) || 
+  (import.meta.env.GEMINI_API_KEY && import.meta.env.GEMINI_API_KEY.trim()) ||
   null;
 
 const OPENAI_API_KEY = 
-  import.meta.env.VITE_OPENAI_API_KEY || 
-  import.meta.env.OPENAI_API_KEY ||
+  (import.meta.env.VITE_OPENAI_API_KEY && import.meta.env.VITE_OPENAI_API_KEY.trim()) || 
+  (import.meta.env.OPENAI_API_KEY && import.meta.env.OPENAI_API_KEY.trim()) ||
   null;
 
 // 프로덕션 및 개발 환경에서 디버깅 (러버블에서 환경 변수가 제대로 주입되는지 확인)
@@ -63,6 +64,10 @@ if (typeof window !== 'undefined') {
     // 모든 환경 변수 키 목록 (값은 제외)
     const envKeysList = allEnvKeys.slice(0, 20);
     
+    // 환경 변수 값 확인 (키는 존재하지만 값이 빈 문자열일 수 있음)
+    const geminiKeyValue = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+    const openAIKeyValue = import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+    
     console.warn('⚠️ API Keys not found. Available environment variables:', {
       hasGemini,
       hasOpenAI,
@@ -75,6 +80,13 @@ if (typeof window !== 'undefined') {
       // 러버블 빌드 환경 확인을 위한 추가 정보
       baseUrl: import.meta.env.BASE_URL,
       viteVersion: import.meta.env.VITE_VERSION,
+      // 환경 변수 값 상태 확인 (실제 값은 노출하지 않음)
+      geminiKeyExists: !!geminiKeyValue,
+      geminiKeyLength: geminiKeyValue ? geminiKeyValue.length : 0,
+      geminiKeyIsEmpty: geminiKeyValue === '',
+      openAIKeyExists: !!openAIKeyValue,
+      openAIKeyLength: openAIKeyValue ? openAIKeyValue.length : 0,
+      openAIKeyIsEmpty: openAIKeyValue === '',
     });
     
     // 러버블 Secrets가 제대로 주입되지 않을 경우를 위한 안내
@@ -112,8 +124,10 @@ function GeminiLiveChat() {
     
     if (!GEMINI_API_KEY || !OPENAI_API_KEY) {
       // 러버블 런타임 환경 변수 확인
-      const runtimeGemini = lovableEnv.VITE_GEMINI_API_KEY || lovableEnv.GEMINI_API_KEY;
-      const runtimeOpenAI = lovableEnv.VITE_OPENAI_API_KEY || lovableEnv.OPENAI_API_KEY;
+      const runtimeGemini = (lovableEnv.VITE_GEMINI_API_KEY && lovableEnv.VITE_GEMINI_API_KEY.trim()) || 
+                            (lovableEnv.GEMINI_API_KEY && lovableEnv.GEMINI_API_KEY.trim());
+      const runtimeOpenAI = (lovableEnv.VITE_OPENAI_API_KEY && lovableEnv.VITE_OPENAI_API_KEY.trim()) || 
+                            (lovableEnv.OPENAI_API_KEY && lovableEnv.OPENAI_API_KEY.trim());
       
       if (runtimeGemini || runtimeOpenAI) {
         setRuntimeApiKeys({
