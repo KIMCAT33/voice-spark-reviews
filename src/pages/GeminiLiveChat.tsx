@@ -32,8 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 
 export type AIModel = "gemini" | "openai";
 
@@ -42,53 +40,6 @@ function GeminiLiveChat() {
   const [searchParams, setSearchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [apiKeys, setApiKeys] = useState<{ gemini?: string; openai?: string }>({});
-  const [isLoadingKeys, setIsLoadingKeys] = useState(true);
-  const [keyError, setKeyError] = useState<string | null>(null);
-  
-  // Fetch API keys from Edge Functions
-  useEffect(() => {
-    const fetchApiKeys = async () => {
-      try {
-        setIsLoadingKeys(true);
-        setKeyError(null);
-        
-        const [geminiResponse, openaiResponse] = await Promise.all([
-          supabase.functions.invoke('get-gemini-key'),
-          supabase.functions.invoke('get-openai-key')
-        ]);
-        
-        const keys: { gemini?: string; openai?: string } = {};
-        
-        if (geminiResponse.data?.apiKey) {
-          keys.gemini = geminiResponse.data.apiKey;
-          console.log('✅ Successfully fetched Gemini API key');
-        } else {
-          console.error('❌ Failed to fetch Gemini API key:', geminiResponse.error);
-        }
-        
-        if (openaiResponse.data?.apiKey) {
-          keys.openai = openaiResponse.data.apiKey;
-          console.log('✅ Successfully fetched OpenAI API key');
-        } else {
-          console.error('❌ Failed to fetch OpenAI API key:', openaiResponse.error);
-        }
-        
-        setApiKeys(keys);
-        
-        if (!keys.gemini && !keys.openai) {
-          setKeyError('API keys not configured in Lovable Secrets');
-        }
-      } catch (error) {
-        console.error('Error fetching API keys:', error);
-        setKeyError('Failed to fetch API keys');
-      } finally {
-        setIsLoadingKeys(false);
-      }
-    };
-    
-    fetchApiKeys();
-  }, []);
   
   // Get selected model from URL or default to "gemini"
   const modelParam = searchParams.get('model') as AIModel;
@@ -135,43 +86,7 @@ function GeminiLiveChat() {
     products = [{ name: productParam, price: '0' }];
   }
 
-  
-  // Check if API key is available for selected model
-  const hasRequiredApiKey = selectedModel === "gemini" 
-    ? !!apiKeys.gemini 
-    : !!apiKeys.openai;
-
-  if (!hasRequiredApiKey) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
-        <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-bold text-destructive">API Key Missing</h1>
-          <p className="text-muted-foreground">
-            The {selectedModel === "gemini" ? "Gemini" : "OpenAI"} API key is not configured.
-          </p>
-          <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2 text-sm">
-            <p className="font-semibold">To fix this in Lovable:</p>
-            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Go to your Lovable project settings</li>
-              <li>Navigate to "Secrets" or "Environment Variables"</li>
-              <li>Add: <code className="bg-background px-1 rounded">{selectedModel === "gemini" ? "VITE_GEMINI_API_KEY" : "VITE_OPENAI_API_KEY"}</code></li>
-              <li>Set the value to your API key</li>
-              <li>Save and redeploy</li>
-            </ol>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <Button variant="outline" onClick={() => setSelectedModel(selectedModel === "gemini" ? "openai" : "gemini")}>
-              Switch to {selectedModel === "gemini" ? "OpenAI" : "Gemini"}
-            </Button>
-            <Button onClick={() => navigate("/")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Models are now always available through secure proxies
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden">
@@ -181,13 +96,13 @@ function GeminiLiveChat() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <LiveAPIProvider 
-        options={{
-          apiKey: selectedModel === "gemini" ? (apiKeys.gemini || "") : "",
-        }}
-        modelType={selectedModel}
-        openAIApiKey={selectedModel === "openai" ? (apiKeys.openai || "") : ""}
-      >
+          <LiveAPIProvider
+            options={{
+              apiKey: "", // API key is managed server-side through proxies
+            }}
+            modelType={selectedModel}
+            openAIApiKey="" // API key is managed server-side through proxies
+          >
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
           <div className="p-3 xs:p-4 border-b border-border/30 bg-background/60 backdrop-blur-xl shadow-sm">
@@ -237,11 +152,11 @@ function GeminiLiveChat() {
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gemini" disabled={!apiKeys.gemini}>
-                      {apiKeys.gemini ? "🤖 Gemini" : "🤖 Gemini (API key missing)"}
+                    <SelectItem value="gemini">
+                      🤖 Gemini
                     </SelectItem>
-                    <SelectItem value="openai" disabled={!apiKeys.openai}>
-                      {apiKeys.openai ? "⚡ OpenAI" : "⚡ OpenAI (API key missing)"}
+                    <SelectItem value="openai">
+                      ⚡ OpenAI
                     </SelectItem>
                   </SelectContent>
                 </Select>
