@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Get environment variables with fallbacks for Lovable
+// 러버블에서 환경 변수가 설정되지 않았을 때 기본값 사용
 const SUPABASE_URL = 
   import.meta.env.VITE_SUPABASE_URL || 
   import.meta.env.SUPABASE_URL ||
@@ -13,16 +14,14 @@ const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.SUPABASE_PUBLISHABLE_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoY2pxaWF6cXlydGxqY21rdGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjM3OTksImV4cCI6MjA3ODIzOTc5OX0.g6FGep12FNnQT_J02w82JPQC4hnoAq3yrk8_l8N5oVQ';
 
-// Validate required values
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('❌ Supabase configuration is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY');
-  throw new Error('Supabase configuration is required');
-}
+// Ensure values are strings (not undefined)
+const finalUrl = String(SUPABASE_URL || 'https://thcjqiazqyrtljcmktii.supabase.co');
+const finalKey = String(SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoY2pxaWF6cXlydGxqY21rdGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjM3OTksImV4cCI6MjA3ODIzOTc5OX0.g6FGep12FNnQT_J02w82JPQC4hnoAq3yrk8_l8N5oVQ');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(finalUrl, finalKey, {
   auth: {
     storage: localStorage,
     persistSession: true,
