@@ -32,110 +32,62 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-
-// Vite only exposes environment variables prefixed with VITE_
-// Lovable Secrets가 빌드 시 자동으로 process.env에 주입됨
-// vite.config.ts에서 이를 import.meta.env로 매핑함
-
-// Lovable Secrets에서 환경 변수 읽기 (빈 문자열 체크 포함)
-const GEMINI_API_KEY = 
-  (import.meta.env.VITE_GEMINI_API_KEY && import.meta.env.VITE_GEMINI_API_KEY.trim()) || 
-  (import.meta.env.GEMINI_API_KEY && import.meta.env.GEMINI_API_KEY.trim()) ||
-  null;
-
-const OPENAI_API_KEY = 
-  (import.meta.env.VITE_OPENAI_API_KEY && import.meta.env.VITE_OPENAI_API_KEY.trim()) || 
-  (import.meta.env.OPENAI_API_KEY && import.meta.env.OPENAI_API_KEY.trim()) ||
-  null;
-
-// 프로덕션 및 개발 환경에서 디버깅 (Lovable Secrets가 제대로 주입되는지 확인)
-if (typeof window !== 'undefined') {
-  const hasGemini = !!GEMINI_API_KEY;
-  const hasOpenAI = !!OPENAI_API_KEY;
-  
-  if (!hasGemini || !hasOpenAI) {
-    // 환경 변수 디버깅 정보 (API 키 값은 노출하지 않음)
-    const allEnvKeys = Object.keys(import.meta.env);
-    const relevantEnvKeys = allEnvKeys
-      .filter(k => k.includes('GEMINI') || k.includes('OPENAI') || k.includes('VITE_'))
-      .slice(0, 20);
-    
-    // 모든 환경 변수 키 목록 (값은 제외)
-    const envKeysList = allEnvKeys.slice(0, 20);
-    
-    // 환경 변수 값 확인 (키는 존재하지만 값이 빈 문자열일 수 있음)
-    const geminiKeyValue = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
-    const openAIKeyValue = import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
-    
-    console.warn('⚠️ API Keys not found. Available environment variables:', {
-      hasGemini,
-      hasOpenAI,
-      relevantEnvKeys,
-      allEnvKeysPreview: envKeysList,
-      totalEnvKeys: allEnvKeys.length,
-      mode: import.meta.env.MODE,
-      prod: import.meta.env.PROD,
-      dev: import.meta.env.DEV,
-      // Lovable 빌드 환경 확인을 위한 추가 정보
-      baseUrl: import.meta.env.BASE_URL,
-      viteVersion: import.meta.env.VITE_VERSION,
-      // 환경 변수 값 상태 확인 (실제 값은 노출하지 않음)
-      geminiKeyExists: !!geminiKeyValue,
-      geminiKeyLength: geminiKeyValue ? geminiKeyValue.length : 0,
-      geminiKeyIsEmpty: geminiKeyValue === '',
-      openAIKeyExists: !!openAIKeyValue,
-      openAIKeyLength: openAIKeyValue ? openAIKeyValue.length : 0,
-      openAIKeyIsEmpty: openAIKeyValue === '',
-    });
-    
-    // Lovable Secrets가 제대로 주입되지 않을 경우를 위한 안내
-    if (import.meta.env.PROD) {
-      console.error('❌ Lovable Secrets가 주입되지 않았습니다.', {
-        suggestion: 'Lovable 프로젝트 설정 → Secrets에서 VITE_GEMINI_API_KEY와 VITE_OPENAI_API_KEY를 확인하세요.',
-        note: '빌드 타임에 주입되어야 하므로, Secrets 변경 후 재배포가 필요합니다.',
-      });
-    }
-  }
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export type AIModel = "gemini" | "openai";
-
-// Trim API keys (empty string if not provided)
-const trimmedGeminiKey = GEMINI_API_KEY?.trim() || "";
-const trimmedOpenAIKey = OPENAI_API_KEY?.trim() || "";
-
-const geminiApiOptions: LiveClientOptions = {
-  apiKey: trimmedGeminiKey,
-};
 
 function GeminiLiveChat() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [runtimeApiKeys, setRuntimeApiKeys] = useState<{ gemini?: string; openai?: string } | null>(null);
+  const [apiKeys, setApiKeys] = useState<{ gemini?: string; openai?: string }>({});
+  const [isLoadingKeys, setIsLoadingKeys] = useState(true);
+  const [keyError, setKeyError] = useState<string | null>(null);
   
-  // Lovable Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에 확인
-  // Lovable이 window 객체에 환경 변수를 주입하는지 확인 (fallback)
+  // Fetch API keys from Edge Functions
   useEffect(() => {
-    // Lovable이 window.__LOVABLE_ENV__ 같은 객체로 환경 변수를 주입할 수 있음
-    const lovableEnv = (window as any).__LOVABLE_ENV__ || (window as any).__ENV__ || {};
-    
-    if (!GEMINI_API_KEY || !OPENAI_API_KEY) {
-      // Lovable 런타임 환경 변수 확인
-      const runtimeGemini = (lovableEnv.VITE_GEMINI_API_KEY && lovableEnv.VITE_GEMINI_API_KEY.trim()) || 
-                            (lovableEnv.GEMINI_API_KEY && lovableEnv.GEMINI_API_KEY.trim());
-      const runtimeOpenAI = (lovableEnv.VITE_OPENAI_API_KEY && lovableEnv.VITE_OPENAI_API_KEY.trim()) || 
-                            (lovableEnv.OPENAI_API_KEY && lovableEnv.OPENAI_API_KEY.trim());
-      
-      if (runtimeGemini || runtimeOpenAI) {
-        setRuntimeApiKeys({
-          gemini: runtimeGemini || undefined,
-          openai: runtimeOpenAI || undefined,
-        });
-        console.log('✅ Lovable 런타임 환경 변수에서 API 키를 찾았습니다.');
+    const fetchApiKeys = async () => {
+      try {
+        setIsLoadingKeys(true);
+        setKeyError(null);
+        
+        const [geminiResponse, openaiResponse] = await Promise.all([
+          supabase.functions.invoke('get-gemini-key'),
+          supabase.functions.invoke('get-openai-key')
+        ]);
+        
+        const keys: { gemini?: string; openai?: string } = {};
+        
+        if (geminiResponse.data?.apiKey) {
+          keys.gemini = geminiResponse.data.apiKey;
+          console.log('✅ Successfully fetched Gemini API key');
+        } else {
+          console.error('❌ Failed to fetch Gemini API key:', geminiResponse.error);
+        }
+        
+        if (openaiResponse.data?.apiKey) {
+          keys.openai = openaiResponse.data.apiKey;
+          console.log('✅ Successfully fetched OpenAI API key');
+        } else {
+          console.error('❌ Failed to fetch OpenAI API key:', openaiResponse.error);
+        }
+        
+        setApiKeys(keys);
+        
+        if (!keys.gemini && !keys.openai) {
+          setKeyError('API keys not configured in Lovable Secrets');
+        }
+      } catch (error) {
+        console.error('Error fetching API keys:', error);
+        setKeyError('Failed to fetch API keys');
+      } finally {
+        setIsLoadingKeys(false);
       }
-    }
+    };
+    
+    fetchApiKeys();
   }, []);
   
   // Get selected model from URL or default to "gemini"
@@ -183,16 +135,13 @@ function GeminiLiveChat() {
     products = [{ name: productParam, price: '0' }];
   }
 
-  // 런타임 API 키가 있으면 사용, 없으면 Lovable Secrets에서 주입된 환경 변수 사용
-  const finalGeminiKey = runtimeApiKeys?.gemini || trimmedGeminiKey;
-  const finalOpenAIKey = runtimeApiKeys?.openai || trimmedOpenAIKey;
   
   // Check if API key is available for selected model
-  const hasRequiredAPIKey = selectedModel === "gemini" 
-    ? !!finalGeminiKey 
-    : !!finalOpenAIKey;
+  const hasRequiredApiKey = selectedModel === "gemini" 
+    ? !!apiKeys.gemini 
+    : !!apiKeys.openai;
 
-  if (!hasRequiredAPIKey) {
+  if (!hasRequiredApiKey) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
         <div className="text-center space-y-4 max-w-md">
@@ -234,11 +183,10 @@ function GeminiLiveChat() {
 
       <LiveAPIProvider 
         options={{
-          ...geminiApiOptions,
-          apiKey: finalGeminiKey, // Lovable Secrets에서 주입된 API 키 사용
+          apiKey: selectedModel === "gemini" ? (apiKeys.gemini || "") : "",
         }}
         modelType={selectedModel}
-        openAIApiKey={finalOpenAIKey} // Lovable Secrets에서 주입된 API 키 사용
+        openAIApiKey={selectedModel === "openai" ? (apiKeys.openai || "") : ""}
       >
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
@@ -289,11 +237,11 @@ function GeminiLiveChat() {
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gemini" disabled={!trimmedGeminiKey}>
-                      {trimmedGeminiKey ? "🤖 Gemini" : "🤖 Gemini (API key missing)"}
+                    <SelectItem value="gemini" disabled={!apiKeys.gemini}>
+                      {apiKeys.gemini ? "🤖 Gemini" : "🤖 Gemini (API key missing)"}
                     </SelectItem>
-                    <SelectItem value="openai" disabled={!trimmedOpenAIKey}>
-                      {trimmedOpenAIKey ? "⚡ OpenAI" : "⚡ OpenAI (API key missing)"}
+                    <SelectItem value="openai" disabled={!apiKeys.openai}>
+                      {apiKeys.openai ? "⚡ OpenAI" : "⚡ OpenAI (API key missing)"}
                     </SelectItem>
                   </SelectContent>
                 </Select>
