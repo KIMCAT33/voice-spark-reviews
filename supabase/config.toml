@@ -7,7 +7,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.get-gemini-key]
-verify_jwt = true
+verify_jwt = false
 
 [functions.get-openai-key]
-verify_jwt = true
+verify_jwt = false
