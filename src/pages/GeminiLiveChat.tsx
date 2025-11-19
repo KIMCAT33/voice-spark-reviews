@@ -35,6 +35,9 @@ import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
 // 러버블에서는 Secrets를 프로젝트 설정에서 추가해야 합니다
+// 주의: .env 파일이 Git에 커밋되어 있으면 빌드 시 그 값이 사용될 수 있습니다
+
+// 러버블 빌드 환경에서 사용 가능한 모든 환경 변수 소스 확인
 const GEMINI_API_KEY = 
   import.meta.env.VITE_GEMINI_API_KEY || 
   import.meta.env.GEMINI_API_KEY ||
@@ -44,6 +47,28 @@ const OPENAI_API_KEY =
   import.meta.env.VITE_OPENAI_API_KEY || 
   import.meta.env.OPENAI_API_KEY ||
   null;
+
+// 프로덕션 환경에서 디버깅 (러버블에서 환경 변수가 제대로 주입되는지 확인)
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
+  const hasGemini = !!GEMINI_API_KEY;
+  const hasOpenAI = !!OPENAI_API_KEY;
+  
+  if (!hasGemini || !hasOpenAI) {
+    // 환경 변수 디버깅 정보 (API 키 값은 노출하지 않음)
+    const relevantEnvKeys = Object.keys(import.meta.env)
+      .filter(k => k.includes('GEMINI') || k.includes('OPENAI') || k.includes('VITE_'))
+      .slice(0, 10);
+    
+    console.warn('⚠️ API Keys not found. Available environment variables:', {
+      hasGemini,
+      hasOpenAI,
+      relevantEnvKeys,
+      totalEnvKeys: Object.keys(import.meta.env).length,
+      mode: import.meta.env.MODE,
+      prod: import.meta.env.PROD,
+    });
+  }
+}
 
 export type AIModel = "gemini" | "openai";
 
