@@ -37,9 +37,10 @@ import { Label } from "@/components/ui/label";
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY as string;
 
-// Check API key existence without logging sensitive information
-if (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== "string" || GEMINI_API_KEY.trim() === "") {
-  console.error("Gemini API Key not configured");
+// Check API key existence (only log in development mode)
+// 러버블 프로덕션 환경에서는 환경 변수가 러버블 대시보드에서 설정되므로 조용히 처리
+if (import.meta.env.DEV && (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== "string" || GEMINI_API_KEY.trim() === "")) {
+  console.warn("⚠️ Gemini API Key not configured in development. Please set VITE_GEMINI_API_KEY in .env file or Lovable project settings.");
 }
 
 export type AIModel = "gemini" | "openai";
