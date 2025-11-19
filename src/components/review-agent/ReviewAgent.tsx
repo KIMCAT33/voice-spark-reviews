@@ -27,6 +27,7 @@ import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { isGenAILiveClient } from "@/lib/type-guards";
 
 // Review data structure
 export interface ReviewData {
@@ -369,40 +370,44 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
 
         // Send Tool Response
         setTimeout(
-          () =>
-            client.sendToolResponse({
-              functionResponses: toolCall.functionCalls?.map((fc) => ({
-                response: {
-                  output: {
-                    success: true,
-                    message: "Review data has been successfully saved.",
+          () => {
+            if (client && isGenAILiveClient(client)) {
+              client.sendToolResponse({
+                functionResponses: toolCall.functionCalls?.map((fc) => ({
+                  response: {
+                    output: {
+                      success: true,
+                      message: "Review data has been successfully saved.",
+                    },
                   },
-                },
-                id: fc.id,
-                name: fc.name,
-              })),
-            }),
+                  id: fc.id,
+                  name: fc.name,
+                })),
+              });
+            }
+          },
           200
         );
       }
     };
 
-    client.on("toolcall", onToolCall);
-    return () => {
-      client.off("toolcall", onToolCall);
-    };
+    if (client && isGenAILiveClient(client)) {
+      client.on("toolcall", onToolCall);
+      return () => {
+        client.off("toolcall", onToolCall);
+      };
+    }
   }, [client, disconnect, saveReviewToDatabase]);
 
   // Send initial message when session is ready
   useEffect(() => {
     const sendInitialMessage = () => {
-      if (currentQuestion === 0 && !messageAlreadySent.current && connected && setupComplete) {
+      if (currentQuestion === 0 && !messageAlreadySent.current && connected && setupComplete && client && isGenAILiveClient(client)) {
         console.log("📝 Conditions met - sending initial greeting message...");
         console.log("  - currentQuestion:", currentQuestion);
         console.log("  - messageAlreadySent:", messageAlreadySent.current);
         console.log("  - connected:", connected);
         console.log("  - setupComplete:", setupComplete);
-        console.log("  - client status:", client.status);
         
         messageAlreadySent.current = true;
         
@@ -410,12 +415,14 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         setTimeout(() => {
           try {
             const productName = products[0]?.name || 'the product';
-            client.send([
-              {
-                text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
-              },
-            ]);
-            console.log("✅ Initial message sent successfully");
+            if (client && isGenAILiveClient(client)) {
+              client.send([
+                {
+                  text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
+                },
+              ]);
+              console.log("✅ Initial message sent successfully");
+            }
           } catch (error) {
             console.error("❌ Failed to send initial message:", error);
             messageAlreadySent.current = false;
@@ -439,13 +446,15 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
     console.log("🔧 Setting up setupcomplete listener");
     console.log("  - connected:", connected);
     console.log("  - setupComplete:", setupComplete);
-    client.on("setupcomplete", onSetupComplete);
-    
-    return () => {
-      console.log("🧹 Cleaning up setupcomplete listener");
-      client.off("setupcomplete", onSetupComplete);
-    };
-  }, [client, currentQuestion, connected, setupComplete]);
+    if (client && isGenAILiveClient(client)) {
+      client.on("setupcomplete", onSetupComplete);
+      
+      return () => {
+        console.log("🧹 Cleaning up setupcomplete listener");
+        client.off("setupcomplete", onSetupComplete);
+      };
+    }
+  }, [client, currentQuestion, connected, setupComplete, products]);
   
   // Reset message flag when disconnected
   useEffect(() => {

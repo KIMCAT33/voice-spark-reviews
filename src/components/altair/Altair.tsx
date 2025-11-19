@@ -22,6 +22,7 @@ import {
   Modality,
   Type,
 } from "@google/genai";
+import { isGenAILiveClient } from "@/lib/type-guards";
 
 const declaration: FunctionDeclaration = {
   name: "render_altair",
@@ -79,7 +80,7 @@ function AltairComponent() {
       }
       // send data for the response of your tool call
       // in this case Im just saying it was successful
-      if (toolCall.functionCalls.length) {
+      if (toolCall.functionCalls.length && client && isGenAILiveClient(client)) {
         setTimeout(
           () =>
             client.sendToolResponse({
@@ -93,10 +94,12 @@ function AltairComponent() {
         );
       }
     };
-    client.on("toolcall", onToolCall);
-    return () => {
-      client.off("toolcall", onToolCall);
-    };
+    if (client && isGenAILiveClient(client)) {
+      client.on("toolcall", onToolCall);
+      return () => {
+        client.off("toolcall", onToolCall);
+      };
+    }
   }, [client]);
 
   const embedRef = useRef<HTMLDivElement>(null);

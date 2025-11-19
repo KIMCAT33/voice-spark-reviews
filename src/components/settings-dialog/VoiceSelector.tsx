@@ -14,8 +14,9 @@ export default function VoiceSelector() {
   const { config, setConfig } = useLiveAPIContext();
 
   useEffect(() => {
+    const configWithSpeech = config as any;
     const voiceName =
-      config.speechConfig?.voiceConfig?.prebuiltVoiceConfig?.voiceName ||
+      configWithSpeech.speechConfig?.voiceConfig?.prebuiltVoiceConfig?.voiceName ||
       "Atari02";
     const voiceOption = { value: voiceName, label: voiceName };
     setSelectedOption(voiceOption);

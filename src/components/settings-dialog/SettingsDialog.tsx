@@ -33,23 +33,25 @@ export default function SettingsDialog() {
 
   // system instructions can come in many types
   const systemInstruction = useMemo(() => {
-    if (!config.systemInstruction) {
+    const configAny = config as any;
+    if (!configAny.systemInstruction && !configAny.instructions) {
       return "";
     }
-    if (typeof config.systemInstruction === "string") {
-      return config.systemInstruction;
+    const instruction = configAny.systemInstruction || configAny.instructions;
+    if (typeof instruction === "string") {
+      return instruction;
     }
-    if (Array.isArray(config.systemInstruction)) {
-      return config.systemInstruction
-        .map((p) => (typeof p === "string" ? p : p.text))
+    if (Array.isArray(instruction)) {
+      return instruction
+        .map((p: any) => (typeof p === "string" ? p : p.text))
         .join("\n");
     }
     if (
-      typeof config.systemInstruction === "object" &&
-      "parts" in config.systemInstruction
+      typeof instruction === "object" &&
+      "parts" in instruction
     ) {
       return (
-        config.systemInstruction.parts?.map((p) => p.text).join("\n") || ""
+        (instruction as any).parts?.map((p: any) => p.text).join("\n") || ""
       );
     }
     return "";

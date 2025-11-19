@@ -11,6 +11,7 @@ import { AudioRecorder } from "@/lib/audio-recorder";
 import { Type, FunctionDeclaration } from "@google/genai";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isGenAILiveClient } from "@/lib/type-guards";
 
 interface VoiceReviewProps {
   onBack: () => void;
@@ -128,9 +129,11 @@ Guidelines:
       // Now it's safe to send the initial message
       setTimeout(() => {
         console.log("👋 Sending initial greeting...");
-        client.send([{
-          text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
-        }], true);
+        if (client && isGenAILiveClient(client)) {
+          client.send([{
+            text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
+          }], true);
+        }
         
         // Start recording after AI has time to respond
         setTimeout(async () => {
@@ -141,7 +144,7 @@ Guidelines:
           audioRecorderRef.current = new AudioRecorder(16000);
           
           audioRecorderRef.current.on("data", (base64Audio: string) => {
-            if (connected && isRecording) {
+            if (connected && isRecording && client && isGenAILiveClient(client)) {
               client.sendRealtimeInput([
                 {
                   mimeType: "audio/pcm;rate=16000",
@@ -204,7 +207,7 @@ Guidelines:
                 key_positive_points: args.key_positive_points || [],
                 key_negative_points: args.key_negative_points || [],
                 improvement_suggestions: args.improvement_suggestions || [],
-                user_id: user?.id || null,
+                user_id: user?.id || null
               };
 
               // Validate with zod schema
@@ -226,13 +229,20 @@ Guidelines:
                 });
               } else {
                 console.log("Review saved successfully:", data);
+                setReviewData({
+                  product_name: reviewDataToSave.product_name,
+                  customer_emotion: reviewDataToSave.customer_emotion,
+                  key_positive_points: reviewDataToSave.key_positive_points,
+                  key_negative_points: reviewDataToSave.key_negative_points,
+                  improvement_suggestions: reviewDataToSave.improvement_suggestions,
+                  review_summary: reviewDataToSave.review_summary,
+                  recommendation_score: reviewDataToSave.recommendation_score
+                });
+                
                 toast({
                   title: "Review saved!",
                   description: "Your feedback has been recorded.",
                 });
-                
-                // Store review ID for navigation
-                setReviewData({ ...reviewDataToSave, id: data.id });
                 
                 // Navigate to dashboard with highlight after a short delay
                 setTimeout(() => {
@@ -257,18 +267,20 @@ Guidelines:
       }
     };
 
-    client.on("setupcomplete", handleSetupComplete);
-    client.on("content", handleContent);
-    client.on("turncomplete", handleTurnComplete);
-    client.on("toolcall", handleToolCall);
+    if (client && isGenAILiveClient(client)) {
+      client.on("setupcomplete", handleSetupComplete);
+      client.on("content", handleContent);
+      client.on("turncomplete", handleTurnComplete);
+      client.on("toolcall", handleToolCall);
 
-    return () => {
-      client.off("setupcomplete", handleSetupComplete);
-      client.off("content", handleContent);
-      client.off("turncomplete", handleTurnComplete);
-      client.off("toolcall", handleToolCall);
-    };
-  }, [client, connected]);
+      return () => {
+        client.off("setupcomplete", handleSetupComplete);
+        client.off("content", handleContent);
+        client.off("turncomplete", handleTurnComplete);
+        client.off("toolcall", handleToolCall);
+      };
+    }
+  }, [client, connected, isRecording, navigate, toast]);
 
   const handleStartRecording = async () => {
     // Prevent multiple clicks during connection

@@ -26,6 +26,7 @@ import AudioPulse from "../audio-pulse/AudioPulse";
 import "./control-tray.scss";
 import SettingsDialog from "../settings-dialog/SettingsDialog";
 import { Mic, MicOff, MonitorOff, Monitor, VideoOff, Video, Play, Pause } from "lucide-react";
+import { isGenAILiveClient } from "@/lib/type-guards";
 
 export type ControlTrayProps = {
   videoRef: RefObject<HTMLVideoElement>;
@@ -103,7 +104,7 @@ function ControlTray({
     
     const onData = (base64: string) => {
       // Only send audio if setup is complete and session exists
-      if (setupCompleteRef && clientRef?.session) {
+      if (setupCompleteRef && clientRef && isGenAILiveClient(clientRef)) {
         // OpenAI와 Gemini 모두 지원
         if (typeof clientRef.sendRealtimeInput === 'function') {
           clientRef.sendRealtimeInput([
@@ -166,7 +167,7 @@ function ControlTray({
       const ctx = canvas.getContext("2d")!;
       canvas.width = video.videoWidth * 0.25;
       canvas.height = video.videoHeight * 0.25;
-      if (canvas.width + canvas.height > 0 && setupComplete && client.session) {
+      if (canvas.width + canvas.height > 0 && setupComplete && client && isGenAILiveClient(client)) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const base64 = canvas.toDataURL("image/jpeg", 1.0);
         const data = base64.slice(base64.indexOf(",") + 1, Infinity);
