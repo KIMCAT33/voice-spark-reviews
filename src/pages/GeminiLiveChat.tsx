@@ -48,25 +48,42 @@ const OPENAI_API_KEY =
   import.meta.env.OPENAI_API_KEY ||
   null;
 
-// 프로덕션 환경에서 디버깅 (러버블에서 환경 변수가 제대로 주입되는지 확인)
-if (typeof window !== 'undefined' && import.meta.env.PROD) {
+// 프로덕션 및 개발 환경에서 디버깅 (러버블에서 환경 변수가 제대로 주입되는지 확인)
+if (typeof window !== 'undefined') {
   const hasGemini = !!GEMINI_API_KEY;
   const hasOpenAI = !!OPENAI_API_KEY;
   
   if (!hasGemini || !hasOpenAI) {
     // 환경 변수 디버깅 정보 (API 키 값은 노출하지 않음)
-    const relevantEnvKeys = Object.keys(import.meta.env)
+    const allEnvKeys = Object.keys(import.meta.env);
+    const relevantEnvKeys = allEnvKeys
       .filter(k => k.includes('GEMINI') || k.includes('OPENAI') || k.includes('VITE_'))
-      .slice(0, 10);
+      .slice(0, 20);
+    
+    // 모든 환경 변수 키 목록 (값은 제외)
+    const envKeysList = allEnvKeys.slice(0, 20);
     
     console.warn('⚠️ API Keys not found. Available environment variables:', {
       hasGemini,
       hasOpenAI,
       relevantEnvKeys,
-      totalEnvKeys: Object.keys(import.meta.env).length,
+      allEnvKeysPreview: envKeysList,
+      totalEnvKeys: allEnvKeys.length,
       mode: import.meta.env.MODE,
       prod: import.meta.env.PROD,
+      dev: import.meta.env.DEV,
+      // 러버블 빌드 환경 확인을 위한 추가 정보
+      baseUrl: import.meta.env.BASE_URL,
+      viteVersion: import.meta.env.VITE_VERSION,
     });
+    
+    // 러버블 Secrets가 제대로 주입되지 않을 경우를 위한 안내
+    if (import.meta.env.PROD) {
+      console.error('❌ 러버블에서 환경 변수가 주입되지 않았습니다.', {
+        suggestion: '러버블 프로젝트 설정 → Secrets에서 VITE_GEMINI_API_KEY와 VITE_OPENAI_API_KEY를 확인하세요.',
+        note: '빌드 타임에 주입되어야 하므로, Secrets 변경 후 재배포가 필요합니다.',
+      });
+    }
   }
 }
 
