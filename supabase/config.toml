@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.get-gemini-key]
 verify_jwt = true
+
+[functions.get-openai-key]
+verify_jwt = true
