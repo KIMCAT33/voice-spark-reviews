@@ -34,17 +34,20 @@ import {
 import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY as string;
+// 러버블에서는 Secrets를 프로젝트 설정에서 추가해야 합니다
+const GEMINI_API_KEY = 
+  import.meta.env.VITE_GEMINI_API_KEY || 
+  import.meta.env.GEMINI_API_KEY ||
+  null;
 
-// Check API key existence (only log in development mode)
-// 러버블 프로덕션 환경에서는 환경 변수가 러버블 대시보드에서 설정되므로 조용히 처리
-if (import.meta.env.DEV && (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== "string" || GEMINI_API_KEY.trim() === "")) {
-  console.warn("⚠️ Gemini API Key not configured in development. Please set VITE_GEMINI_API_KEY in .env file or Lovable project settings.");
-}
+const OPENAI_API_KEY = 
+  import.meta.env.VITE_OPENAI_API_KEY || 
+  import.meta.env.OPENAI_API_KEY ||
+  null;
 
 export type AIModel = "gemini" | "openai";
 
+// Trim API keys (empty string if not provided)
 const trimmedGeminiKey = GEMINI_API_KEY?.trim() || "";
 const trimmedOpenAIKey = OPENAI_API_KEY?.trim() || "";
 
@@ -111,11 +114,21 @@ function GeminiLiveChat() {
   if (!hasRequiredAPIKey) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-md">
           <h1 className="text-2xl font-bold text-destructive">API Key Missing</h1>
           <p className="text-muted-foreground">
-            Please add your {selectedModel === "gemini" ? "Gemini" : "OpenAI"} API key to the .env file
+            The {selectedModel === "gemini" ? "Gemini" : "OpenAI"} API key is not configured.
           </p>
+          <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2 text-sm">
+            <p className="font-semibold">To fix this in Lovable:</p>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+              <li>Go to your Lovable project settings</li>
+              <li>Navigate to "Secrets" or "Environment Variables"</li>
+              <li>Add: <code className="bg-background px-1 rounded">{selectedModel === "gemini" ? "VITE_GEMINI_API_KEY" : "VITE_OPENAI_API_KEY"}</code></li>
+              <li>Set the value to your API key</li>
+              <li>Save and redeploy</li>
+            </ol>
+          </div>
           <div className="flex gap-2 justify-center">
             <Button variant="outline" onClick={() => setSelectedModel(selectedModel === "gemini" ? "openai" : "gemini")}>
               Switch to {selectedModel === "gemini" ? "OpenAI" : "Gemini"}
