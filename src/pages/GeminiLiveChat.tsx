@@ -35,7 +35,7 @@ import { Label } from "@/components/ui/label";
 
 // Vite only exposes environment variables prefixed with VITE_
 // 러버블에서는 Secrets를 프로젝트 설정에서 추가해야 합니다
-// 주의: .env 파일이 Git에 커밋되어 있으면 빌드 시 그 값이 사용될 수 있습니다
+// 러버블 Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에도 확인
 
 // 러버블 빌드 환경에서 사용 가능한 모든 환경 변수 소스 확인
 const GEMINI_API_KEY = 
@@ -102,6 +102,28 @@ function GeminiLiveChat() {
   const [searchParams, setSearchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [runtimeApiKeys, setRuntimeApiKeys] = useState<{ gemini?: string; openai?: string } | null>(null);
+  
+  // 러버블 Secrets가 빌드 타임에 주입되지 않는 경우를 대비하여 런타임에 확인
+  // 러버블이 window 객체에 환경 변수를 주입하는지 확인
+  useEffect(() => {
+    // 러버블이 window.__LOVABLE_ENV__ 같은 객체로 환경 변수를 주입할 수 있음
+    const lovableEnv = (window as any).__LOVABLE_ENV__ || (window as any).__ENV__ || {};
+    
+    if (!GEMINI_API_KEY || !OPENAI_API_KEY) {
+      // 러버블 런타임 환경 변수 확인
+      const runtimeGemini = lovableEnv.VITE_GEMINI_API_KEY || lovableEnv.GEMINI_API_KEY;
+      const runtimeOpenAI = lovableEnv.VITE_OPENAI_API_KEY || lovableEnv.OPENAI_API_KEY;
+      
+      if (runtimeGemini || runtimeOpenAI) {
+        setRuntimeApiKeys({
+          gemini: runtimeGemini || undefined,
+          openai: runtimeOpenAI || undefined,
+        });
+        console.log('✅ 러버블 런타임 환경 변수에서 API 키를 찾았습니다.');
+      }
+    }
+  }, []);
   
   // Get selected model from URL or default to "gemini"
   const modelParam = searchParams.get('model') as AIModel;
@@ -148,10 +170,14 @@ function GeminiLiveChat() {
     products = [{ name: productParam, price: '0' }];
   }
 
+  // 런타임 API 키가 있으면 사용, 없으면 빌드 타임 환경 변수 사용
+  const finalGeminiKey = runtimeApiKeys?.gemini || trimmedGeminiKey;
+  const finalOpenAIKey = runtimeApiKeys?.openai || trimmedOpenAIKey;
+  
   // Check if API key is available for selected model
   const hasRequiredAPIKey = selectedModel === "gemini" 
-    ? !!trimmedGeminiKey 
-    : !!trimmedOpenAIKey;
+    ? !!finalGeminiKey 
+    : !!finalOpenAIKey;
 
   if (!hasRequiredAPIKey) {
     return (
@@ -194,9 +220,12 @@ function GeminiLiveChat() {
       </div>
 
       <LiveAPIProvider 
-        options={geminiApiOptions}
+        options={{
+          ...geminiApiOptions,
+          apiKey: finalGeminiKey, // 런타임 API 키 우선 사용
+        }}
         modelType={selectedModel}
-        openAIApiKey={trimmedOpenAIKey}
+        openAIApiKey={finalOpenAIKey} // 런타임 API 키 우선 사용
       >
         <div className="flex flex-col h-screen relative z-10">
           {/* Header with Glassmorphism */}
