@@ -36,7 +36,20 @@ export type UseLiveAPIResults = {
 };
 
 export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
-  const client = useMemo(() => new GenAILiveClient(options), [options]);
+  // Determine if we should use proxy
+  const useProxy = true; // Always use proxy for security
+  const proxyUrl = `wss://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/gemini-live-proxy`;
+  
+  // Create client with proxy configuration
+  const client = useMemo(
+    () => new GenAILiveClient({ 
+      ...options, 
+      apiKey: '', // No API key on client side
+      useProxy,
+      proxyUrl
+    }), 
+    [options, useProxy, proxyUrl]
+  );
   const audioStreamerRef = useRef<AudioStreamer | null>(null);
 
   const [model, setModel] = useState<string>("models/gemini-2.0-flash-exp");

@@ -71,6 +71,8 @@ export interface LiveClientEventTypes {
  */
 export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   protected client: GoogleGenAI;
+  private useProxy: boolean = false;
+  private proxyUrl: string = '';
 
   private _status: "connected" | "disconnected" | "connecting" = "disconnected";
   public get status() {
@@ -78,6 +80,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   }
 
   private _session: Session | null = null;
+  private _ws: WebSocket | null = null; // Direct WebSocket for proxy mode
   public get session() {
     return this._session;
   }
@@ -93,9 +96,11 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     return { ...this.config };
   }
 
-  constructor(options: LiveClientOptions) {
+  constructor(options: LiveClientOptions & { useProxy?: boolean; proxyUrl?: string }) {
     super();
     this.client = new GoogleGenAI(options);
+    this.useProxy = options.useProxy || false;
+    this.proxyUrl = options.proxyUrl || '';
     this.send = this.send.bind(this);
     this.onopen = this.onopen.bind(this);
     this.onerror = this.onerror.bind(this);
@@ -115,6 +120,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   async connect(model: string, config: LiveConnectConfig): Promise<boolean> {
     console.log("🔗 Starting connection with model:", model);
     console.log("Config:", config);
+    console.log("Use proxy:", this.useProxy);
     
     if (this._status === "connected" || this._status === "connecting") {
       console.warn("Already connected or connecting, returning false");
@@ -125,6 +131,12 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     this.config = config;
     this._model = model;
 
+    // Use proxy mode if configured
+    if (this.useProxy && this.proxyUrl) {
+      return this.connectViaProxy(model, config);
+    }
+
+    // Original Google SDK connection
     const callbacks: LiveCallbacks = {
       onopen: this.onopen,
       onmessage: this.onmessage,
@@ -151,7 +163,65 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     return true;
   }
 
+  private async connectViaProxy(model: string, config: LiveConnectConfig): Promise<boolean> {
+    try {
+      const wsUrl = `${this.proxyUrl}?model=${encodeURIComponent(model)}`;
+      console.log("🔗 Connecting via proxy:", wsUrl);
+      
+      this._ws = new WebSocket(wsUrl);
+      
+      this._ws.onopen = () => {
+        console.log("✅ Proxy WebSocket opened");
+        this._status = "connected";
+        this.onopen();
+        
+        // Send initial setup message with config
+        const setupMessage = {
+          setup: {
+            model,
+            ...config
+          }
+        };
+        this._ws?.send(JSON.stringify(setupMessage));
+      };
+      
+      this._ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          this.onmessage(message);
+        } catch (error) {
+          console.error("Error parsing proxy message:", error);
+        }
+      };
+      
+      this._ws.onerror = (event) => {
+        console.error("❌ Proxy WebSocket error:", event);
+        this.onerror(event as ErrorEvent);
+      };
+      
+      this._ws.onclose = (event) => {
+        console.log("🔌 Proxy WebSocket closed");
+        this._status = "disconnected";
+        this.onclose(event);
+      };
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Error connecting via proxy:", error);
+      this._status = "disconnected";
+      return false;
+    }
+  }
+
   public disconnect() {
+    if (this.useProxy && this._ws) {
+      this._ws.close();
+      this._ws = null;
+      this._status = "disconnected";
+      this.log("client.close", `Disconnected from proxy`);
+      return true;
+    }
+    
     if (!this.session) {
       return false;
     }
@@ -262,6 +332,16 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send realtimeInput, this is base64 chunks of "audio/pcm" and/or "image/jpg"
    */
   sendRealtimeInput(chunks: Array<{ mimeType: string; data: string }>) {
+    if (this.useProxy && this._ws) {
+      // Send via proxy WebSocket
+      const message = {
+        realtimeInput: { mediaChunks: chunks }
+      };
+      this._ws.send(JSON.stringify(message));
+      this.log(`client.realtimeInput`, `sent ${chunks.length} chunks via proxy`);
+      return;
+    }
+    
     if (!this.session) {
       console.warn("Cannot send realtime input: session not available");
       return;
@@ -299,6 +379,16 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    *  send a response to a function call and provide the id of the functions you are responding to
    */
   sendToolResponse(toolResponse: LiveClientToolResponse) {
+    if (this.useProxy && this._ws) {
+      // Send via proxy WebSocket
+      const message = {
+        toolResponse: toolResponse
+      };
+      this._ws.send(JSON.stringify(message));
+      this.log(`client.toolResponse`, toolResponse);
+      return;
+    }
+    
     if (
       toolResponse.functionResponses &&
       toolResponse.functionResponses.length
