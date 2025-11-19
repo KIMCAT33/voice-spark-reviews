@@ -23,6 +23,7 @@ import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
 import { useLoggerStore } from "../../lib/store-logger";
 import Logger, { LoggerFilterType } from "../logger/Logger";
 import "./side-panel.scss";
+import { isGenAILiveClient } from "@/lib/type-guards";
 
 const filterOptions = [
   { value: "conversations", label: "Conversations" },
@@ -58,14 +59,18 @@ export default function SidePanel() {
 
   // listen for log events and store them
   useEffect(() => {
-    client.on("log", log);
-    return () => {
-      client.off("log", log);
-    };
+    if (client && isGenAILiveClient(client)) {
+      client.on("log", log);
+      return () => {
+        client.off("log", log);
+      };
+    }
   }, [client, log]);
 
   const handleSubmit = () => {
-    client.send([{ text: textInput }]);
+    if (client && isGenAILiveClient(client)) {
+      client.send([{ text: textInput }]);
+    }
 
     setTextInput("");
     if (inputRef.current) {

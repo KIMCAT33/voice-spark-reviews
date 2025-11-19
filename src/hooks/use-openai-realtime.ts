@@ -34,15 +34,16 @@ function convertGeminiConfigToOpenAI(config: LiveConnectConfig): { instructions:
 
   console.log('🔄 [OpenAI] Converting config:', {
     hasSystemInstruction: !!config.systemInstruction,
-    hasParts: !!config.systemInstruction?.parts,
-    partsLength: config.systemInstruction?.parts?.length || 0,
+    hasParts: !!(config.systemInstruction as any)?.parts,
+    partsLength: (config.systemInstruction as any)?.parts?.length || 0,
     hasTools: !!config.tools,
     toolsLength: config.tools?.length || 0
   });
 
   // systemInstruction에서 text 추출
-  if (config.systemInstruction?.parts) {
-    instructions = config.systemInstruction.parts
+  const systemInst = config.systemInstruction as any;
+  if (systemInst?.parts) {
+    instructions = systemInst.parts
       .map((part: any, index: number) => {
         console.log(`📄 [OpenAI] Processing part ${index}:`, typeof part, part);
         if (typeof part === 'string') return part;
@@ -354,7 +355,7 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
       console.log('🔗 [OpenAI] Connecting to Realtime API...');
       await sessionRef.current.connect({
-        apiKey: clientSecret
+        apiKey: clientSecret || ''
       });
 
       console.log('✅ [OpenAI] Connected successfully');
