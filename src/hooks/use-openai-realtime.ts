@@ -290,10 +290,27 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
       agentRef.current = agent;
 
+      // Session 생성 시 모든 configuration 전달
+      console.log('🔧 [OpenAI] Creating session with full configuration');
       const session = new RealtimeSession(agent, {
-        model: 'gpt-4o-realtime-preview-2024-12-17'
-      });
+        model: 'gpt-4o-realtime-preview-2024-12-17',
+        modalities: ['text', 'audio'],
+        instructions: config.instructions,
+        voice: 'alloy',
+        input_audio_format: 'pcm16',
+        output_audio_format: 'pcm16',
+        turn_detection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500
+        },
+        tools: config.tools,
+        tool_choice: 'auto',
+        temperature: 0.8
+      } as any);
       sessionRef.current = session;
+      console.log('✅ [OpenAI] Session created with instructions and tools');
 
       // OpenAI 이벤트를 Gemini 스타일로 변환
       setupEventListeners(session);
