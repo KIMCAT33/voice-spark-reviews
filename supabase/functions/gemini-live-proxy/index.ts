@@ -69,7 +69,15 @@ Deno.serve(async (req) => {
     // Helper function to convert camelCase to snake_case
     const convertToSnakeCase = (obj: any): any => {
       if (obj === null || typeof obj !== 'object') return obj;
-      if (Array.isArray(obj)) return obj.map(convertToSnakeCase);
+      if (Array.isArray(obj)) {
+        return obj.map(item => {
+          // If it's a string that looks like a property name (camelCase), convert it
+          if (typeof item === 'string' && /^[a-z][a-zA-Z0-9]*$/.test(item)) {
+            return item.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+          }
+          return convertToSnakeCase(item);
+        });
+      }
       
       const converted: any = {};
       for (const [key, value] of Object.entries(obj)) {
