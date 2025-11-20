@@ -92,6 +92,15 @@ Deno.serve(async (req) => {
     // Handle Gemini connection open
     geminiSocket.onopen = () => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
+      
+      // Send initial setup message with model configuration
+      const setupMessage = {
+        setup: {
+          model: model,
+        }
+      };
+      console.log('📤 [Gemini Proxy] Sending setup message:', JSON.stringify(setupMessage));
+      geminiSocket.send(JSON.stringify(setupMessage));
     };
 
     // Handle errors
