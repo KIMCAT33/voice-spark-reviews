@@ -131,15 +131,28 @@ Deno.serve(async (req) => {
     };
 
     // Gemini -> Client: Forward messages
-    geminiSocket.onmessage = (event) => {
+    geminiSocket.onmessage = async (event) => {
       try {
-        const preview = event.data.substring(0, 100);
-        console.log('📥 [Gemini Proxy] Received from Gemini (len:', event.data.length, '):', preview, '...');
+        // Convert data to string if it's not already
+        let messageData: string;
+        if (typeof event.data === 'string') {
+          messageData = event.data;
+        } else if (event.data instanceof Blob) {
+          messageData = await event.data.text();
+        } else if (event.data instanceof ArrayBuffer) {
+          messageData = new TextDecoder().decode(event.data);
+        } else {
+          console.error('❌ [Gemini Proxy] Unknown data type:', typeof event.data);
+          return;
+        }
+        
+        const preview = messageData.substring(0, 100);
+        console.log('📥 [Gemini Proxy] Received from Gemini (len:', messageData.length, '):', preview, '...');
         console.log('🔍 [Gemini Proxy] Client readyState:', clientSocket.readyState);
         
         // Try to parse and log message type
         try {
-          const parsed = JSON.parse(event.data);
+          const parsed = JSON.parse(messageData);
           const msgType = parsed.setupComplete ? 'setupComplete' : 
                          parsed.serverContent ? 'content' : 
                          parsed.toolCall ? 'toolCall' : 
@@ -154,7 +167,7 @@ Deno.serve(async (req) => {
         
         if (clientSocket.readyState === WebSocket.OPEN) {
           console.log('✅ [Gemini Proxy] Forwarding to client');
-          clientSocket.send(event.data);
+          clientSocket.send(messageData);
         } else {
           console.warn('⚠️ [Gemini Proxy] Client socket not ready, dropping message');
         }
