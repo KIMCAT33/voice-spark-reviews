@@ -66,6 +66,19 @@ Deno.serve(async (req) => {
     // Message buffer for client messages before Gemini is ready
     let messageBuffer: string[] = [];
 
+    // Helper function to convert camelCase to snake_case
+    const convertToSnakeCase = (obj: any): any => {
+      if (obj === null || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(convertToSnakeCase);
+      
+      const converted: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        converted[snakeKey] = convertToSnakeCase(value);
+      }
+      return converted;
+    };
+
     // Client -> Gemini: Forward messages (with buffering)
     clientSocket.onmessage = (event) => {
       try {
@@ -73,12 +86,23 @@ Deno.serve(async (req) => {
         console.log('📨 [Gemini Proxy] Received from client (len:', event.data.length, '):', preview, '...');
         console.log('🔍 [Gemini Proxy] Gemini readyState:', geminiSocket.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
         
+        // Convert camelCase to snake_case for Gemini API
+        let messageToSend = event.data;
+        try {
+          const parsed = JSON.parse(event.data);
+          const converted = convertToSnakeCase(parsed);
+          messageToSend = JSON.stringify(converted);
+          console.log('🔄 [Gemini Proxy] Converted message:', messageToSend.substring(0, 200), '...');
+        } catch (e) {
+          console.log('⚠️ [Gemini Proxy] Could not parse message for conversion, sending as-is');
+        }
+        
         if (geminiSocket.readyState === WebSocket.OPEN) {
           console.log('✅ [Gemini Proxy] Forwarding to Gemini immediately');
-          geminiSocket.send(event.data);
+          geminiSocket.send(messageToSend);
         } else {
           console.log('📦 [Gemini Proxy] Buffering message, current buffer size:', messageBuffer.length);
-          messageBuffer.push(event.data);
+          messageBuffer.push(messageToSend);
         }
       } catch (error) {
         console.error('❌ [Gemini Proxy] Error in client message handler:', error);
