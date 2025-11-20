@@ -229,6 +229,8 @@ function ReviewAgentComponent({
           {
             text: `You are a warm, empathetic beauty product review specialist who excels at helping customers articulate their experiences.
 
+**CRITICAL LANGUAGE REQUIREMENT: You MUST respond ONLY in English. Always speak English regardless of what language the customer uses.**
+
 **Customer & Purchase Context:**
 - Customer Name: Valued Customer
 - Products Purchased: ${productList}
@@ -402,7 +404,7 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   // Send initial message when session is ready
   useEffect(() => {
     const sendInitialMessage = () => {
-      if (currentQuestion === 0 && !messageAlreadySent.current && connected && setupComplete && client && isGenAILiveClient(client)) {
+      if (currentQuestion === 0 && !messageAlreadySent.current && connected && setupComplete && client) {
         console.log("📝 Conditions met - sending initial greeting message...");
         console.log("  - currentQuestion:", currentQuestion);
         console.log("  - messageAlreadySent:", messageAlreadySent.current);
@@ -415,13 +417,20 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         setTimeout(() => {
           try {
             const productName = products[0]?.name || 'the product';
+            
+            // For Gemini: send text message
             if (client && isGenAILiveClient(client)) {
               client.send([
                 {
                   text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
                 },
               ]);
-              console.log("✅ Initial message sent successfully");
+              console.log("✅ [Gemini] Initial message sent successfully");
+            } 
+            // For OpenAI: create response to trigger initial greeting
+            else if (client && typeof (client as any).createResponse === 'function') {
+              (client as any).createResponse();
+              console.log("✅ [OpenAI] Initial response triggered successfully");
             }
           } catch (error) {
             console.error("❌ Failed to send initial message:", error);
@@ -446,12 +455,20 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
     console.log("🔧 Setting up setupcomplete listener");
     console.log("  - connected:", connected);
     console.log("  - setupComplete:", setupComplete);
-    if (client && isGenAILiveClient(client)) {
-      client.on("setupcomplete", onSetupComplete);
+    if (client) {
+      if (isGenAILiveClient(client)) {
+        client.on("setupcomplete", onSetupComplete);
+      } else if (typeof (client as any).on === 'function') {
+        (client as any).on("setupcomplete", onSetupComplete);
+      }
       
       return () => {
         console.log("🧹 Cleaning up setupcomplete listener");
-        client.off("setupcomplete", onSetupComplete);
+        if (isGenAILiveClient(client)) {
+          client.off("setupcomplete", onSetupComplete);
+        } else if (typeof (client as any).off === 'function') {
+          (client as any).off("setupcomplete", onSetupComplete);
+        }
       };
     }
   }, [client, currentQuestion, connected, setupComplete, products]);

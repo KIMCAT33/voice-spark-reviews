@@ -584,6 +584,28 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
           }
         });
       },
+      createResponse: async () => {
+        // OpenAI의 response 생성 메서드 (Gemini 호환성)
+        if (!sessionRef.current) {
+          console.warn('⚠️ [OpenAI] Cannot create response: session not available');
+          return;
+        }
+        
+        const session = sessionRef.current as any;
+        console.log('🎤 [OpenAI] createResponse 호출됨');
+        
+        try {
+          if (typeof session.createResponse === 'function') {
+            const response = await session.createResponse();
+            console.log('✅ [OpenAI] Response created:', response?.id || 'success');
+            return response;
+          } else {
+            console.log('ℹ️ [OpenAI] createResponse 없음 - Instructions에 의존하여 자동 응답');
+          }
+        } catch (error) {
+          console.error('❌ [OpenAI] Error creating response:', error);
+        }
+      },
       on,
       off,
       connect,
