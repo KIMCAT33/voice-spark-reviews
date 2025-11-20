@@ -248,14 +248,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             console.log('✅ [OpenAI] Session updated successfully');
             setConnected(true);
             triggerEvent('setupcomplete', {});
-            
-            // 연결 후 초기 응답 트리거
-            setTimeout(() => {
-              if (wsRef.current?.readyState === WebSocket.OPEN) {
-                console.log('🎬 [OpenAI] Triggering initial response...');
-                wsRef.current.send(JSON.stringify({ type: 'response.create' }));
-              }
-            }, 500);
+            // Server VAD 모드에서는 자동으로 응답 생성되므로 수동 트리거 불필요
           }
 
           // 오디오 응답 처리
@@ -386,12 +379,8 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       }
     }));
 
-    setTimeout(() => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: 'response.create' }));
-        console.log('✅ [OpenAI] Response triggered');
-      }
-    }, 100);
+    // Server VAD 모드에서는 자동으로 응답이 생성되므로 수동 트리거 불필요
+    console.log('✅ [OpenAI] Message sent, waiting for Server VAD');
   }, []);
 
   // Tool 응답 전송
