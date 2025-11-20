@@ -63,23 +63,15 @@ Deno.serve(async (req) => {
     
     const geminiSocket = new WebSocket(geminiWsUrl);
     
-    // Buffer for pending messages before Gemini socket is open
-    let messageBuffer: string[] = [];
-    let geminiReady = false;
-
-    // Client -> Gemini: Forward messages (with buffering)
+    // Client -> Gemini: Forward messages directly
     clientSocket.onmessage = (event) => {
       try {
-        const preview = event.data.substring(0, 100);
-        console.log('📤 [Gemini Proxy] Client -> Gemini:', preview, '...');
-        console.log('🔍 [Gemini Proxy] Gemini state:', geminiSocket.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
-        
-        if (geminiSocket.readyState === WebSocket.OPEN && geminiReady) {
-          console.log('✅ [Gemini Proxy] Forwarding to Gemini immediately');
+        if (geminiSocket.readyState === WebSocket.OPEN) {
+          const preview = event.data.substring(0, 100);
+          console.log('📤 [Gemini Proxy] Client -> Gemini (len:', event.data.length, '):', preview, '...');
           geminiSocket.send(event.data);
         } else {
-          console.log('⏳ [Gemini Proxy] Buffering message (ready:', geminiReady, ')');
-          messageBuffer.push(event.data);
+          console.log('⚠️ [Gemini Proxy] Cannot forward - Gemini not ready, state:', geminiSocket.readyState);
         }
       } catch (error) {
         console.error('❌ [Gemini Proxy] Error forwarding to Gemini:', error);
@@ -116,20 +108,7 @@ Deno.serve(async (req) => {
     // Handle Gemini connection open
     geminiSocket.onopen = () => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
-      geminiReady = true;
-      
-      // Send buffered messages
-      console.log('📦 [Gemini Proxy] Flushing', messageBuffer.length, 'buffered messages');
-      for (let i = 0; i < messageBuffer.length; i++) {
-        try {
-          const preview = messageBuffer[i].substring(0, 100);
-          console.log(`📤 [Gemini Proxy] Sending buffered message ${i+1}:`, preview, '...');
-          geminiSocket.send(messageBuffer[i]);
-        } catch (error) {
-          console.error('❌ [Gemini Proxy] Error sending buffered message:', error);
-        }
-      }
-      messageBuffer = [];
+      console.log('🎤 [Gemini Proxy] Waiting for client to send setup message...');
     };
 
     // Handle errors
