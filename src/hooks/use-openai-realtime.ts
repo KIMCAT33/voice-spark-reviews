@@ -238,9 +238,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
                   }
                 },
                 instructions: config.instructions,
-                tools: config.tools || [],
-                tool_choice: 'auto',
-                temperature: 0.8
+                tools: config.tools || []
               }
             }));
           }
