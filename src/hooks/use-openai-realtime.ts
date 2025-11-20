@@ -279,6 +279,11 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       // Instructions 내용 로깅 (디버깅용)
       if (agentConfig.instructions) {
         console.log('📝 [OpenAI] Instructions preview:', agentConfig.instructions.substring(0, 500));
+        
+        // Instructions에 "즉시 시작" 지시 확인
+        if (!agentConfig.instructions.includes('start the conversation IMMEDIATELY')) {
+          console.warn('⚠️ [OpenAI] Instructions may not include immediate start directive');
+        }
       }
       
       // Tools 내용 로깅 (디버깅용)
@@ -432,41 +437,23 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       console.log('✅ [OpenAI] Connected successfully');
       setConnected(true);
       
-      // Agent가 먼저 인사하도록 trigger (OpenAI Realtime API는 기본적으로 사용자 입력 대기)
+      // Agent instructions에 따라 즉시 응답 생성 (conversation.item.create 없이)
       setTimeout(async () => {
         try {
-          console.log('🎤 [OpenAI] Triggering initial greeting from agent...');
+          console.log('🎤 [OpenAI] Triggering agent to start conversation...');
           const session = sessionRef.current as any;
           const ws = session?.ws || session?._ws || session?.connection?.ws;
           
           if (ws && ws.readyState === WebSocket.OPEN) {
-            // Step 1: conversation.item.create - 내부 user 메시지로 greeting 요청
-            const itemCreate = {
-              type: 'conversation.item.create',
-              item: {
-                type: 'message',
-                role: 'user',
-                content: [{
-                  type: 'input_text',
-                  text: 'Please greet me and start the review conversation as instructed in your system prompt.'
-                }]
-              }
-            };
-            ws.send(JSON.stringify(itemCreate));
-            console.log('📤 [OpenAI] Sent conversation.item.create');
-            
-            // Step 2: response.create - AI 응답 트리거
-            setTimeout(() => {
-              if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'response.create' }));
-                console.log('✅ [OpenAI] Sent response.create - agent should start speaking');
-              }
-            }, 100);
+            // Agent의 instructions에 "즉시 인사하고 시작하라"가 있으므로
+            // response.create만 보내면 Agent가 instructions대로 행동함
+            ws.send(JSON.stringify({ type: 'response.create' }));
+            console.log('✅ [OpenAI] Sent response.create - agent should follow instructions');
           } else {
-            console.warn('⚠️ [OpenAI] WebSocket not available for initial greeting');
+            console.warn('⚠️ [OpenAI] WebSocket not available');
           }
         } catch (error) {
-          console.error('❌ [OpenAI] Error triggering initial greeting:', error);
+          console.error('❌ [OpenAI] Error triggering initial response:', error);
         }
       }, 500);
 
