@@ -33,6 +33,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Validate API key
+    if (!geminiApiKey.trim()) {
+      console.error('❌ GEMINI_API_KEY is empty');
+      return new Response(JSON.stringify({ error: 'API key is empty' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('✅ [Gemini Proxy] API key loaded, length:', geminiApiKey.length);
+    
     // Get model from query params (default: gemini-2.0-flash-exp)
     const url = new URL(req.url);
     const model = url.searchParams.get('model') || 'models/gemini-2.0-flash-exp';
