@@ -437,9 +437,19 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       console.log('✅ [OpenAI] Connected successfully');
       setConnected(true);
       
-      // OpenAI Agent는 instructions에 따라 동작
-      // VAD(Voice Activity Detection)가 활성화되어 있어 사용자 음성을 기다림
-      console.log('ℹ️ [OpenAI] Agent connected - waiting for user speech (VAD enabled)');
+      // Agent가 즉시 인사를 시작하도록 트리거
+      console.log('🎬 [OpenAI] Triggering initial agent response...');
+      setTimeout(() => {
+        try {
+          const session = sessionRef.current as any;
+          if (session && typeof session.createResponse === 'function') {
+            session.createResponse();
+            console.log('✅ [OpenAI] Initial response triggered');
+          }
+        } catch (error) {
+          console.error('❌ [OpenAI] Error triggering initial response:', error);
+        }
+      }, 500);
 
       // Audio recorder 시작
       if (!audioRecorderRef.current) {
@@ -559,44 +569,39 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
     console.log('📤 [OpenAI] Attempting to send user message:', text.substring(0, 100));
     
     try {
-      // 방법 1: WebSocket 직접 접근 (내부 구현)
-      const ws = session.ws || session._ws || session.connection?.ws || session.client?.ws;
-      
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        console.log('✅ [OpenAI] Found WebSocket, sending conversation.item.create');
+      // @openai/agents SDK의 올바른 방법: conversation API 사용
+      if (session.conversation && typeof session.conversation.item?.create === 'function') {
+        console.log('✅ [OpenAI] Using conversation.item.create API');
         
-        // conversation.item.create - user 메시지 생성
-        ws.send(JSON.stringify({
-          type: 'conversation.item.create',
-          item: {
-            type: 'message',
-            role: 'user',
-            content: [{
-              type: 'input_text',
-              text: text
-            }]
-          }
-        }));
+        session.conversation.item.create({
+          type: 'message',
+          role: 'user',
+          content: [{
+            type: 'input_text',
+            text: text
+          }]
+        });
         
-        // response.create - AI 응답 트리거
+        // AI 응답 트리거
         setTimeout(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'response.create' }));
-            console.log('✅ [OpenAI] Sent response.create');
+          if (typeof session.createResponse === 'function') {
+            session.createResponse();
+            console.log('✅ [OpenAI] Triggered response after message');
           }
         }, 100);
         
         return;
       }
       
-      // 방법 2: createResponse 메서드 (fallback)
+      // Fallback: createResponse만 호출 (메시지 없이 응답 트리거)
       if (typeof session.createResponse === 'function') {
-        console.log('⚠️ [OpenAI] Using createResponse fallback (may not send text)');
+        console.log('⚠️ [OpenAI] Using createResponse (no message send)');
         session.createResponse();
         return;
       }
       
       console.error('❌ [OpenAI] No method available to send message');
+      console.log('🔍 [OpenAI] Available session methods:', Object.keys(session));
     } catch (error) {
       console.error('❌ [OpenAI] Error sending message:', error);
     }
