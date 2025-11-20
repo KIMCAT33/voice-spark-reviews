@@ -25,7 +25,7 @@ import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { isGenAILiveClient } from "@/lib/type-guards";
 
@@ -112,6 +112,8 @@ function ReviewAgentComponent({
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const selectedModel = searchParams.get('model') || 'gemini'; // URL에서 모델 확인
   const [reviewData, setReviewData] = useState<ReviewData>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -418,19 +420,36 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
           try {
             const productName = products[0]?.name || 'the product';
             
-            // For Gemini: send text message
-            if (client && isGenAILiveClient(client)) {
-              client.send([
-                {
-                  text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
-                },
-              ]);
-              console.log("✅ [Gemini] Initial message sent successfully");
-            } 
-            // For OpenAI: create response to trigger initial greeting
-            else if (client && typeof (client as any).createResponse === 'function') {
-              (client as any).createResponse();
-              console.log("✅ [OpenAI] Initial response triggered successfully");
+            console.log('🔍 [ReviewAgent] Model selection:', {
+              urlParam: selectedModel,
+              isGeminiClient: isGenAILiveClient(client),
+              clientType: client?.constructor?.name
+            });
+            
+            // URL 파라미터 기반 분기 (더 명확함)
+            if (selectedModel === 'openai') {
+              console.log("🎯 [ReviewAgent] Using OpenAI model - triggering initial response");
+              // OpenAI는 사용자가 먼저 말할 때까지 기다리므로
+              // send() 메서드로 초기 메시지를 보내 Agent가 응답하도록 트리거
+              if (client && typeof (client as any).send === 'function') {
+                (client as any).send([{ text: "Hello" }]);
+                console.log("✅ [OpenAI] Sent initial trigger message");
+              } else {
+                console.warn("⚠️ [OpenAI] Client send method not available");
+              }
+            } else {
+              // Gemini: send text message
+              console.log("🎯 [ReviewAgent] Using Gemini model");
+              if (client && isGenAILiveClient(client)) {
+                client.send([
+                  {
+                    text: `Start the interview by greeting the customer warmly and asking about their experience with ${productName}.`,
+                  },
+                ]);
+                console.log("✅ [Gemini] Initial message sent successfully");
+              } else {
+                console.warn("⚠️ [Gemini] Client not ready or incorrect type");
+              }
             }
           } catch (error) {
             console.error("❌ Failed to send initial message:", error);
