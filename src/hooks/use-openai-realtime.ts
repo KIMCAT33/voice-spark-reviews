@@ -248,7 +248,17 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             console.log('✅ [OpenAI] Session updated successfully');
             setConnected(true);
             triggerEvent('setupcomplete', {});
-            // Server VAD 모드에서는 자동으로 응답 생성되므로 수동 트리거 불필요
+            
+            // OpenAI Realtime API는 초기 응답을 자동으로 생성하지 않으므로 명시적으로 요청
+            // 시스템 인스트럭션에서 즉시 대화를 시작하라고 지시했으므로 응답 생성
+            setTimeout(() => {
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                console.log('🚀 [OpenAI] Requesting initial response...');
+                wsRef.current.send(JSON.stringify({
+                  type: 'response.create'
+                }));
+              }
+            }, 500);
           }
 
           // 오디오 응답 처리
@@ -414,10 +424,23 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
     }));
   }, []);
 
+  // 초기 응답 생성
+  const createResponse = useCallback(() => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.warn('⚠️ [OpenAI] WebSocket not ready for response.create');
+      return;
+    }
+    console.log('🚀 [OpenAI] Creating response...');
+    wsRef.current.send(JSON.stringify({
+      type: 'response.create'
+    }));
+  }, []);
+
   // 클라이언트 래퍼
   const clientWrapper = useMemo(() => ({
     send,
     sendToolResponse,
+    createResponse,
     sendRealtimeInput: (chunks: Array<{ mimeType: string; data: string }>) => {
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
       
@@ -430,7 +453,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
         }
       });
     }
-  }), [send, sendToolResponse]);
+  }), [send, sendToolResponse, createResponse]);
 
   // Cleanup
   useEffect(() => {
