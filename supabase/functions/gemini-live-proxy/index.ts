@@ -55,10 +55,11 @@ Deno.serve(async (req) => {
     // Upgrade client connection
     const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
-    // Connect to Gemini Live API
-    // Note: API key is passed in the setup message, not in the URL
-    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
-    console.log('🌐 [Gemini Proxy] Connecting to:', geminiWsUrl);
+    // Connect to Gemini Live API with API key in URL
+    // The API key MUST be in the URL as a query parameter, not in the setup message
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(geminiApiKey)}`;
+    console.log('🌐 [Gemini Proxy] Connecting to Gemini (URL length):', geminiWsUrl.length);
+    console.log('🔐 [Gemini Proxy] Using API key in URL parameter');
     
     const geminiSocket = new WebSocket(geminiWsUrl);
 
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
     clientSocket.onmessage = (event) => {
       try {
         if (geminiSocket.readyState === WebSocket.OPEN) {
-          console.log('📤 [Gemini Proxy] Client -> Gemini:', typeof event.data);
+          console.log('📤 [Gemini Proxy] Client -> Gemini:', typeof event.data, 'length:', event.data?.length);
           geminiSocket.send(event.data);
         } else {
           console.warn('⚠️ [Gemini Proxy] Gemini socket not ready, state:', geminiSocket.readyState);
@@ -80,7 +81,14 @@ Deno.serve(async (req) => {
     geminiSocket.onmessage = (event) => {
       try {
         if (clientSocket.readyState === WebSocket.OPEN) {
-          console.log('📥 [Gemini Proxy] Gemini -> Client:', typeof event.data);
+          console.log('📥 [Gemini Proxy] Gemini -> Client:', typeof event.data, 'length:', event.data?.length);
+          // Try to parse and log message type
+          try {
+            const parsed = JSON.parse(event.data);
+            console.log('📋 [Gemini Proxy] Message type:', parsed.serverContent?.modelTurn?.parts?.[0] ? 'content' : parsed.setupComplete ? 'setupComplete' : 'unknown');
+          } catch (e) {
+            // Not JSON, skip parsing
+          }
           clientSocket.send(event.data);
         } else {
           console.warn('⚠️ [Gemini Proxy] Client socket not ready');
@@ -94,20 +102,24 @@ Deno.serve(async (req) => {
     geminiSocket.onopen = () => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
       
-      // Send initial setup message with API key and model configuration
+      // Send initial setup message with model configuration (NOT API key)
       const setupMessage = {
         setup: {
-          model: model,
-          apiKey: geminiApiKey,
+          model: `models/${model}`,
         }
       };
-      console.log('📤 [Gemini Proxy] Sending setup message with model:', model);
+      console.log('📤 [Gemini Proxy] Sending setup message:', JSON.stringify(setupMessage));
       geminiSocket.send(JSON.stringify(setupMessage));
     };
 
     // Handle errors
     geminiSocket.onerror = (error) => {
       console.error('❌ [Gemini Proxy] Gemini socket error:', error);
+      console.error('🔍 [Gemini Proxy] Error details:', {
+        type: error.type,
+        message: error instanceof ErrorEvent ? error.message : 'unknown',
+        readyState: geminiSocket.readyState
+      });
       if (clientSocket.readyState === WebSocket.OPEN) {
         clientSocket.close(1011, 'Upstream connection error');
       }
@@ -115,6 +127,11 @@ Deno.serve(async (req) => {
 
     clientSocket.onerror = (error) => {
       console.error('❌ [Gemini Proxy] Client socket error:', error);
+      console.error('🔍 [Gemini Proxy] Client error details:', {
+        type: error.type,
+        message: error instanceof ErrorEvent ? error.message : 'unknown',
+        readyState: clientSocket.readyState
+      });
       if (geminiSocket.readyState === WebSocket.OPEN) {
         geminiSocket.close();
       }
@@ -122,14 +139,24 @@ Deno.serve(async (req) => {
 
     // Handle connection close
     geminiSocket.onclose = (event) => {
-      console.log('🔌 [Gemini Proxy] Gemini connection closed:', event.code, event.reason);
+      console.log('🔌 [Gemini Proxy] Gemini connection closed');
+      console.log('📊 [Gemini Proxy] Close details:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      });
       if (clientSocket.readyState === WebSocket.OPEN) {
         clientSocket.close(event.code, event.reason);
       }
     };
 
     clientSocket.onclose = (event) => {
-      console.log('🔌 [Gemini Proxy] Client connection closed:', event.code, event.reason);
+      console.log('🔌 [Gemini Proxy] Client connection closed');
+      console.log('📊 [Gemini Proxy] Client close details:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      });
       if (geminiSocket.readyState === WebSocket.OPEN) {
         geminiSocket.close();
       }
