@@ -361,7 +361,7 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       console.log('✅ [OpenAI] Connected successfully');
       setConnected(true);
 
-      // 연결 후 초기 응답 생성 - response.create 이벤트 직접 전송
+      // 연결 후 초기 응답 생성 - session 객체의 실제 API 확인 및 사용
       setTimeout(async () => {
         const currentSession = sessionRef.current;
         if (!currentSession) {
@@ -371,38 +371,53 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
         
         try {
           console.log('🎤 [OpenAI] 연결 후 초기 응답 생성 시도...');
-          
-          // RealtimeSession의 send 메서드를 사용하여 이벤트 전송
           const session = currentSession as any;
-          if (typeof session.send === 'function') {
-            // 1. 먼저 사용자 메시지를 대화에 추가 (AI가 응답할 컨텍스트 제공)
-            session.send({
+          
+          // session 객체의 사용 가능한 메서드 로깅
+          console.log('🔍 [OpenAI] Session 메서드:', Object.keys(session));
+          console.log('🔍 [OpenAI] Session prototype:', Object.getOwnPropertyNames(Object.getPrototypeOf(session)));
+          
+          // Instructions에 "IMMEDIATELY start speaking"이 있으므로
+          // 추가적인 트리거 없이도 AI가 자동으로 시작해야 함
+          // 하지만 명시적으로 첫 응답을 요청하려면:
+          
+          // 방법 1: sendUserMessageContent 메서드 시도
+          if (typeof session.sendUserMessageContent === 'function') {
+            console.log('📤 [OpenAI] sendUserMessageContent 메서드 사용');
+            session.sendUserMessageContent([{
+              type: 'input_text',
+              text: 'Hello, please start as instructed in your system prompt.'
+            }]);
+          }
+          // 방법 2: conversation.item.create via underlying connection
+          else if (session.connection && typeof session.connection.send === 'function') {
+            console.log('📤 [OpenAI] connection.send 메서드 사용');
+            session.connection.send(JSON.stringify({
               type: 'conversation.item.create',
               item: {
                 type: 'message',
                 role: 'user',
                 content: [{
                   type: 'input_text',
-                  text: 'Please start the conversation and greet me warmly as instructed.'
+                  text: 'Hello, please start as instructed.'
                 }]
               }
-            });
-            console.log('📤 [OpenAI] 사용자 메시지 추가 완료');
-            
-            // 2. response.create 이벤트를 보내서 AI가 응답하도록 트리거
+            }));
+            // 그 다음 response.create
             setTimeout(() => {
-              session.send({
+              session.connection.send(JSON.stringify({
                 type: 'response.create'
-              });
-              console.log('✅ [OpenAI] response.create 이벤트 전송 완료');
+              }));
             }, 100);
-          } else {
-            console.warn('⚠️ [OpenAI] session.send 메서드를 찾을 수 없음');
+          }
+          // 방법 3: Instructions만으로 자동 시작 (아무것도 하지 않음)
+          else {
+            console.log('ℹ️ [OpenAI] Instructions에 의존하여 자동 시작 대기');
           }
         } catch (responseError: any) {
           console.error('❌ [OpenAI] 초기 응답 생성 실패:', responseError?.message || responseError);
         }
-      }, 1000); // 1000ms 딜레이로 세션 연결 안정화 대기
+      }, 1000);
 
       // Audio recorder 시작
       if (!audioRecorderRef.current) {
@@ -594,24 +609,32 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
         });
       },
       createResponse: async () => {
-        // OpenAI의 response 생성 메서드 (Gemini 호환성)
-        if (!sessionRef.current) {
-          console.warn('⚠️ [OpenAI] Cannot create response: session not available');
+        const session = sessionRef.current as any;
+        if (!session) {
+          console.warn('⚠️ [OpenAI] No session available for createResponse');
           return;
         }
         
-        const session = sessionRef.current as any;
         console.log('🎤 [OpenAI] createResponse 호출됨');
         
         try {
-          if (typeof session.send === 'function') {
-            // response.create 이벤트를 전송하여 AI 응답 트리거
-            session.send({
+          // 방법 1: sendUserMessageContent 메서드 시도
+          if (typeof session.sendUserMessageContent === 'function') {
+            console.log('📤 [OpenAI] sendUserMessageContent 메서드 사용');
+            session.sendUserMessageContent([{
+              type: 'input_text',
+              text: 'Continue the conversation.'
+            }]);
+          }
+          // 방법 2: connection.send 사용
+          else if (session.connection && typeof session.connection.send === 'function') {
+            console.log('📤 [OpenAI] connection.send 메서드 사용');
+            session.connection.send(JSON.stringify({
               type: 'response.create'
-            });
-            console.log('✅ [OpenAI] response.create 이벤트 전송');
-          } else {
-            console.warn('⚠️ [OpenAI] session.send 메서드 없음');
+            }));
+          }
+          else {
+            console.warn('⚠️ [OpenAI] 사용 가능한 send 메서드 없음');
           }
         } catch (error) {
           console.error('❌ [OpenAI] Error creating response:', error);
