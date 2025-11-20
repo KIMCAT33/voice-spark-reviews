@@ -232,13 +232,15 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
                   },
                   output: {
                     format: {
-                      type: 'audio/pcm'
+                      type: 'audio/pcm',
+                      rate: 24000
                     },
                     voice: 'alloy'
                   }
                 },
                 instructions: config.instructions,
-                tools: config.tools || []
+                tools: config.tools || [],
+                tool_choice: 'auto'
               }
             }));
           }
