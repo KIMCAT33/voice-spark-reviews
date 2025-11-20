@@ -422,9 +422,13 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         return;
       }
       try {
+        const partsArray = Array.isArray(parts) ? parts : [parts];
         const message = {
           clientContent: {
-            turns: Array.isArray(parts) ? parts : [parts],
+            turns: [{
+              role: 'user',
+              parts: partsArray
+            }],
             turnComplete
           }
         };
