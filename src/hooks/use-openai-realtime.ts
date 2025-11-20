@@ -225,7 +225,10 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
                       rate: 24000
                     },
                     turn_detection: {
-                      type: 'semantic_vad'
+                      type: 'semantic_vad',
+                      threshold: 0.5,
+                      prefix_padding_ms: 300,
+                      silence_duration_ms: 1000
                     }
                   },
                   output: {
@@ -264,6 +267,16 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             }
             
             audioStreamerRef.current.addPCM16(bytes);
+          }
+
+          // 음성 중지 감지
+          if (data.type === 'input_audio_buffer.speech_stopped') {
+            console.log('🛑 [OpenAI] Speech stopped - VAD detected end of speech');
+          }
+
+          // 음성 커밋 완료
+          if (data.type === 'input_audio_buffer.committed') {
+            console.log('✅ [OpenAI] Audio buffer committed');
           }
 
           // 텍스트 응답 처리
@@ -314,8 +327,13 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       if (!audioRecorderRef.current) {
         console.log('🎤 [OpenAI] Starting audio recorder...');
         audioRecorderRef.current = new AudioRecorder(24000);
+        let audioChunkCount = 0;
         audioRecorderRef.current.on('data', (base64Audio: string) => {
           if (wsRef.current?.readyState === WebSocket.OPEN) {
+            audioChunkCount++;
+            if (audioChunkCount % 50 === 0) {
+              console.log(`🎤 [OpenAI] Sent ${audioChunkCount} audio chunks`);
+            }
             wsRef.current.send(JSON.stringify({
               type: 'input_audio_buffer.append',
               audio: base64Audio
