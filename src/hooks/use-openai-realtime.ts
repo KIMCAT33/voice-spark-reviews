@@ -79,18 +79,16 @@ function convertGeminiConfigToOpenAI(config: LiveConnectConfig): { instructions:
       .join('\n');
   }
 
-  // Gemini tools를 OpenAI 형식으로 변환
+  // Gemini tools를 OpenAI Realtime 형식으로 변환
   if (config.tools && Array.isArray(config.tools)) {
     tools = config.tools
       .filter((tool: any) => tool?.functionDeclarations)
       .flatMap((tool: any) => 
         tool.functionDeclarations.map((func: any) => ({
           type: 'function',
-          function: {
-            name: func.name,
-            description: func.description,
-            parameters: convertParameters(func.parameters)
-          }
+          name: func.name,
+          description: func.description,
+          parameters: convertParameters(func.parameters)
         }))
       );
   }
