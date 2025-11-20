@@ -56,21 +56,30 @@ Deno.serve(async (req) => {
     const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
     // Connect to Gemini Live API with API key in URL
-    // The API key MUST be in the URL as a query parameter, not in the setup message
     const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(geminiApiKey)}`;
-    console.log('🌐 [Gemini Proxy] Connecting to Gemini (URL length):', geminiWsUrl.length);
-    console.log('🔐 [Gemini Proxy] Using API key in URL parameter');
+    console.log('🌐 [Gemini Proxy] Connecting to Gemini');
+    console.log('🔐 [Gemini Proxy] API key in URL: YES');
+    console.log('🔗 [Gemini Proxy] Full URL (censored):', geminiWsUrl.replace(geminiApiKey, 'CENSORED'));
     
     const geminiSocket = new WebSocket(geminiWsUrl);
+    
+    // Buffer for pending messages before Gemini socket is open
+    let messageBuffer: string[] = [];
+    let geminiReady = false;
 
-    // Client -> Gemini: Forward messages
+    // Client -> Gemini: Forward messages (with buffering)
     clientSocket.onmessage = (event) => {
       try {
-        if (geminiSocket.readyState === WebSocket.OPEN) {
-          console.log('📤 [Gemini Proxy] Client -> Gemini:', typeof event.data, 'length:', event.data?.length);
+        const preview = event.data.substring(0, 100);
+        console.log('📤 [Gemini Proxy] Client -> Gemini:', preview, '...');
+        console.log('🔍 [Gemini Proxy] Gemini state:', geminiSocket.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
+        
+        if (geminiSocket.readyState === WebSocket.OPEN && geminiReady) {
+          console.log('✅ [Gemini Proxy] Forwarding to Gemini immediately');
           geminiSocket.send(event.data);
         } else {
-          console.warn('⚠️ [Gemini Proxy] Gemini socket not ready, state:', geminiSocket.readyState);
+          console.log('⏳ [Gemini Proxy] Buffering message (ready:', geminiReady, ')');
+          messageBuffer.push(event.data);
         }
       } catch (error) {
         console.error('❌ [Gemini Proxy] Error forwarding to Gemini:', error);
@@ -81,17 +90,23 @@ Deno.serve(async (req) => {
     geminiSocket.onmessage = (event) => {
       try {
         if (clientSocket.readyState === WebSocket.OPEN) {
-          console.log('📥 [Gemini Proxy] Gemini -> Client:', typeof event.data, 'length:', event.data?.length);
+          const preview = event.data.substring(0, 100);
+          console.log('📥 [Gemini Proxy] Gemini -> Client:', preview, '...');
+          
           // Try to parse and log message type
           try {
             const parsed = JSON.parse(event.data);
-            console.log('📋 [Gemini Proxy] Message type:', parsed.serverContent?.modelTurn?.parts?.[0] ? 'content' : parsed.setupComplete ? 'setupComplete' : 'unknown');
+            const msgType = parsed.setupComplete ? 'setupComplete' : 
+                           parsed.serverContent ? 'content' : 
+                           parsed.toolCall ? 'toolCall' : 
+                           Object.keys(parsed)[0];
+            console.log('📋 [Gemini Proxy] Message type:', msgType);
           } catch (e) {
-            // Not JSON, skip parsing
+            console.log('📋 [Gemini Proxy] Non-JSON message');
           }
           clientSocket.send(event.data);
         } else {
-          console.warn('⚠️ [Gemini Proxy] Client socket not ready');
+          console.warn('⚠️ [Gemini Proxy] Client socket not ready, state:', clientSocket.readyState);
         }
       } catch (error) {
         console.error('❌ [Gemini Proxy] Error forwarding to client:', error);
@@ -101,16 +116,20 @@ Deno.serve(async (req) => {
     // Handle Gemini connection open
     geminiSocket.onopen = () => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
+      geminiReady = true;
       
-      // Send initial setup message with model configuration (NOT API key)
-      // Model name should already include "models/" prefix from client
-      const setupMessage = {
-        setup: {
-          model: model.startsWith('models/') ? model : `models/${model}`,
+      // Send buffered messages
+      console.log('📦 [Gemini Proxy] Flushing', messageBuffer.length, 'buffered messages');
+      for (let i = 0; i < messageBuffer.length; i++) {
+        try {
+          const preview = messageBuffer[i].substring(0, 100);
+          console.log(`📤 [Gemini Proxy] Sending buffered message ${i+1}:`, preview, '...');
+          geminiSocket.send(messageBuffer[i]);
+        } catch (error) {
+          console.error('❌ [Gemini Proxy] Error sending buffered message:', error);
         }
-      };
-      console.log('📤 [Gemini Proxy] Sending setup message:', JSON.stringify(setupMessage));
-      geminiSocket.send(JSON.stringify(setupMessage));
+      }
+      messageBuffer = [];
     };
 
     // Handle errors
@@ -166,9 +185,13 @@ Deno.serve(async (req) => {
     return response;
   } catch (error) {
     console.error('❌ [Gemini Proxy] Fatal error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error', 
+      details: error instanceof Error ? error.message : String(error)
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
