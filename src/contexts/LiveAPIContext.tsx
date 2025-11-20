@@ -41,7 +41,7 @@ export const LiveAPIProvider: FC<LiveAPIProviderProps> = ({
 }) => {
   // 모델 타입에 따라 적절한 Hook 사용
   const geminiAPI = useLiveAPI(options);
-  const openAIAPI = useOpenAIRealtime(openAIApiKey);
+  const openAIAPI = useOpenAIRealtime();
 
   // 선택한 모델에 따라 적절한 API 반환
   const liveAPI = useMemo(() => {
