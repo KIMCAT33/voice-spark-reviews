@@ -27,6 +27,46 @@ export type UseOpenAIRealtimeResults = {
   off: (event: string, handler: any) => void;
 };
 
+// Gemini Type enum을 OpenAI 형식으로 변환
+function convertGeminiTypeToOpenAI(type: any): string {
+  if (typeof type === 'string') {
+    return type.toLowerCase();
+  }
+  // Type enum 객체인 경우
+  const typeStr = String(type);
+  return typeStr.toLowerCase();
+}
+
+// Gemini parameters를 OpenAI 형식으로 재귀적으로 변환
+function convertParameters(params: any): any {
+  if (!params || typeof params !== 'object') {
+    return params;
+  }
+
+  const converted: any = {};
+  
+  for (const key in params) {
+    if (key === 'type') {
+      converted.type = convertGeminiTypeToOpenAI(params.type);
+    } else if (key === 'properties' && typeof params.properties === 'object') {
+      converted.properties = {};
+      for (const propKey in params.properties) {
+        converted.properties[propKey] = convertParameters(params.properties[propKey]);
+      }
+    } else if (key === 'items' && typeof params.items === 'object') {
+      converted.items = convertParameters(params.items);
+    } else if (key === 'enum' && Array.isArray(params.enum)) {
+      converted.enum = params.enum;
+    } else if (key === 'description') {
+      converted.description = params.description;
+    } else if (key === 'required' && Array.isArray(params.required)) {
+      converted.required = params.required;
+    }
+  }
+  
+  return converted;
+}
+
 // Gemini config를 OpenAI instructions로 변환
 function convertGeminiConfigToOpenAI(config: LiveConnectConfig): { instructions: string; tools: any[] } {
   let instructions = '';
@@ -68,13 +108,19 @@ function convertGeminiConfigToOpenAI(config: LiveConnectConfig): { instructions:
       if (tool.functionDeclarations) {
         tool.functionDeclarations.forEach((funcDecl: any, funcIndex: number) => {
           console.log(`  📦 Function ${funcIndex}:`, funcDecl.name);
+          
+          // Parameters를 OpenAI 형식으로 변환
+          const convertedParams = funcDecl.parameters ? convertParameters(funcDecl.parameters) : {};
+          
+          console.log(`  📝 Converted parameters:`, JSON.stringify(convertedParams, null, 2));
+          
           // OpenAI tool 형식으로 변환
           tools.push({
             type: 'function',
             function: {
               name: funcDecl.name,
               description: funcDecl.description,
-              parameters: funcDecl.parameters || {}
+              parameters: convertedParams
             }
           });
         });
@@ -219,20 +265,34 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       const agentConfig = {
         name: 'ReviewAgent',
         instructions: config.instructions,
-        tools: config.tools || []
+        tools: config.tools || [],
+        model: 'gpt-4o-realtime-preview-2024-12-17'
       };
       
       console.log('🔧 [OpenAI] Agent config:', {
         name: agentConfig.name,
-        instructionsLength: agentConfig.instructions.length,
-        toolsCount: agentConfig.tools.length
+        instructionsLength: agentConfig.instructions?.length || 0,
+        toolsCount: agentConfig.tools.length,
+        model: agentConfig.model
       });
+      
+      // Instructions 내용 로깅 (디버깅용)
+      if (agentConfig.instructions) {
+        console.log('📝 [OpenAI] Instructions preview:', agentConfig.instructions.substring(0, 500));
+      }
+      
+      // Tools 내용 로깅 (디버깅용)
+      if (agentConfig.tools.length > 0) {
+        console.log('🔧 [OpenAI] Tools:', JSON.stringify(agentConfig.tools, null, 2));
+      }
 
       const agent = new RealtimeAgent(agentConfig as any);
 
       agentRef.current = agent;
 
-      const session = new RealtimeSession(agent);
+      const session = new RealtimeSession(agent, {
+        model: 'gpt-4o-realtime-preview-2024-12-17'
+      });
       sessionRef.current = session;
 
       // OpenAI 이벤트를 Gemini 스타일로 변환
