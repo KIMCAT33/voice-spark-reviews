@@ -43,10 +43,11 @@ Deno.serve(async (req) => {
     }
 
     console.log('✅ [Gemini Proxy] API key loaded, length:', geminiApiKey.length);
+    console.log('🔑 [Gemini Proxy] API key first 10 chars:', geminiApiKey.substring(0, 10) + '...');
     
     // Get model from query params (default: gemini-2.0-flash-exp)
     const url = new URL(req.url);
-    const model = url.searchParams.get('model') || 'models/gemini-2.0-flash-exp';
+    const model = url.searchParams.get('model') || 'gemini-2.0-flash-exp';
     
     console.log('🔌 [Gemini Proxy] Establishing WebSocket connection');
     console.log('📱 [Gemini Proxy] Model:', model);
@@ -54,8 +55,10 @@ Deno.serve(async (req) => {
     // Upgrade client connection
     const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
-    // Connect to Gemini Live API
-    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${geminiApiKey}`;
+    // Connect to Gemini Live API with proper URL encoding
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(geminiApiKey)}`;
+    console.log('🌐 [Gemini Proxy] Connecting to:', geminiWsUrl.substring(0, 100) + '...');
+    
     const geminiSocket = new WebSocket(geminiWsUrl);
 
     // Client -> Gemini: Forward messages
