@@ -217,6 +217,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             wsRef.current?.send(JSON.stringify({
               type: 'session.update',
               session: {
+                type: 'realtime',
                 instructions: config.instructions,
                 voice: 'alloy',
                 turn_detection: {
