@@ -218,11 +218,29 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
               type: 'session.update',
               session: {
                 type: 'realtime',
-                instructions: config.instructions,
-                turn_detection: {
-                  type: 'server_vad'
+                model: 'gpt-4o-realtime-preview-2024-12-17',
+                output_modalities: ['audio', 'text'],
+                audio: {
+                  input: {
+                    format: {
+                      type: 'audio/pcm',
+                      rate: 24000
+                    },
+                    turn_detection: {
+                      type: 'semantic_vad'
+                    }
+                  },
+                  output: {
+                    format: {
+                      type: 'audio/pcm'
+                    },
+                    voice: 'alloy'
+                  }
                 },
-                tools: config.tools || []
+                instructions: config.instructions,
+                tools: config.tools || [],
+                tool_choice: 'auto',
+                temperature: 0.8
               }
             }));
           }
