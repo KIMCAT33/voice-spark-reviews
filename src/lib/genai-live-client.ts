@@ -175,23 +175,24 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         this._status = "connected";
         this.onopen();
         
-        // Send initial setup message with config in correct format
+        // Send initial setup message with config in correct Gemini format
         const { responseModalities, speechConfig, systemInstruction, tools, ...rest } = config;
+        
         const setupMessage = {
           setup: {
             model,
             ...(systemInstruction && { systemInstruction }),
             ...(tools && { tools }),
-            ...(speechConfig && { speechConfig }),
-            ...(responseModalities && {
+            ...((responseModalities || speechConfig) && {
               generationConfig: {
-                responseModalities
+                ...(responseModalities && { responseModalities }),
+                ...(speechConfig && { speechConfig })
               }
             }),
             ...rest
           }
         };
-        console.log("📤 Sending setup message:", JSON.stringify(setupMessage).substring(0, 200));
+        console.log("📤 Sending setup message:", JSON.stringify(setupMessage).substring(0, 300));
         this._ws?.send(JSON.stringify(setupMessage));
       };
       
