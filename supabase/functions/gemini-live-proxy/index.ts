@@ -74,6 +74,10 @@ Deno.serve(async (req) => {
         const converted = obj.map(item => {
           // If it's a string, convert it from camelCase to snake_case
           if (typeof item === 'string') {
+            // Don't convert if it's all uppercase (enum values like "AUDIO", "TEXT")
+            if (item === item.toUpperCase()) {
+              return item;
+            }
             const snakeCase = item.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
             console.log(`🔄 Array item conversion: "${item}" -> "${snakeCase}"`);
             return snakeCase;
