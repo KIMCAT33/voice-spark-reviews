@@ -219,7 +219,6 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
               session: {
                 type: 'realtime',
                 instructions: config.instructions,
-                voice: 'alloy',
                 turn_detection: {
                   type: 'server_vad'
                 },
