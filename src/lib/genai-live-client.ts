@@ -415,6 +415,28 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send normal content parts such as { text }
    */
   send(parts: Part | Part[], turnComplete: boolean = true) {
+    // For proxy mode, send directly via WebSocket
+    if (this.useProxy && this._ws) {
+      if (this._status !== "connected") {
+        console.warn(`Cannot send content: status is ${this._status}`);
+        return;
+      }
+      try {
+        const message = {
+          clientContent: {
+            turns: Array.isArray(parts) ? parts : [parts],
+            turnComplete
+          }
+        };
+        this._ws.send(JSON.stringify(message));
+        console.log(`📤 Sending content via proxy:`, message);
+      } catch (error) {
+        console.error("Error sending via proxy:", error);
+      }
+      return;
+    }
+    
+    // For direct mode, use session
     if (!this.session) {
       console.warn("Cannot send content: session not available");
       return;
