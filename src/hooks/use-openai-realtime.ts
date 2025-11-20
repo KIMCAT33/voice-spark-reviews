@@ -219,7 +219,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
               session: {
                 type: 'realtime',
                 model: 'gpt-4o-realtime-preview-2024-12-17',
-                output_modalities: ['audio', 'text'],
+                output_modalities: ['audio'],
                 audio: {
                   input: {
                     format: {
