@@ -322,58 +322,7 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
   // OpenAI 이벤트를 Gemini 스타일로 변환
   const setupEventListeners = (session: RealtimeSession) => {
-    // session.created 이벤트 리스닝 - configuration 업데이트
-    (session as any).on('session.created', (event: any) => {
-      console.log('📡 [OpenAI] session.created event received');
-      console.log('📝 [OpenAI] Current session config:', event.session);
-      
-      // Session update 이벤트 전송
-      setTimeout(() => {
-        console.log('🔧 [OpenAI] Sending session.update with instructions and tools');
-        console.log('📝 [OpenAI] Instructions length:', config.instructions?.length || 0);
-        console.log('🔧 [OpenAI] Tools count:', config.tools?.length || 0);
-        
-        const updateEvent = {
-          type: 'session.update',
-          session: {
-            modalities: ['text', 'audio'],
-            instructions: config.instructions || '',
-            voice: 'alloy',
-            input_audio_format: 'pcm16',
-            output_audio_format: 'pcm16',
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500
-            },
-            tools: config.tools || [],
-            tool_choice: 'auto',
-            temperature: 0.8,
-            max_response_output_tokens: 'inf'
-          }
-        };
-        
-        try {
-          // WebSocket을 통해 직접 전송
-          const ws = (session as any).ws || (session as any)._ws || (session as any).connection?.ws;
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(updateEvent));
-            console.log('✅ [OpenAI] Session configuration sent');
-          } else {
-            console.warn('⚠️ [OpenAI] WebSocket not available, ws state:', ws?.readyState);
-          }
-        } catch (error) {
-          console.error('❌ [OpenAI] Failed to send session.update:', error);
-        }
-      }, 100);
-    });
-
-    // session.updated 이벤트 리스닝 - 업데이트 확인
-    (session as any).on('session.updated', (event: any) => {
-      console.log('✅ [OpenAI] session.updated event received');
-      console.log('📝 [OpenAI] Updated session config:', event.session);
-    });
+    // session.created/updated 이벤트는 RealtimeAgent의 instructions가 자동으로 적용되므로 불필요
 
     // 오디오 출력 처리
     (session as any).on('response.audio.delta', (data: any) => {
@@ -482,31 +431,44 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
       console.log('✅ [OpenAI] Connected successfully');
       setConnected(true);
-
-      // 연결 후 초기 응답 생성 - sendMessage 메서드 사용
+      
+      // Agent가 먼저 인사하도록 trigger (OpenAI Realtime API는 기본적으로 사용자 입력 대기)
       setTimeout(async () => {
-        const currentSession = sessionRef.current;
-        if (!currentSession) {
-          console.log('⚠️ [OpenAI] 세션이 없어서 초기 응답 생성 건너뜀');
-          return;
-        }
-        
         try {
-          console.log('🎤 [OpenAI] 연결 후 초기 응답 생성 시도...');
-          const session = currentSession as any;
+          console.log('🎤 [OpenAI] Triggering initial greeting from agent...');
+          const session = sessionRef.current as any;
+          const ws = session?.ws || session?._ws || session?.connection?.ws;
           
-          // sendMessage 메서드 사용 (실제 존재하는 메서드)
-          if (typeof session.sendMessage === 'function') {
-            console.log('📤 [OpenAI] sendMessage 메서드 사용');
-            await session.sendMessage('Please start the conversation and greet me as instructed in your system prompt.');
-            console.log('✅ [OpenAI] 초기 메시지 전송 완료');
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            // Step 1: conversation.item.create - 내부 user 메시지로 greeting 요청
+            const itemCreate = {
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'user',
+                content: [{
+                  type: 'input_text',
+                  text: 'Please greet me and start the review conversation as instructed in your system prompt.'
+                }]
+              }
+            };
+            ws.send(JSON.stringify(itemCreate));
+            console.log('📤 [OpenAI] Sent conversation.item.create');
+            
+            // Step 2: response.create - AI 응답 트리거
+            setTimeout(() => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'response.create' }));
+                console.log('✅ [OpenAI] Sent response.create - agent should start speaking');
+              }
+            }, 100);
           } else {
-            console.warn('⚠️ [OpenAI] sendMessage 메서드를 찾을 수 없음');
+            console.warn('⚠️ [OpenAI] WebSocket not available for initial greeting');
           }
-        } catch (responseError: any) {
-          console.error('❌ [OpenAI] 초기 응답 생성 실패:', responseError?.message || responseError);
+        } catch (error) {
+          console.error('❌ [OpenAI] Error triggering initial greeting:', error);
         }
-      }, 1000);
+      }, 500);
 
       // Audio recorder 시작
       if (!audioRecorderRef.current) {
