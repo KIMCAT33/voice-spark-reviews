@@ -290,29 +290,13 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
       agentRef.current = agent;
 
-      // Session 생성 시 모든 configuration 전달
-      console.log('🔧 [OpenAI] Creating session with full configuration');
-      const session = new RealtimeSession(agent, {
-        model: 'gpt-4o-realtime-preview-2024-12-17',
-        modalities: ['text', 'audio'],
-        instructions: config.instructions,
-        voice: 'alloy',
-        input_audio_format: 'pcm16',
-        output_audio_format: 'pcm16',
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500
-        },
-        tools: config.tools,
-        tool_choice: 'auto',
-        temperature: 0.8
-      } as any);
+      // Session 생성
+      console.log('🔧 [OpenAI] Creating session');
+      const session = new RealtimeSession(agent);
       sessionRef.current = session;
-      console.log('✅ [OpenAI] Session created with instructions and tools');
+      console.log('✅ [OpenAI] Session created');
 
-      // OpenAI 이벤트를 Gemini 스타일로 변환
+      // setupEventListeners를 먼저 호출하여 이벤트 핸들러 등록
       setupEventListeners(session);
 
       setIsInitialized(true);
@@ -338,6 +322,59 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
 
   // OpenAI 이벤트를 Gemini 스타일로 변환
   const setupEventListeners = (session: RealtimeSession) => {
+    // session.created 이벤트 리스닝 - configuration 업데이트
+    (session as any).on('session.created', (event: any) => {
+      console.log('📡 [OpenAI] session.created event received');
+      console.log('📝 [OpenAI] Current session config:', event.session);
+      
+      // Session update 이벤트 전송
+      setTimeout(() => {
+        console.log('🔧 [OpenAI] Sending session.update with instructions and tools');
+        console.log('📝 [OpenAI] Instructions length:', config.instructions?.length || 0);
+        console.log('🔧 [OpenAI] Tools count:', config.tools?.length || 0);
+        
+        const updateEvent = {
+          type: 'session.update',
+          session: {
+            modalities: ['text', 'audio'],
+            instructions: config.instructions || '',
+            voice: 'alloy',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500
+            },
+            tools: config.tools || [],
+            tool_choice: 'auto',
+            temperature: 0.8,
+            max_response_output_tokens: 'inf'
+          }
+        };
+        
+        try {
+          // WebSocket을 통해 직접 전송
+          const ws = (session as any).ws || (session as any)._ws || (session as any).connection?.ws;
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(updateEvent));
+            console.log('✅ [OpenAI] Session configuration sent');
+          } else {
+            console.warn('⚠️ [OpenAI] WebSocket not available, ws state:', ws?.readyState);
+          }
+        } catch (error) {
+          console.error('❌ [OpenAI] Failed to send session.update:', error);
+        }
+      }, 100);
+    });
+
+    // session.updated 이벤트 리스닝 - 업데이트 확인
+    (session as any).on('session.updated', (event: any) => {
+      console.log('✅ [OpenAI] session.updated event received');
+      console.log('📝 [OpenAI] Updated session config:', event.session);
+    });
+
     // 오디오 출력 처리
     (session as any).on('response.audio.delta', (data: any) => {
       if (data?.delta && audioStreamerRef.current) {
