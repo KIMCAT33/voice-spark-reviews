@@ -196,8 +196,7 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       
       wsRef.current = new WebSocket(url, [
         'realtime',
-        `openai-insecure-api-key.${clientSecret}`,
-        'openai-beta.realtime-v1'
+        `openai-insecure-api-key.${clientSecret}`
       ]);
 
       wsRef.current.onopen = () => {
