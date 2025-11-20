@@ -55,9 +55,10 @@ Deno.serve(async (req) => {
     // Upgrade client connection
     const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
-    // Connect to Gemini Live API with proper URL encoding
-    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(geminiApiKey)}`;
-    console.log('🌐 [Gemini Proxy] Connecting to:', geminiWsUrl.substring(0, 100) + '...');
+    // Connect to Gemini Live API
+    // Note: API key is passed in the setup message, not in the URL
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
+    console.log('🌐 [Gemini Proxy] Connecting to:', geminiWsUrl);
     
     const geminiSocket = new WebSocket(geminiWsUrl);
 
@@ -93,13 +94,14 @@ Deno.serve(async (req) => {
     geminiSocket.onopen = () => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
       
-      // Send initial setup message with model configuration
+      // Send initial setup message with API key and model configuration
       const setupMessage = {
         setup: {
           model: model,
+          apiKey: geminiApiKey,
         }
       };
-      console.log('📤 [Gemini Proxy] Sending setup message:', JSON.stringify(setupMessage));
+      console.log('📤 [Gemini Proxy] Sending setup message with model:', model);
       geminiSocket.send(JSON.stringify(setupMessage));
     };
 
