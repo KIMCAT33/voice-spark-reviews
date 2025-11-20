@@ -428,15 +428,10 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
             
             // URL 파라미터 기반 분기 (더 명확함)
             if (selectedModel === 'openai') {
-              console.log("🎯 [ReviewAgent] Using OpenAI model - triggering initial response");
-              // OpenAI는 사용자가 먼저 말할 때까지 기다리므로
-              // send() 메서드로 초기 메시지를 보내 Agent가 응답하도록 트리거
-              if (client && typeof (client as any).send === 'function') {
-                (client as any).send([{ text: "Hello" }]);
-                console.log("✅ [OpenAI] Sent initial trigger message");
-              } else {
-                console.warn("⚠️ [OpenAI] Client send method not available");
-              }
+              console.log("🎯 [ReviewAgent] Using OpenAI model - waiting for user audio input");
+              // OpenAI Server VAD 모드: 사용자의 음성 입력을 자동으로 감지하고 응답
+              // 별도의 초기 메시지 없이 바로 오디오 대화 시작
+              console.log("✅ [OpenAI] Ready for voice conversation - speak to start");
             } else {
               // Gemini: send text message
               console.log("🎯 [ReviewAgent] Using Gemini model");

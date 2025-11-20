@@ -379,13 +379,9 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       }
     }));
 
-    // 텍스트 메시지는 수동으로 응답 생성 필요
-    setTimeout(() => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: 'response.create' }));
-        console.log('✅ [OpenAI] Response triggered for text message');
-      }
-    }, 100);
+    // Server VAD 모드에서는 오디오 입력을 자동으로 처리
+    // 텍스트 메시지도 Server VAD가 처리하도록 대기
+    console.log('✅ [OpenAI] Message sent, Server VAD will handle response');
   }, []);
 
   // Tool 응답 전송
