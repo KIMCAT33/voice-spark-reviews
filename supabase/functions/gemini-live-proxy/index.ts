@@ -103,9 +103,10 @@ Deno.serve(async (req) => {
       console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
       
       // Send initial setup message with model configuration (NOT API key)
+      // Model name should already include "models/" prefix from client
       const setupMessage = {
         setup: {
-          model: `models/${model}`,
+          model: model.startsWith('models/') ? model : `models/${model}`,
         }
       };
       console.log('📤 [Gemini Proxy] Sending setup message:', JSON.stringify(setupMessage));
