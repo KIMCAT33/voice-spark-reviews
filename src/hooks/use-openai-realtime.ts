@@ -379,8 +379,13 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       }
     }));
 
-    // Server VAD 모드에서는 자동으로 응답이 생성되므로 수동 트리거 불필요
-    console.log('✅ [OpenAI] Message sent, waiting for Server VAD');
+    // 텍스트 메시지는 수동으로 응답 생성 필요
+    setTimeout(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'response.create' }));
+        console.log('✅ [OpenAI] Response triggered for text message');
+      }
+    }, 100);
   }, []);
 
   // Tool 응답 전송
