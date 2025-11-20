@@ -63,75 +63,106 @@ Deno.serve(async (req) => {
     
     const geminiSocket = new WebSocket(geminiWsUrl);
     
-    // Client -> Gemini: Forward messages directly
+    // Message buffer for client messages before Gemini is ready
+    let messageBuffer: string[] = [];
+
+    // Client -> Gemini: Forward messages (with buffering)
     clientSocket.onmessage = (event) => {
       try {
+        const preview = event.data.substring(0, 100);
+        console.log('📨 [Gemini Proxy] Received from client (len:', event.data.length, '):', preview, '...');
+        console.log('🔍 [Gemini Proxy] Gemini readyState:', geminiSocket.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
+        
         if (geminiSocket.readyState === WebSocket.OPEN) {
-          const preview = event.data.substring(0, 100);
-          console.log('📤 [Gemini Proxy] Client -> Gemini (len:', event.data.length, '):', preview, '...');
+          console.log('✅ [Gemini Proxy] Forwarding to Gemini immediately');
           geminiSocket.send(event.data);
         } else {
-          console.log('⚠️ [Gemini Proxy] Cannot forward - Gemini not ready, state:', geminiSocket.readyState);
+          console.log('📦 [Gemini Proxy] Buffering message, current buffer size:', messageBuffer.length);
+          messageBuffer.push(event.data);
         }
       } catch (error) {
-        console.error('❌ [Gemini Proxy] Error forwarding to Gemini:', error);
+        console.error('❌ [Gemini Proxy] Error in client message handler:', error);
       }
     };
 
     // Gemini -> Client: Forward messages
     geminiSocket.onmessage = (event) => {
       try {
-        if (clientSocket.readyState === WebSocket.OPEN) {
-          const preview = event.data.substring(0, 100);
-          console.log('📥 [Gemini Proxy] Gemini -> Client:', preview, '...');
-          
-          // Try to parse and log message type
-          try {
-            const parsed = JSON.parse(event.data);
-            const msgType = parsed.setupComplete ? 'setupComplete' : 
-                           parsed.serverContent ? 'content' : 
-                           parsed.toolCall ? 'toolCall' : 
-                           Object.keys(parsed)[0];
-            console.log('📋 [Gemini Proxy] Message type:', msgType);
-          } catch (e) {
-            console.log('📋 [Gemini Proxy] Non-JSON message');
+        const preview = event.data.substring(0, 100);
+        console.log('📥 [Gemini Proxy] Received from Gemini (len:', event.data.length, '):', preview, '...');
+        console.log('🔍 [Gemini Proxy] Client readyState:', clientSocket.readyState);
+        
+        // Try to parse and log message type
+        try {
+          const parsed = JSON.parse(event.data);
+          const msgType = parsed.setupComplete ? 'setupComplete' : 
+                         parsed.serverContent ? 'content' : 
+                         parsed.toolCall ? 'toolCall' : 
+                         Object.keys(parsed)[0];
+          console.log('📋 [Gemini Proxy] Message type:', msgType);
+          if (parsed.setupComplete) {
+            console.log('✅ [Gemini Proxy] Setup completed successfully!');
           }
+        } catch (e) {
+          console.log('📋 [Gemini Proxy] Non-JSON message');
+        }
+        
+        if (clientSocket.readyState === WebSocket.OPEN) {
+          console.log('✅ [Gemini Proxy] Forwarding to client');
           clientSocket.send(event.data);
         } else {
-          console.warn('⚠️ [Gemini Proxy] Client socket not ready, state:', clientSocket.readyState);
+          console.warn('⚠️ [Gemini Proxy] Client socket not ready, dropping message');
         }
       } catch (error) {
-        console.error('❌ [Gemini Proxy] Error forwarding to client:', error);
+        console.error('❌ [Gemini Proxy] Error in Gemini message handler:', error);
       }
     };
 
     // Handle Gemini connection open
     geminiSocket.onopen = () => {
-      console.log('✅ [Gemini Proxy] Connected to Gemini Live API');
-      console.log('🎤 [Gemini Proxy] Waiting for client to send setup message...');
+      console.log('✅ [Gemini Proxy] Gemini WebSocket OPEN');
+      console.log('📦 [Gemini Proxy] Flushing', messageBuffer.length, 'buffered messages');
+      
+      // Send all buffered messages
+      for (let i = 0; i < messageBuffer.length; i++) {
+        try {
+          const msg = messageBuffer[i];
+          const preview = msg.substring(0, 100);
+          console.log(`📤 [Gemini Proxy] Sending buffered message ${i+1}/${messageBuffer.length}:`, preview, '...');
+          geminiSocket.send(msg);
+        } catch (error) {
+          console.error('❌ [Gemini Proxy] Error sending buffered message:', error);
+        }
+      }
+      messageBuffer = [];
+      console.log('✅ [Gemini Proxy] All buffered messages sent');
     };
 
     // Handle errors
     geminiSocket.onerror = (error) => {
-      console.error('❌ [Gemini Proxy] Gemini socket error:', error);
+      console.error('❌ [Gemini Proxy] Gemini socket error');
       console.error('🔍 [Gemini Proxy] Error details:', {
         type: error.type,
         message: error instanceof ErrorEvent ? error.message : 'unknown',
-        readyState: geminiSocket.readyState
+        readyState: geminiSocket.readyState,
+        bufferedMessages: messageBuffer.length
       });
       if (clientSocket.readyState === WebSocket.OPEN) {
+        console.log('🔌 [Gemini Proxy] Closing client socket due to Gemini error');
         clientSocket.close(1011, 'Upstream connection error');
       }
     };
 
     clientSocket.onerror = (error) => {
-      console.error('❌ [Gemini Proxy] Client socket error:', error);
+      console.error('❌ [Gemini Proxy] Client socket error');
       console.error('🔍 [Gemini Proxy] Client error details:', {
         type: error.type,
         message: error instanceof ErrorEvent ? error.message : 'unknown',
-        readyState: clientSocket.readyState
+        readyState: clientSocket.readyState,
+        bufferedMessages: messageBuffer.length
       });
       if (geminiSocket.readyState === WebSocket.OPEN) {
+        console.log('🔌 [Gemini Proxy] Closing Gemini socket due to client error');
         geminiSocket.close();
       }
     };
@@ -142,9 +173,14 @@ Deno.serve(async (req) => {
       console.log('📊 [Gemini Proxy] Close details:', {
         code: event.code,
         reason: event.reason,
-        wasClean: event.wasClean
+        wasClean: event.wasClean,
+        bufferedMessages: messageBuffer.length
       });
+      if (event.code === 1007) {
+        console.error('🔑 [Gemini Proxy] Authentication failed - API key rejected by Gemini');
+      }
       if (clientSocket.readyState === WebSocket.OPEN) {
+        console.log('🔌 [Gemini Proxy] Closing client socket');
         clientSocket.close(event.code, event.reason);
       }
     };
@@ -154,9 +190,11 @@ Deno.serve(async (req) => {
       console.log('📊 [Gemini Proxy] Client close details:', {
         code: event.code,
         reason: event.reason,
-        wasClean: event.wasClean
+        wasClean: event.wasClean,
+        bufferedMessages: messageBuffer.length
       });
       if (geminiSocket.readyState === WebSocket.OPEN) {
+        console.log('🔌 [Gemini Proxy] Closing Gemini socket');
         geminiSocket.close();
       }
     };
