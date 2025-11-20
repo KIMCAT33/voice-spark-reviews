@@ -205,7 +205,17 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
       wsRef.current.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📨 [OpenAI] Received:', data.type);
+          // 모든 이벤트 타입 로깅 (디버깅용)
+          // response 관련 이벤트는 전체 데이터를 로깅
+          if (data.type) {
+            if (data.type.includes('response') || data.type.includes('audio')) {
+              console.log('📨 [OpenAI] Received:', data.type, JSON.stringify(data, null, 2));
+            } else {
+              console.log('📨 [OpenAI] Received:', data.type);
+            }
+          } else {
+            console.log('📨 [OpenAI] Received (no type):', Object.keys(data).slice(0, 5));
+          }
 
           // session.created 이벤트를 받으면 session.update 전송
           if (data.type === 'session.created' && !sessionCreatedRef.current) {
@@ -250,40 +260,143 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             triggerEvent('setupcomplete', {});
             
             // OpenAI Realtime API는 초기 응답을 자동으로 생성하지 않으므로 명시적으로 요청
-            // 시스템 인스트럭션에서 즉시 대화를 시작하라고 지시했으므로 응답 생성
+            // 정상 작동하는 프로젝트 방식: conversation.item.create로 사용자 메시지를 먼저 보내고
+            // 그 다음 response.create를 호출하면 응답이 생성됨
+            const requestInitialResponse = () => {
+              if (wsRef.current?.readyState === WebSocket.OPEN && audioRecorderRef.current) {
+                console.log('🚀 [OpenAI] Requesting initial response after audio recorder is ready...');
+                try {
+                  // 1단계: conversation.item.create로 사용자 메시지 생성 (트리거용)
+                  wsRef.current.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                      type: 'message',
+                      role: 'user',
+                      content: [{
+                        type: 'input_text',
+                        text: 'Hello'
+                      }]
+                    }
+                  }));
+                  console.log('✅ [OpenAI] conversation.item.create sent (trigger message)');
+                  
+                  // 2단계: response.create로 AI 응답 트리거 (짧은 딜레이)
+                  setTimeout(() => {
+                    if (wsRef.current?.readyState === WebSocket.OPEN) {
+                      wsRef.current.send(JSON.stringify({
+                        type: 'response.create'
+                      }));
+                      console.log('✅ [OpenAI] response.create sent - AI should respond now');
+                    } else {
+                      console.warn('⚠️ [OpenAI] WebSocket closed before response.create');
+                    }
+                  }, 300);
+                } catch (error) {
+                  console.error('❌ [OpenAI] Failed to send initial response request:', error);
+                }
+              } else {
+                if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+                  console.warn('⚠️ [OpenAI] WebSocket not OPEN yet, retrying...', wsRef.current?.readyState);
+                }
+                if (!audioRecorderRef.current) {
+                  console.warn('⚠️ [OpenAI] Audio recorder not ready yet, retrying...');
+                }
+                // WebSocket이나 오디오 녹음이 아직 준비되지 않았으면 재시도
+                setTimeout(requestInitialResponse, 200);
+              }
+            };
+            
+            // 오디오 녹음이 시작된 후에 초기 응답 요청 (더 긴 딜레이)
+            setTimeout(requestInitialResponse, 1000);
+          }
+
+          // 오디오 응답 처리 - 여러 가능한 이벤트 타입 확인
+          if (data.type === 'response.audio.delta') {
+            if (data.delta) {
+              console.log('🔊 [OpenAI] Audio delta received, length:', data.delta.length);
+              const binaryString = atob(data.delta);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              
+              if (!audioStreamerRef.current) {
+                audioStreamerRef.current = new AudioStreamer(await audioContext());
+              }
+              
+              audioStreamerRef.current.addPCM16(bytes);
+            } else {
+              console.warn('⚠️ [OpenAI] response.audio.delta received but delta is empty');
+            }
+          }
+          
+          // 다른 오디오 이벤트 타입들도 확인
+          if (data.type === 'response.output_audio.delta' || data.type === 'response.output_audio_delta') {
+            console.log('🔊 [OpenAI] Alternative audio delta event received:', data.type);
+            if (data.delta) {
+              const binaryString = atob(data.delta);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              
+              if (!audioStreamerRef.current) {
+                audioStreamerRef.current = new AudioStreamer(await audioContext());
+              }
+              
+              audioStreamerRef.current.addPCM16(bytes);
+            }
+          }
+          
+          // 오디오 응답 시작
+          if (data.type === 'response.audio_started' || data.type === 'response.output_audio.started') {
+            console.log('🎵 [OpenAI] Audio response started');
+          }
+          
+          // 오디오 응답 완료
+          if (data.type === 'response.audio_done' || data.type === 'response.output_audio.done') {
+            console.log('🎵 [OpenAI] Audio response done');
+          }
+
+          // 음성 시작 감지
+          if (data.type === 'input_audio_buffer.speech_started') {
+            console.log('🎤 [OpenAI] Speech started - VAD detected speech');
+          }
+
+          // 음성 중지 감지 - 이때 응답 생성 시작
+          if (data.type === 'input_audio_buffer.speech_stopped') {
+            console.log('🛑 [OpenAI] Speech stopped - requesting response...');
+            // 음성이 중지되면 response.create를 명시적으로 요청
             setTimeout(() => {
               if (wsRef.current?.readyState === WebSocket.OPEN) {
-                console.log('🚀 [OpenAI] Requesting initial response...');
-                wsRef.current.send(JSON.stringify({
-                  type: 'response.create'
-                }));
+                console.log('🚀 [OpenAI] Requesting response after speech stopped...');
+                try {
+                  wsRef.current.send(JSON.stringify({
+                    type: 'response.create'
+                  }));
+                } catch (error) {
+                  console.error('❌ [OpenAI] Failed to send response.create after speech stopped:', error);
+                }
               }
-            }, 500);
+            }, 100);
           }
 
-          // 오디오 응답 처리
-          if (data.type === 'response.audio.delta' && data.delta) {
-            const binaryString = atob(data.delta);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            if (!audioStreamerRef.current) {
-              audioStreamerRef.current = new AudioStreamer(await audioContext());
-            }
-            
-            audioStreamerRef.current.addPCM16(bytes);
-          }
-
-          // 음성 중지 감지
-          if (data.type === 'input_audio_buffer.speech_stopped') {
-            console.log('🛑 [OpenAI] Speech stopped - VAD detected end of speech');
-          }
-
-          // 음성 커밋 완료
+          // 음성 커밋 완료 - 이때 자동으로 응답이 생성되어야 함
           if (data.type === 'input_audio_buffer.committed') {
-            console.log('✅ [OpenAI] Audio buffer committed');
+            console.log('✅ [OpenAI] Audio buffer committed - should trigger auto response');
+            // 커밋 후 자동으로 응답이 생성되어야 하지만, 명시적으로 요청
+            setTimeout(() => {
+              if (wsRef.current?.readyState === WebSocket.OPEN) {
+                console.log('🚀 [OpenAI] Requesting response after audio committed...');
+                try {
+                  wsRef.current.send(JSON.stringify({
+                    type: 'response.create'
+                  }));
+                } catch (error) {
+                  console.error('❌ [OpenAI] Failed to send response.create after commit:', error);
+                }
+              }
+            }, 200);
           }
 
           // 텍스트 응답 처리
@@ -304,9 +417,99 @@ export function useOpenAIRealtime(): UseOpenAIRealtimeResults {
             });
           }
 
-          // 응답 완료
+          // 응답 생성 시작
+          if (data.type === 'response.created') {
+            console.log('🎬 [OpenAI] Response created - 전체 데이터:', JSON.stringify(data, null, 2));
+            
+            // response 객체 확인
+            if (data.response) {
+              console.log('📦 [OpenAI] Response created object:', {
+                id: data.response.id,
+                status: data.response.status,
+                modality: data.response.modality,
+                output: data.response.output
+              });
+            }
+          }
+
+          // 응답 생성 오류
+          if (data.type === 'response.error') {
+            console.error('❌ [OpenAI] Response error:', data.error);
+            triggerEvent('error', {
+              type: 'response_error',
+              ...data.error
+            });
+            
+            // 쿼터 초과 에러의 경우 특별 처리
+            if (data.error?.code === 'insufficient_quota') {
+              console.error('❌ [OpenAI] API Quota Exceeded - Please check your OpenAI billing and plan');
+            }
+          }
+
+          // 응답 완료 - 모든 응답 데이터 확인
           if (data.type === 'response.done') {
+            console.log('✅ [OpenAI] Response done - 전체 데이터:', JSON.stringify(data, null, 2));
+            
+            // response 객체 확인
+            if (data.response) {
+              const status = data.response.status;
+              const statusDetails = data.response.status_details;
+              
+              // 응답 실패 확인
+              if (status === 'failed' || statusDetails?.type === 'failed') {
+                const error = statusDetails?.error || data.response.error;
+                console.error('❌ [OpenAI] Response failed:', {
+                  status,
+                  error_type: error?.type,
+                  error_code: error?.code,
+                  error_message: error?.message
+                });
+                
+                // 에러 이벤트 트리거
+                triggerEvent('error', {
+                  type: 'response_failed',
+                  code: error?.code,
+                  message: error?.message || 'Response failed'
+                });
+                
+                // 쿼터 초과 에러의 경우 특별 처리
+                if (error?.code === 'insufficient_quota') {
+                  console.error('❌ [OpenAI] API Quota Exceeded - Please check your OpenAI billing and plan');
+                  alert('OpenAI API 쿼터를 초과했습니다. 계정의 결제 정보와 플랜을 확인해주세요.');
+                }
+                
+                return; // 실패한 응답은 turncomplete 트리거하지 않음
+              }
+              
+              console.log('📦 [OpenAI] Response object:', {
+                id: data.response.id,
+                status: data.response.status,
+                output: data.response.output,
+                has_audio: !!data.response.output?.find((o: any) => o.type === 'audio'),
+                has_text: !!data.response.output?.find((o: any) => o.type === 'text'),
+                output_types: data.response.output?.map((o: any) => o.type)
+              });
+            }
+            
+            // 응답 아이템 확인 (오디오가 실제로 생성되었는지)
+            if (data.item) {
+              console.log('📦 [OpenAI] Response item:', {
+                item_id: data.item.id,
+                has_audio: !!data.item.audio,
+                content: data.item.content?.slice(0, 2)
+              });
+            }
+            
             triggerEvent('turncomplete', {});
+          }
+          
+          // 응답의 모든 부분 수집
+          if (data.type === 'response.output_item.added') {
+            console.log('📦 [OpenAI] Response output item added:', {
+              item_id: data.item?.id,
+              item_type: data.item?.type,
+              has_content: !!data.item?.content
+            });
           }
 
           // 에러 처리

@@ -428,15 +428,10 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
             
             // URL 파라미터 기반 분기 (더 명확함)
             if (selectedModel === 'openai') {
-              console.log("🎯 [ReviewAgent] Using OpenAI model - creating initial response");
-              // OpenAI Realtime API는 명시적으로 response.create를 호출해야 초기 응답 생성
-              // 시스템 인스트럭션에서 즉시 대화를 시작하라고 지시했으므로 응답 생성
-              if (client && typeof (client as any).createResponse === 'function') {
-                (client as any).createResponse();
-                console.log("✅ [OpenAI] Initial response requested");
-              } else {
-                console.warn("⚠️ [OpenAI] createResponse method not available");
-              }
+              console.log("🎯 [ReviewAgent] Using OpenAI model - initial response already requested in useOpenAIRealtime");
+              // OpenAI Realtime API는 useOpenAIRealtime에서 session.updated 이후 자동으로 초기 응답을 요청함
+              // 중복 호출을 피하기 위해 여기서는 호출하지 않음
+              // 만약 응답이 없다면 useOpenAIRealtime의 로직을 확인해야 함
             } else {
               // Gemini: send text message
               console.log("🎯 [ReviewAgent] Using Gemini model");
@@ -474,19 +469,57 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
     console.log("🔧 Setting up setupcomplete listener");
     console.log("  - connected:", connected);
     console.log("  - setupComplete:", setupComplete);
+    
+    const onError = (error: any) => {
+      console.error('❌ [ReviewAgent] Client error:', error);
+      
+      // 쿼터 초과 에러 처리
+      if (error?.code === 'insufficient_quota' || error?.message?.includes('quota')) {
+        toast({
+          title: "OpenAI API 쿼터 초과",
+          description: "OpenAI API 사용 한도를 초과했습니다. 계정의 결제 정보와 플랜을 확인해주세요.",
+          variant: "destructive",
+        });
+      } else if (error?.code === 'response_failed' || error?.type === 'response_failed') {
+        if (error?.code === 'insufficient_quota') {
+          toast({
+            title: "API 응답 생성 실패",
+            description: "OpenAI API 쿼터를 초과했습니다. 계정의 결제 정보와 플랜을 확인해주세요.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "API 응답 생성 실패",
+            description: error?.message || "AI 응답을 생성하는 중 오류가 발생했습니다.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "연결 오류",
+          description: error?.message || "AI와 연결하는 중 오류가 발생했습니다.",
+          variant: "destructive",
+        });
+      }
+    };
+    
     if (client) {
       if (isGenAILiveClient(client)) {
         client.on("setupcomplete", onSetupComplete);
+        client.on("error", onError);
       } else if (typeof (client as any).on === 'function') {
         (client as any).on("setupcomplete", onSetupComplete);
+        (client as any).on("error", onError);
       }
       
       return () => {
         console.log("🧹 Cleaning up setupcomplete listener");
         if (isGenAILiveClient(client)) {
           client.off("setupcomplete", onSetupComplete);
+          client.off("error", onError);
         } else if (typeof (client as any).off === 'function') {
           (client as any).off("setupcomplete", onSetupComplete);
+          (client as any).off("error", onError);
         }
       };
     }
