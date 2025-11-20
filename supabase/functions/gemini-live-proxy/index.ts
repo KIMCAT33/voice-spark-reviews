@@ -90,9 +90,13 @@ Deno.serve(async (req) => {
         let messageToSend = event.data;
         try {
           const parsed = JSON.parse(event.data);
+          
+          // Log the full message for debugging
+          console.log('📋 [Gemini Proxy] Full original message:', JSON.stringify(parsed, null, 2));
+          
           const converted = convertToSnakeCase(parsed);
           messageToSend = JSON.stringify(converted);
-          console.log('🔄 [Gemini Proxy] Converted message:', messageToSend.substring(0, 200), '...');
+          console.log('🔄 [Gemini Proxy] Full converted message:', JSON.stringify(JSON.parse(messageToSend), null, 2));
         } catch (e) {
           console.log('⚠️ [Gemini Proxy] Could not parse message for conversion, sending as-is');
         }
