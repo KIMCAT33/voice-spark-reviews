@@ -361,7 +361,7 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
       console.log('✅ [OpenAI] Connected successfully');
       setConnected(true);
 
-      // 연결 후 초기 응답 생성 (Instructions에 따라 자동으로 인사말 시작)
+      // 연결 후 초기 응답 생성 - response.create 이벤트 직접 전송
       setTimeout(async () => {
         const currentSession = sessionRef.current;
         if (!currentSession) {
@@ -370,30 +370,39 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
         }
         
         try {
-          // OpenAI RealtimeSession은 instructions만으로도 자동으로 응답을 시작할 수 있음
-          // createResponse 메서드는 API 버전에 따라 없을 수 있으므로 존재 여부 확인 후 호출
           console.log('🎤 [OpenAI] 연결 후 초기 응답 생성 시도...');
-          console.log('🔍 [OpenAI] Session 상태:', {
-            hasSession: !!currentSession,
-            hasAgent: !!agentRef.current,
-            sessionId: (currentSession as any)?.id,
-            hasCreateResponse: typeof (currentSession as any)?.createResponse === 'function'
-          });
           
-          // createResponse가 있으면 호출, 없으면 instructions에 의존
-          if (typeof (currentSession as any)?.createResponse === 'function') {
-            const response = await (currentSession as any).createResponse();
-            console.log('✅ [OpenAI] 초기 응답 생성 성공:', response?.id || 'response created');
+          // RealtimeSession의 send 메서드를 사용하여 이벤트 전송
+          const session = currentSession as any;
+          if (typeof session.send === 'function') {
+            // 1. 먼저 사용자 메시지를 대화에 추가 (AI가 응답할 컨텍스트 제공)
+            session.send({
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'user',
+                content: [{
+                  type: 'input_text',
+                  text: 'Please start the conversation and greet me warmly as instructed.'
+                }]
+              }
+            });
+            console.log('📤 [OpenAI] 사용자 메시지 추가 완료');
+            
+            // 2. response.create 이벤트를 보내서 AI가 응답하도록 트리거
+            setTimeout(() => {
+              session.send({
+                type: 'response.create'
+              });
+              console.log('✅ [OpenAI] response.create 이벤트 전송 완료');
+            }, 100);
           } else {
-            // createResponse가 없으면 instructions에 의존하여 자동으로 응답 시작
-            // Instructions에 "IMMEDIATELY start speaking"이 명시되어 있으므로 자동으로 시작될 것
-            console.log('ℹ️ [OpenAI] createResponse 메서드 없음 - Instructions에 의존하여 자동 응답 시작');
+            console.warn('⚠️ [OpenAI] session.send 메서드를 찾을 수 없음');
           }
         } catch (responseError: any) {
-          // 응답 생성 실패는 치명적이지 않음 (에이전트가 자동으로 응답할 수도 있음)
-          console.log('ℹ️ [OpenAI] 초기 응답 생성 실패 (무시 가능, 에이전트가 자동으로 응답할 수 있음):', responseError?.message || responseError);
+          console.error('❌ [OpenAI] 초기 응답 생성 실패:', responseError?.message || responseError);
         }
-      }, 500); // 500ms 딜레이로 세션 연결 안정화 대기
+      }, 1000); // 1000ms 딜레이로 세션 연결 안정화 대기
 
       // Audio recorder 시작
       if (!audioRecorderRef.current) {
@@ -595,12 +604,14 @@ export function useOpenAIRealtime(apiKey?: string): UseOpenAIRealtimeResults {
         console.log('🎤 [OpenAI] createResponse 호출됨');
         
         try {
-          if (typeof session.createResponse === 'function') {
-            const response = await session.createResponse();
-            console.log('✅ [OpenAI] Response created:', response?.id || 'success');
-            return response;
+          if (typeof session.send === 'function') {
+            // response.create 이벤트를 전송하여 AI 응답 트리거
+            session.send({
+              type: 'response.create'
+            });
+            console.log('✅ [OpenAI] response.create 이벤트 전송');
           } else {
-            console.log('ℹ️ [OpenAI] createResponse 없음 - Instructions에 의존하여 자동 응답');
+            console.warn('⚠️ [OpenAI] session.send 메서드 없음');
           }
         } catch (error) {
           console.error('❌ [OpenAI] Error creating response:', error);
