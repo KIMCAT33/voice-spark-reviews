@@ -1,19 +1,34 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ReviewCompletion } from "@/components/review-agent/ReviewCompletion";
 
 const ReviewComplete = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const reviewData = location.state?.reviewData;
+  const [reviewData, setReviewData] = useState<any>(null);
+  const [savedReviewId, setSavedReviewId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect to dashboard if no review data
-    if (!reviewData) {
-      console.warn("No review data found, redirecting to dashboard");
+    // Get review data from sessionStorage
+    const storedData = sessionStorage.getItem('completedReview');
+    
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        console.log("✅ Retrieved review data from sessionStorage:", parsed);
+        setReviewData(parsed.reviewData);
+        setSavedReviewId(parsed.savedReviewId);
+        
+        // Clear the data after retrieval
+        sessionStorage.removeItem('completedReview');
+      } catch (error) {
+        console.error("Error parsing stored review data:", error);
+        navigate("/dashboard");
+      }
+    } else {
+      console.warn("No review data found in sessionStorage, redirecting to dashboard");
       navigate("/dashboard");
     }
-  }, [reviewData, navigate]);
+  }, [navigate]);
 
   if (!reviewData) {
     return null;
@@ -24,7 +39,7 @@ const ReviewComplete = () => {
       <ReviewCompletion 
         reviewData={reviewData}
         isSaving={false}
-        savedReviewId={location.state?.savedReviewId || null}
+        savedReviewId={savedReviewId}
       />
     </div>
   );
