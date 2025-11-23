@@ -23,22 +23,30 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
 
   const beautyInsights = [
     {
-      title: "Skincare Routine Tips",
-      description: "For best results, apply your beauty products in order: cleanser, toner, serum, moisturizer, and sunscreen during the day."
+      title: "Recommended Products for Your Skin Type",
+      description: "For dry skin: Try our Hydrating Face Cream and Nourishing Body Lotion. For oily skin: Our Refreshing Facial Toner helps balance oil production. For combination skin: Use our lightweight moisturizers that hydrate without clogging pores."
+    },
+    {
+      title: "Daily Skincare Routine",
+      description: "Morning: Cleanse → Tone → Serum → Moisturize → SPF. Evening: Double cleanse → Tone → Treatment/Serum → Eye cream → Night cream. Remember to be gentle and consistent for best results."
+    },
+    {
+      title: "Skin Management Tips",
+      description: "Stay hydrated by drinking 8 glasses of water daily. Get 7-8 hours of sleep for skin regeneration. Avoid touching your face throughout the day. Change pillowcases weekly to prevent breakouts."
     },
     {
       title: "Product Pairing Recommendations",
       description: reviewData.sentiment === "positive" 
-        ? "Based on your satisfaction, these products pair perfectly with your purchase for enhanced results and a complete beauty routine."
-        : "We recommend trying complementary products from our hydrating line to address your concerns and improve your experience."
+        ? "Based on your satisfaction, pair this with our vitamin C serum for brightening and our night repair cream for enhanced results while you sleep."
+        : "We recommend complementing your routine with our gentle cleansing foam and hydrating essence to address your concerns effectively."
+    },
+    {
+      title: "Seasonal Skincare Adjustments",
+      description: "Winter: Use richer moisturizers and add facial oils. Summer: Switch to lighter textures and boost SPF protection. Spring/Fall: Focus on repair and prevention with antioxidant serums."
     },
     {
       title: "Ingredient Insights",
-      description: "Understanding your product ingredients helps you make informed choices. Look for hyaluronic acid for hydration and vitamin C for brightening."
-    },
-    {
-      title: "Exclusive Beauty Tips",
-      description: "Store your products in a cool, dry place away from direct sunlight to maintain their effectiveness and extend their shelf life."
+      description: "Hyaluronic Acid: Intense hydration. Niacinamide: Minimizes pores and evens skin tone. Retinol: Anti-aging and cell renewal. Vitamin C: Brightening and antioxidant protection. Ceramides: Strengthen skin barrier."
     }
   ];
 
