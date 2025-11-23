@@ -349,10 +349,10 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         setReviewData(prev => {
           const updatedReviewData = {
             ...prev,
-            ...newReviewData,
-            positivePoints: newReviewData.positivePoints || prev.positivePoints,
-            negativePoints: newReviewData.negativePoints || prev.negativePoints,
-            improvementSuggestions: newReviewData.improvementSuggestions || prev.improvementSuggestions,
+            ...(newReviewData || {}),
+            positivePoints: newReviewData?.positivePoints || prev.positivePoints,
+            negativePoints: newReviewData?.negativePoints || prev.negativePoints,
+            improvementSuggestions: newReviewData?.improvementSuggestions || prev.improvementSuggestions,
           };
 
           // Check if all questions are complete (5 questions completed)
