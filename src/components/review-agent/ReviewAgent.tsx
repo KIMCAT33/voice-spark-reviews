@@ -23,7 +23,7 @@ import {
 } from "@google/genai";
 import "./review-agent.scss";
 import { ReviewCompletion } from "./ReviewCompletion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -542,22 +542,38 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   }, [connected]);
 
   // Show completion screen when interview is done
-  console.log("🔍 Render check:", { isComplete, reviewData, hasKeys: Object.keys(reviewData).length });
-  
   useEffect(() => {
     if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
-      console.log("🎉 Navigating to completion screen with data:", reviewData);
-      navigate("/review-complete", { 
-        state: { 
-          reviewData,
-          savedReviewId 
-        } 
-      });
+      console.log("🎉 Interview complete! Review data:", reviewData);
+      console.log("🎉 Navigating to completion screen...");
+      
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigate("/review-complete", { 
+          state: { 
+            reviewData: reviewData,
+            savedReviewId: savedReviewId 
+          },
+          replace: true
+        });
+      }, 500);
+    } else if (isComplete) {
+      console.error("❌ Interview complete but reviewData is empty:", reviewData);
     }
-  }, [isComplete, reviewData, savedReviewId, navigate]);
+  }, [isComplete, navigate]);
   
-  if (isComplete && (!reviewData || Object.keys(reviewData).length === 0)) {
-    console.error("❌ Interview complete but reviewData is empty!");
+  // Don't render completion screen in ReviewAgent anymore
+  if (isComplete) {
+    return (
+      <div className="review-agent-container" ref={reviewContainerRef}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Finalizing your review...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
