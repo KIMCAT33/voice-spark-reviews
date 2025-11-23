@@ -51,66 +51,80 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-      {/* Success Header */}
-      <Card className="p-8 text-center shadow-glow border-2 border-primary/20">
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-            <CheckCircle className="w-12 h-12 text-primary" />
+    <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
+      {/* Success Header with Gradient */}
+      <Card className="relative overflow-hidden p-10 text-center border-none shadow-2xl bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 opacity-50" />
+        <div className="relative z-10">
+          <div className="flex justify-center mb-6 animate-in scale-in duration-500 delay-100">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
+              <CheckCircle className="w-14 h-14 text-white animate-in scale-in duration-300 delay-200" />
+            </div>
           </div>
+          <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent animate-in fade-in duration-500 delay-200">
+            Thank You for Answering!
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto animate-in fade-in duration-500 delay-300">
+            {isSaving ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving your valuable feedback...
+              </span>
+            ) : (
+              "Your honest feedback helps us create better beauty products for you."
+            )}
+          </p>
         </div>
-        <h2 className="text-3xl font-bold mb-2">Thank You for Answering!</h2>
-        <p className="text-muted-foreground text-lg">
-          {isSaving ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Saving your valuable feedback...
-            </span>
-          ) : savedReviewId ? (
-            "Your honest feedback helps us create better beauty products for you."
-          ) : (
-            "Your honest feedback helps us create better beauty products for you."
-          )}
-        </p>
       </Card>
 
-      {/* Review Summary */}
-      <Card className="p-6 shadow-card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Package className="w-5 h-5 text-primary" />
-          Your Review Summary
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Product</p>
-            <p className="font-semibold">{reviewData.productName || "Rouge Velvet Matte Lipstick - Cherry Red #05"}</p>
+      {/* Review Summary with Modern Design */}
+      <Card className="p-8 shadow-elegant border-primary/10 hover:shadow-glow transition-all duration-300 animate-in slide-in-right duration-500 delay-200">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Package className="w-6 h-6 text-primary" />
+          </div>
+          <h3 className="text-2xl font-bold">Your Review Summary</h3>
+        </div>
+        
+        <div className="space-y-6">
+          <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
+            <p className="text-sm text-muted-foreground mb-2 font-medium">Product</p>
+            <p className="text-lg font-semibold text-foreground">
+              {reviewData.productName || "Rouge Velvet Matte Lipstick - Cherry Red #05"}
+            </p>
           </div>
           
           {reviewData.overallRating && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Your Rating</p>
-              <div className="flex items-center gap-1">
+            <div className="p-4 rounded-lg bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20">
+              <p className="text-sm text-muted-foreground mb-3 font-medium">Your Rating</p>
+              <div className="flex items-center gap-2">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
+                    className={`w-7 h-7 transition-all duration-300 delay-${i * 50} ${
                       i < reviewData.overallRating!
-                        ? "text-accent fill-accent"
-                        : "text-muted"
+                        ? "text-accent fill-accent animate-in scale-in"
+                        : "text-muted/30"
                     }`}
                   />
                 ))}
-                <span className="ml-2 font-semibold">{reviewData.overallRating}/5</span>
+                <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                  {reviewData.overallRating}/5
+                </span>
               </div>
             </div>
           )}
 
           {Array.isArray(reviewData.positivePoints) && reviewData.positivePoints.length > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">What You Loved</p>
+            <div className="p-4 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-900/50">
+              <p className="text-sm font-medium mb-3 text-green-900 dark:text-green-100">What You Loved</p>
               <div className="flex flex-wrap gap-2">
                 {reviewData.positivePoints.map((point, i) => (
-                  <Badge key={i} className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Badge 
+                    key={i} 
+                    className="px-4 py-2 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 border-green-300 dark:border-green-800 hover-scale animate-in scale-in"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
                     {point}
                   </Badge>
                 ))}
@@ -120,21 +134,46 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
         </div>
       </Card>
 
-      {/* Beauty Insights for Customer */}
-      <Card className="p-6 shadow-card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-accent" />
-          Beauty Insights Just for You
-        </h3>
-        <div className="space-y-4">
+      {/* Beauty Insights with Enhanced Design */}
+      <Card className="p-8 shadow-elegant border-accent/10 hover:shadow-glow transition-all duration-300 animate-in slide-in-right duration-500 delay-300">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-accent" />
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+            Beauty Insights Just for You
+          </h3>
+        </div>
+        
+        <div className="grid gap-4">
           {beautyInsights.map((insight, i) => (
-            <div key={i} className="border-l-4 border-primary/30 pl-4">
-              <h4 className="font-semibold mb-1">{insight.title}</h4>
-              <p className="text-sm text-muted-foreground">{insight.description}</p>
+            <div 
+              key={i} 
+              className="group p-5 rounded-xl border-l-4 border-primary/40 bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 hover:to-accent/5 transition-all duration-300 hover-scale animate-in fade-in"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
+              <h4 className="font-semibold text-lg mb-2 text-foreground group-hover:text-primary transition-colors">
+                {insight.title}
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {insight.description}
+              </p>
             </div>
           ))}
         </div>
       </Card>
+
+      {/* CTA Button */}
+      <div className="flex justify-center animate-in fade-in duration-500 delay-500">
+        <Button 
+          size="lg"
+          onClick={() => navigate("/dashboard")}
+          className="group px-8 py-6 text-lg bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-glow hover:shadow-elegant transition-all duration-300"
+        >
+          Back to Dashboard
+          <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </Button>
+      </div>
     </div>
   );
 };
