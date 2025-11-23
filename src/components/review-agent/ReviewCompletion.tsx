@@ -21,20 +21,24 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
 
   console.log("🎨 ReviewCompletion rendering with data:", reviewData);
 
-  const productInsights = [
+  const beautyInsights = [
     {
-      title: "Your Feedback Matters",
-      description: "Thank you for sharing your honest thoughts! Your review helps us improve our products."
+      title: "Skincare Routine Tips",
+      description: "For best results, apply your beauty products in order: cleanser, toner, serum, moisturizer, and sunscreen during the day."
     },
     {
-      title: "Personalized Recommendations",
+      title: "Product Pairing Recommendations",
       description: reviewData.sentiment === "positive" 
-        ? "Based on your love for this product, you might also enjoy our premium collection with similar benefits."
-        : "We've noted your concerns and our product team will work on improvements. Consider trying our hydrating formula next."
+        ? "Based on your satisfaction, these products pair perfectly with your purchase for enhanced results and a complete beauty routine."
+        : "We recommend trying complementary products from our hydrating line to address your concerns and improve your experience."
     },
     {
-      title: "Exclusive Offer",
-      description: "As a thank you, enjoy 10% off your next purchase! Check your email for the discount code."
+      title: "Ingredient Insights",
+      description: "Understanding your product ingredients helps you make informed choices. Look for hyaluronic acid for hydration and vitamin C for brightening."
+    },
+    {
+      title: "Exclusive Beauty Tips",
+      description: "Store your products in a cool, dry place away from direct sunlight to maintain their effectiveness and extend their shelf life."
     }
   ];
 
@@ -47,17 +51,17 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
             <CheckCircle className="w-12 h-12 text-primary" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold mb-2">Thank You for Your Review!</h2>
+        <h2 className="text-3xl font-bold mb-2">Thank You for Answering!</h2>
         <p className="text-muted-foreground text-lg">
           {isSaving ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin" />
-              Saving your feedback...
+              Saving your valuable feedback...
             </span>
           ) : savedReviewId ? (
-            "Your feedback has been recorded and will help us serve you better. Redirecting to dashboard..."
+            "Your honest feedback helps us create better beauty products for you."
           ) : (
-            "Your feedback has been recorded and will help us serve you better."
+            "Your honest feedback helps us create better beauty products for you."
           )}
         </p>
       </Card>
@@ -108,14 +112,14 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
         </div>
       </Card>
 
-      {/* Product Insights for Customer */}
+      {/* Beauty Insights for Customer */}
       <Card className="p-6 shadow-card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-accent" />
-          Insights & Recommendations
+          Beauty Insights Just for You
         </h3>
         <div className="space-y-4">
-          {productInsights.map((insight, i) => (
+          {beautyInsights.map((insight, i) => (
             <div key={i} className="border-l-4 border-primary/30 pl-4">
               <h4 className="font-semibold mb-1">{insight.title}</h4>
               <p className="text-sm text-muted-foreground">{insight.description}</p>
