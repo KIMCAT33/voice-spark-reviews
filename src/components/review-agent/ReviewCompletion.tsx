@@ -19,6 +19,8 @@ interface ReviewCompletionProps {
 export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId = null }: ReviewCompletionProps) => {
   const navigate = useNavigate();
 
+  console.log("🎨 ReviewCompletion rendering with data:", reviewData);
+
   const productInsights = [
     {
       title: "Your Feedback Matters",
@@ -91,7 +93,7 @@ export const ReviewCompletion = ({ reviewData, isSaving = false, savedReviewId =
             </div>
           )}
 
-          {reviewData.positivePoints && reviewData.positivePoints.length > 0 && (
+          {Array.isArray(reviewData.positivePoints) && reviewData.positivePoints.length > 0 && (
             <div>
               <p className="text-sm text-muted-foreground mb-2">What You Loved</p>
               <div className="flex flex-wrap gap-2">

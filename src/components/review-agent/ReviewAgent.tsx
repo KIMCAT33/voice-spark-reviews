@@ -363,6 +363,8 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
 
           // Check if all questions are complete (5 questions completed)
           if (questionNumber >= 5) {
+            console.log("✅ Interview complete! Final review data:", updatedReviewData);
+            console.log("✅ Setting isComplete to true");
             setIsComplete(true);
             // Disconnect the call after finishing interview
             setTimeout(() => {
@@ -540,17 +542,23 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   }, [connected]);
 
   // Show completion screen when interview is done
+  console.log("🔍 Render check:", { isComplete, reviewData, hasKeys: Object.keys(reviewData).length });
+  
   if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
     console.log("🎉 Showing completion screen with data:", reviewData);
     return (
       <div className="review-agent-container" ref={reviewContainerRef}>
         <ReviewCompletion 
-          reviewData={reviewData || {}} 
+          reviewData={reviewData} 
           isSaving={isSaving}
           savedReviewId={savedReviewId}
         />
       </div>
     );
+  }
+  
+  if (isComplete && (!reviewData || Object.keys(reviewData).length === 0)) {
+    console.error("❌ Interview complete but reviewData is empty!");
   }
 
   return (
