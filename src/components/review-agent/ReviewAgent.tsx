@@ -545,17 +545,18 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   useEffect(() => {
     if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
       console.log("🎉 Interview complete! Review data:", reviewData);
-      console.log("🎉 Navigating to completion screen...");
+      console.log("🎉 Saving to sessionStorage and navigating...");
       
-      // Small delay to ensure state is updated
+      // Save review data to sessionStorage for reliable transfer
+      sessionStorage.setItem('completedReview', JSON.stringify({
+        reviewData: reviewData,
+        savedReviewId: savedReviewId,
+        timestamp: Date.now()
+      }));
+      
+      // Navigate to completion page
       setTimeout(() => {
-        navigate("/review-complete", { 
-          state: { 
-            reviewData: reviewData,
-            savedReviewId: savedReviewId 
-          },
-          replace: true
-        });
+        navigate("/review-complete", { replace: true });
       }, 500);
     } else if (isComplete) {
       console.error("❌ Interview complete but reviewData is empty:", reviewData);
