@@ -339,21 +339,27 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
         const args = fc.args as any;
         const { questionNumber, answer, reviewData: newReviewData } = args;
 
-        console.log("Review data collected:", {
+        console.log("🔍 Review data collected:", {
           questionNumber,
           answer,
           reviewData: newReviewData,
+          hasPositivePoints: newReviewData?.positivePoints !== undefined,
+          hasNegativePoints: newReviewData?.negativePoints !== undefined,
         });
 
         // Accumulate review data instead of replacing
         setReviewData(prev => {
+          console.log("📊 Updating review data:", { prev, newReviewData });
+          
           const updatedReviewData = {
             ...prev,
             ...(newReviewData || {}),
-            positivePoints: newReviewData?.positivePoints || prev.positivePoints,
-            negativePoints: newReviewData?.negativePoints || prev.negativePoints,
-            improvementSuggestions: newReviewData?.improvementSuggestions || prev.improvementSuggestions,
+            positivePoints: newReviewData?.positivePoints || prev?.positivePoints || [],
+            negativePoints: newReviewData?.negativePoints || prev?.negativePoints || [],
+            improvementSuggestions: newReviewData?.improvementSuggestions || prev?.improvementSuggestions || [],
           };
+          
+          console.log("✅ Updated review data:", updatedReviewData);
 
           // Check if all questions are complete (5 questions completed)
           if (questionNumber >= 5) {
@@ -534,11 +540,12 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   }, [connected]);
 
   // Show completion screen when interview is done
-  if (isComplete && Object.keys(reviewData).length > 0) {
+  if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
+    console.log("🎉 Showing completion screen with data:", reviewData);
     return (
       <div className="review-agent-container" ref={reviewContainerRef}>
         <ReviewCompletion 
-          reviewData={reviewData} 
+          reviewData={reviewData || {}} 
           isSaving={isSaving}
           savedReviewId={savedReviewId}
         />
