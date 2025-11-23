@@ -14,6 +14,7 @@ import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import ProductInsights from "./pages/ProductInsights";
 import GenerateProductImages from "./pages/GenerateProductImages";
+import ReviewComplete from "./pages/ReviewComplete";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function App() {
           <Route path="/product/:handle" element={<ProductDetail />} />
           <Route path="/insights/:handle" element={<ProductInsights />} />
           <Route path="/generate-images" element={<GenerateProductImages />} />
+          <Route path="/review-complete" element={<ReviewComplete />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
