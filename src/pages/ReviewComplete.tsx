@@ -22,13 +22,23 @@ const ReviewComplete = () => {
         sessionStorage.removeItem('completedReview');
       } catch (error) {
         console.error("Error parsing stored review data:", error);
-        navigate("/dashboard");
+        // Use sample data instead of redirecting
+        setReviewData(getSampleReviewData());
       }
     } else {
-      console.warn("No review data found in sessionStorage, redirecting to dashboard");
-      navigate("/dashboard");
+      console.warn("No review data found in sessionStorage, showing sample data");
+      // Show sample data for preview instead of redirecting
+      setReviewData(getSampleReviewData());
     }
   }, [navigate]);
+
+  const getSampleReviewData = () => ({
+    productName: "Hydrating Face Cream",
+    overallRating: 5,
+    positivePoints: ["Long-lasting hydration", "Smooth texture", "Great scent"],
+    negativePoints: [],
+    sentiment: "positive" as const
+  });
 
   if (!reviewData) {
     return null;
