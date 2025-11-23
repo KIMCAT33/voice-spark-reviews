@@ -544,18 +544,17 @@ After Question 5${productCount > 1 ? ' for all products' : ''}, warmly conclude:
   // Show completion screen when interview is done
   console.log("🔍 Render check:", { isComplete, reviewData, hasKeys: Object.keys(reviewData).length });
   
-  if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
-    console.log("🎉 Showing completion screen with data:", reviewData);
-    return (
-      <div className="review-agent-container" ref={reviewContainerRef}>
-        <ReviewCompletion 
-          reviewData={reviewData} 
-          isSaving={isSaving}
-          savedReviewId={savedReviewId}
-        />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (isComplete && reviewData && Object.keys(reviewData).length > 0) {
+      console.log("🎉 Navigating to completion screen with data:", reviewData);
+      navigate("/review-complete", { 
+        state: { 
+          reviewData,
+          savedReviewId 
+        } 
+      });
+    }
+  }, [isComplete, reviewData, savedReviewId, navigate]);
   
   if (isComplete && (!reviewData || Object.keys(reviewData).length === 0)) {
     console.error("❌ Interview complete but reviewData is empty!");
