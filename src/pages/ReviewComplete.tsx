@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ReviewCompletion } from "@/components/review-agent/ReviewCompletion";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const ReviewComplete = () => {
   const navigate = useNavigate();
@@ -45,7 +47,15 @@ const ReviewComplete = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
+      {/* Back to Home */}
+      <div className="container mx-auto max-w-4xl mb-4">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Home
+        </Button>
+      </div>
+      
       <ReviewCompletion 
         reviewData={reviewData}
         isSaving={false}
