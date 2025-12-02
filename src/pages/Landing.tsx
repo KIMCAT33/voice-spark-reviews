@@ -39,81 +39,84 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted overflow-x-hidden">
-      {/* Header */}
-      <header className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+      {/* Hero Container - Full Viewport Height */}
+      <div className="h-screen flex flex-col">
+        {/* Header */}
+        <header className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+              </div>
+              <span className="text-base sm:text-lg md:text-xl font-bold">VOIX</span>
             </div>
-            <span className="text-base sm:text-lg md:text-xl font-bold">VOIX</span>
-          </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/shop")}
-            className="text-sm sm:text-base"
-          >
-            Shop
-          </Button>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16 lg:py-24 xl:py-32">
-        <div className="max-w-5xl mx-auto text-center space-y-4 sm:space-y-6 md:space-y-8">
-          <div className="inline-block animate-fade-in">
-            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl gradient-primary shadow-glow mb-3 sm:mb-4 md:mb-6">
-              <Mic className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 text-primary-foreground" />
-            </div>
-          </div>
-          
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-tight px-2 animate-fade-in break-words">
-            VOIX: Voice-First CRM Agent for Customer Experience
-          </h1>
-          
-          <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 animate-fade-in leading-relaxed">
-            Transform customer feedback with AI-powered voice reviews. 
-            Collect authentic insights, boost engagement, and make data-driven decisions.
-          </p>
-
-          <div className="flex flex-col gap-3 justify-center pt-2 sm:pt-4 md:pt-6 lg:pt-8 px-2 sm:px-4 animate-fade-in">
-            {/* Primary CTA - Quick Demo */}
             <Button 
-              size="lg" 
-              className="w-full sm:w-auto mx-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 gradient-primary shadow-glow hover:opacity-90 transition-all font-semibold"
-              onClick={() => navigate("/purchase")}
+              variant="outline" 
+              onClick={() => navigate("/shop")}
+              className="text-sm sm:text-base"
             >
-              <Sparkles className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-              Quick Demo (2-3 min)
+              Shop
             </Button>
-            
-            {/* Secondary CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
-                onClick={() => navigate("/shop")}
-              >
-                Full Experience (5-7 min)
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
-                onClick={() => navigate("/dashboard")}
-              >
-                <BarChart3 className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-                View Dashboard
-              </Button>
-            </div>
           </div>
+        </header>
 
-          <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 animate-fade-in text-center">
-            Choose your demo experience above
-          </p>
-        </div>
-      </section>
+        {/* Hero Section */}
+        <section className="flex-1 container mx-auto px-4 sm:px-6 flex items-center justify-center">
+          <div className="max-w-5xl mx-auto text-center space-y-4 sm:space-y-6 md:space-y-8">
+            <div className="inline-block animate-fade-in">
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl gradient-primary shadow-glow mb-3 sm:mb-4 md:mb-6">
+                <Mic className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 text-primary-foreground" />
+              </div>
+            </div>
+            
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-tight px-2 animate-fade-in break-words">
+              VOIX: Voice-First CRM Agent for Customer Experience
+            </h1>
+            
+            <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 animate-fade-in leading-relaxed">
+              Transform customer feedback with AI-powered voice reviews. 
+              Collect authentic insights, boost engagement, and make data-driven decisions.
+            </p>
+
+            <div className="flex flex-col gap-3 justify-center pt-2 sm:pt-4 md:pt-6 lg:pt-8 px-2 sm:px-4 animate-fade-in">
+              {/* Primary CTA - Quick Demo */}
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto mx-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 gradient-primary shadow-glow hover:opacity-90 transition-all font-semibold"
+                onClick={() => navigate("/purchase")}
+              >
+                <Sparkles className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+                Quick Demo (2-3 min)
+              </Button>
+              
+              {/* Secondary CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
+                  onClick={() => navigate("/shop")}
+                >
+                  Full Experience (5-7 min)
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-sm xs:text-base sm:text-lg px-6 xs:px-8 sm:px-10 md:px-12 py-5 xs:py-6 sm:py-7 font-semibold border-2"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <BarChart3 className="mr-2 h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+                  View Dashboard
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 animate-fade-in text-center">
+              Choose your demo experience above
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* Features Grid */}
       <section className="container mx-auto px-3 xs:px-4 sm:px-6 py-10 sm:py-12 md:py-16 lg:py-20">
