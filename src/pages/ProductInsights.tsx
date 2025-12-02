@@ -170,13 +170,20 @@ const ProductInsights = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
       <div className="container mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Home
+          </Button>
+          <span className="text-muted-foreground">/</span>
           <Button
             variant="ghost"
             onClick={() => navigate("/dashboard")}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Dashboard
           </Button>
         </div>
 

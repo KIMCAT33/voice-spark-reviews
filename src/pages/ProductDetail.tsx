@@ -137,10 +137,16 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate('/shop')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Store
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => navigate('/')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Home
+            </Button>
+            <span className="text-muted-foreground">/</span>
+            <Button variant="ghost" onClick={() => navigate('/shop')}>
+              Store
+            </Button>
+          </div>
           <CartDrawer />
         </div>
       </header>

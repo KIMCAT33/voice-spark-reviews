@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Phone } from "lucide-react";
+import { CheckCircle, Phone, ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import lipstickImage from "@/assets/red-lipstick.jpg";
 import { StepProgressBar } from "@/components/StepProgressBar";
@@ -48,9 +48,18 @@ const ProductPurchase = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-3 xs:p-4 sm:p-6">
-      <Card className="max-w-2xl w-full p-5 xs:p-6 sm:p-8 md:p-12 shadow-card space-y-6 sm:space-y-8">
-        {/* Progress Bar */}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-3 xs:p-4 sm:p-6">
+      {/* Back to Home */}
+      <div className="container mx-auto max-w-2xl mb-4">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Home
+        </Button>
+      </div>
+      
+      <div className="flex items-center justify-center">
+        <Card className="max-w-2xl w-full p-5 xs:p-6 sm:p-8 md:p-12 shadow-card space-y-6 sm:space-y-8">
+          {/* Progress Bar */}
         <div className="pb-4 border-b">
           <StepProgressBar 
             current={1} 
@@ -148,7 +157,8 @@ const ProductPurchase = () => {
             🎁 Get 10% off your next purchase for completing the review
           </p>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

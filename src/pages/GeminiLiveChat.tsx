@@ -112,11 +112,11 @@ function GeminiLiveChat() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/purchase")}
+                  onClick={() => navigate("/")}
                   className="hover:bg-primary/10 transition-colors flex-shrink-0 px-2"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span className="text-xs xs:text-sm">Back</span>
+                  <span className="text-xs xs:text-sm">Home</span>
                 </Button>
                 <h1 className="text-xs xs:text-sm font-bold text-primary text-right leading-tight flex-1 min-w-0 break-words">
                   Customer Service Review Call
@@ -125,14 +125,24 @@ function GeminiLiveChat() {
               
               {/* Desktop Layout */}
               <div className="hidden md:flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/purchase")}
-                  className="hover:bg-primary/10 transition-colors"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Purchase
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/")}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Home
+                  </Button>
+                  <span className="text-muted-foreground">/</span>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/purchase")}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    Purchase
+                  </Button>
+                </div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Customer Service Review Call
                 </h1>
