@@ -35,44 +35,45 @@ interface ReviewData {
 // Define the function declaration outside component to avoid recreation
 const endReviewDeclaration: FunctionDeclaration = {
   name: "end_review",
-  description: "Call this function when you have gathered enough feedback to complete the review. Include all structured data about the customer's experience.",
+  description:
+    "Call this function when you have gathered enough feedback to complete the review. Include all structured data about the customer's experience.",
   parameters: {
     type: Type.OBJECT,
     properties: {
       product_name: {
         type: Type.STRING,
-        description: "Name of the product being reviewed"
+        description: "Name of the product being reviewed",
       },
       customer_emotion: {
         type: Type.STRING,
-        description: "Overall customer emotion: satisfied, neutral, or frustrated"
+        description: "Overall customer emotion: satisfied, neutral, or frustrated",
       },
       key_positive_points: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
-        description: "List of positive feedback points"
+        description: "List of positive feedback points",
       },
       key_negative_points: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
-        description: "List of negative feedback points or concerns"
+        description: "List of negative feedback points or concerns",
       },
       improvement_suggestions: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
-        description: "Suggestions for product improvement"
+        description: "Suggestions for product improvement",
       },
       review_summary: {
         type: Type.STRING,
-        description: "A brief summary of the customer's overall feedback"
+        description: "A brief summary of the customer's overall feedback",
       },
       recommendation_score: {
         type: Type.NUMBER,
-        description: "Likelihood to recommend (1-5 scale)"
-      }
+        description: "Likelihood to recommend (1-5 scale)",
+      },
     },
-    required: ["product_name", "customer_emotion", "review_summary", "recommendation_score"]
-  }
+    required: ["product_name", "customer_emotion", "review_summary", "recommendation_score"],
+  },
 };
 
 const VoiceReview = ({ onBack }: VoiceReviewProps) => {
@@ -93,8 +94,9 @@ const VoiceReview = ({ onBack }: VoiceReviewProps) => {
     setModel("models/gemini-2.0-flash-exp");
     setConfig({
       systemInstruction: {
-        parts: [{
-          text: `You are a friendly customer service representative conducting a post-purchase review call for VOIX. 
+        parts: [
+          {
+            text: `You are a friendly customer service representative conducting a post-purchase review call for VOIX. 
 
 CRITICAL INSTRUCTIONS:
 1. START IMMEDIATELY with a warm greeting when the customer says hello: "Hi! Thanks so much for taking the time to share your thoughts about your recent purchase. I'd love to hear about your experience!"
@@ -111,12 +113,15 @@ Guidelines:
 - Keep responses concise (2-3 sentences max per turn)
 - Don't sound robotic or scripted
 - After 2-3 meaningful exchanges, wrap up naturally and call the end_review function
-- Make the customer feel heard and valued`
-        }]
+- Make the customer feel heard and valued`,
+          },
+        ],
       },
-      tools: [{
-        functionDeclarations: [endReviewDeclaration]
-      }]
+      tools: [
+        {
+          functionDeclarations: [endReviewDeclaration],
+        },
+      ],
     });
   }, [setConfig, setModel]);
 
@@ -125,24 +130,29 @@ Guidelines:
 
     const handleSetupComplete = async () => {
       console.log("✅ Setup complete - WebSocket is ready");
-      
+
       // Now it's safe to send the initial message
       setTimeout(() => {
         console.log("👋 Sending initial greeting...");
         if (client && isGenAILiveClient(client)) {
-          client.send([{
-            text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product."
-          }], true);
+          client.send(
+            [
+              {
+                text: "Hello, I just completed my purchase and I'm ready to share my feedback about the product.",
+              },
+            ],
+            true,
+          );
         }
-        
+
         // Start recording after AI has time to respond
         setTimeout(async () => {
           console.log("🎤 Starting audio recording...");
           setIsRecording(true);
           setIsConnecting(false);
-          
+
           audioRecorderRef.current = new AudioRecorder(16000);
-          
+
           audioRecorderRef.current.on("data", (base64Audio: string) => {
             if (connected && isRecording && client && isGenAILiveClient(client)) {
               client.sendRealtimeInput([
@@ -164,13 +174,10 @@ Guidelines:
       const text = data.text || data.transcript;
       if (text) {
         currentTranscriptRef.current += text;
-        setMessages(prev => {
+        setMessages((prev) => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage?.role === "assistant") {
-            return [
-              ...prev.slice(0, -1),
-              { role: "assistant", content: currentTranscriptRef.current }
-            ];
+            return [...prev.slice(0, -1), { role: "assistant", content: currentTranscriptRef.current }];
           }
           return [...prev, { role: "assistant", content: currentTranscriptRef.current }];
         });
@@ -191,8 +198,10 @@ Guidelines:
 
             try {
               // Get current user (for demo purposes, allow saving without auth)
-              const { data: { user } } = await supabase.auth.getUser();
-              
+              const {
+                data: { user },
+              } = await supabase.auth.getUser();
+
               if (!user) {
                 // For demo purposes, allow saving without auth
                 console.warn("User not authenticated, saving without user_id");
@@ -207,18 +216,14 @@ Guidelines:
                 key_positive_points: args.key_positive_points || [],
                 key_negative_points: args.key_negative_points || [],
                 improvement_suggestions: args.improvement_suggestions || [],
-                user_id: user?.id || null
+                user_id: user?.id || null,
               };
 
               // Validate with zod schema
               const { reviewSchema } = await import("@/lib/validation");
               const validatedData = reviewSchema.parse(reviewDataToSave);
 
-              const { data, error } = await supabase
-                .from("reviews")
-                .insert(validatedData)
-                .select()
-                .single();
+              const { data, error } = await supabase.from("reviews").insert(validatedData).select().single();
 
               if (error) {
                 console.error("Error saving review:", error);
@@ -236,14 +241,14 @@ Guidelines:
                   key_negative_points: reviewDataToSave.key_negative_points,
                   improvement_suggestions: reviewDataToSave.improvement_suggestions,
                   review_summary: reviewDataToSave.review_summary,
-                  recommendation_score: reviewDataToSave.recommendation_score
+                  recommendation_score: reviewDataToSave.recommendation_score,
                 });
-                
+
                 toast({
                   title: "Review saved!",
                   description: "Your feedback has been recorded.",
                 });
-                
+
                 // Navigate to dashboard with highlight after a short delay
                 setTimeout(() => {
                   navigate(`/dashboard?highlightReview=${data.id}`);
@@ -251,11 +256,12 @@ Guidelines:
               }
             } catch (error: any) {
               console.error("Error saving review:", error);
-              
-              const errorMessage = error.name === "ZodError" 
-                ? "The review data didn't meet our requirements. Please try again with valid information."
-                : error.message || "Failed to save review";
-              
+
+              const errorMessage =
+                error.name === "ZodError"
+                  ? "The review data didn't meet our requirements. Please try again with valid information."
+                  : error.message || "Failed to save review";
+
               toast({
                 title: "Validation Error",
                 description: errorMessage,
@@ -307,7 +313,6 @@ Guidelines:
         title: "Connected Successfully",
         description: "The AI will greet you shortly. Please speak after you hear the greeting.",
       });
-
     } catch (error) {
       console.error("❌ Error starting recording:", error);
       setIsRecording(false);
@@ -333,32 +338,30 @@ Guidelines:
   };
 
   if (reviewData) {
-    return <ReviewSummary 
-      data={reviewData} 
-      onNewReview={() => {
-        setReviewData(null);
-        setMessages([]);
-        setSessionStarted(false);
-      }} 
-      onBack={() => {
-        const reviewId = (reviewData as any).id;
-        if (reviewId) {
-          navigate(`/dashboard?highlightReview=${reviewId}`);
-        } else {
-          navigate("/dashboard");
-        }
-      }} 
-    />;
+    return (
+      <ReviewSummary
+        data={reviewData}
+        onNewReview={() => {
+          setReviewData(null);
+          setMessages([]);
+          setSessionStarted(false);
+        }}
+        onBack={() => {
+          const reviewId = (reviewData as any).id;
+          if (reviewId) {
+            navigate(`/dashboard?highlightReview=${reviewId}`);
+          } else {
+            navigate("/dashboard");
+          }
+        }}
+      />
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted p-4 md:p-8">
       <div className="container mx-auto max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="mb-6"
-        >
+        <Button variant="ghost" onClick={onBack} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
@@ -367,7 +370,7 @@ Guidelines:
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2">VOIX Voice Review</h2>
             <p className="text-muted-foreground">
-              {!sessionStarted 
+              {!sessionStarted
                 ? "Press the call button to start voice review"
                 : isConnecting
                   ? "🎧 Connecting... Please wait"
@@ -381,9 +384,7 @@ Guidelines:
               </p>
             )}
             {sessionStarted && (isConnecting || !isRecording) && (
-              <p className="text-sm text-primary mt-2 font-medium animate-pulse">
-                ⏳ Waiting for AI greeting...
-              </p>
+              <p className="text-sm text-primary mt-2 font-medium animate-pulse">⏳ Waiting for AI greeting...</p>
             )}
           </div>
 
@@ -402,7 +403,7 @@ Guidelines:
               >
                 <Phone className="h-10 w-10 text-primary-foreground" />
               </Button>
-            ) : (isProcessing || isConnecting) ? (
+            ) : isProcessing || isConnecting ? (
               <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
               </div>
@@ -412,9 +413,7 @@ Guidelines:
                 onClick={handleStopRecording}
                 disabled={!isRecording}
                 className={`w-24 h-24 rounded-full shadow-glow ${
-                  isRecording
-                    ? "bg-accent hover:bg-accent/90"
-                    : "gradient-primary opacity-50 cursor-not-allowed"
+                  isRecording ? "bg-accent hover:bg-accent/90" : "gradient-primary opacity-50 cursor-not-allowed"
                 }`}
               >
                 {isRecording ? (
@@ -427,9 +426,7 @@ Guidelines:
           </div>
 
           {/* Transcription Display */}
-          {sessionStarted && (
-            <TranscriptionDisplay messages={messages} />
-          )}
+          {sessionStarted && <TranscriptionDisplay messages={messages} />}
         </Card>
       </div>
     </div>

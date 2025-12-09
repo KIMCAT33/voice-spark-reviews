@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 export default function Shop() {
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const addItem = useCartStore(state => state.addItem);
+  const addItem = useCartStore((state) => state.addItem);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,16 +22,16 @@ export default function Shop() {
     try {
       setLoading(true);
       const data = await fetchProducts(100);
-      
+
       // Remove duplicates by product title
-      const uniqueProducts = data.filter((product, index, self) =>
-        index === self.findIndex((p) => p.node.title === product.node.title)
+      const uniqueProducts = data.filter(
+        (product, index, self) => index === self.findIndex((p) => p.node.title === product.node.title),
       );
-      
+
       setProducts(uniqueProducts);
     } catch (error) {
-      console.error('Failed to load products:', error);
-      toast.error('Failed to load products.');
+      console.error("Failed to load products:", error);
+      toast.error("Failed to load products.");
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function Shop() {
   const handleAddToCart = (product: ShopifyProduct) => {
     const variant = product.node.variants.edges[0]?.node;
     if (!variant) {
-      toast.error('This product is currently unavailable.');
+      toast.error("This product is currently unavailable.");
       return;
     }
 
@@ -50,12 +50,12 @@ export default function Shop() {
       variantTitle: variant.title,
       price: variant.price,
       quantity: 1,
-      selectedOptions: variant.selectedOptions || []
+      selectedOptions: variant.selectedOptions || [],
     };
-    
+
     addItem(cartItem);
-    toast.success('Added to cart!', {
-      position: 'top-center'
+    toast.success("Added to cart!", {
+      position: "top-center",
     });
   };
 
@@ -75,8 +75,8 @@ export default function Shop() {
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              ← Back to Home
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              ← Home
             </Button>
             <h1 className="text-2xl font-bold">VOIX Shop</h1>
           </div>
@@ -90,7 +90,8 @@ export default function Shop() {
             <Package className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
             <h2 className="text-3xl font-bold mb-4">No Products Available</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              No products have been added to the store yet. Tell us in the chat what products you'd like to sell and we'll add them for you!
+              No products have been added to the store yet. Tell us in the chat what products you'd like to sell and
+              we'll add them for you!
             </p>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Example:</p>
@@ -112,8 +113,8 @@ export default function Shop() {
                 const image = product.node.images.edges[0]?.node;
 
                 return (
-                  <Card 
-                    key={product.node.id} 
+                  <Card
+                    key={product.node.id}
                     className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                     onClick={() => navigate(`/product/${product.node.handle}`)}
                   >
@@ -130,24 +131,24 @@ export default function Shop() {
                         </div>
                       )}
                     </div>
-                    
+
                     <CardHeader>
                       <CardTitle className="line-clamp-1">{product.node.title}</CardTitle>
                       <CardDescription className="line-clamp-2">
-                        {product.node.description || 'No description'}
+                        {product.node.description || "No description"}
                       </CardDescription>
                     </CardHeader>
-                    
+
                     <CardContent>
                       <p className="text-2xl font-bold">
-                        {product.node.priceRange.minVariantPrice.currencyCode}{' '}
+                        {product.node.priceRange.minVariantPrice.currencyCode}{" "}
                         {parseFloat(product.node.priceRange.minVariantPrice.amount).toFixed(2)}
                       </p>
                     </CardContent>
-                    
+
                     <CardFooter className="flex gap-2">
-                      <Button 
-                        className="flex-1" 
+                      <Button
+                        className="flex-1"
                         variant="outline"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -156,8 +157,8 @@ export default function Shop() {
                       >
                         View Details
                       </Button>
-                      <Button 
-                        className="flex-1" 
+                      <Button
+                        className="flex-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAddToCart(product);
@@ -165,7 +166,7 @@ export default function Shop() {
                         disabled={!variant?.availableForSale}
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        {variant?.availableForSale ? 'Add' : 'Sold Out'}
+                        {variant?.availableForSale ? "Add" : "Sold Out"}
                       </Button>
                     </CardFooter>
                   </Card>
