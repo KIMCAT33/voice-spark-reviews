@@ -36,15 +36,13 @@ const ReviewSummary = ({ data, onNewReview, onBack }: ReviewSummaryProps) => {
       <div className="container mx-auto max-w-4xl">
         <Button variant="ghost" onClick={onBack} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          Home
         </Button>
 
         <Card className="p-8 md:p-12 shadow-card space-y-8">
           <div className="text-center space-y-4">
             <h2 className="text-3xl font-bold">Review Summary</h2>
-            <p className="text-muted-foreground">
-              Thank you for sharing your thoughts! Here's what we learned:
-            </p>
+            <p className="text-muted-foreground">Thank you for sharing your thoughts! Here's what we learned:</p>
           </div>
 
           {/* Rating */}
@@ -52,11 +50,7 @@ const ReviewSummary = ({ data, onNewReview, onBack }: ReviewSummaryProps) => {
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
-                className={`h-8 w-8 ${
-                  i < data.recommendation_score
-                    ? "text-accent fill-accent"
-                    : "text-muted"
-                }`}
+                className={`h-8 w-8 ${i < data.recommendation_score ? "text-accent fill-accent" : "text-muted"}`}
               />
             ))}
           </div>
@@ -117,19 +111,11 @@ const ReviewSummary = ({ data, onNewReview, onBack }: ReviewSummaryProps) => {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleDownloadJSON}
-            >
+            <Button size="lg" variant="outline" onClick={handleDownloadJSON}>
               <Download className="mr-2 h-4 w-4" />
               Download JSON
             </Button>
-            <Button
-              size="lg"
-              className="gradient-primary"
-              onClick={onNewReview}
-            >
+            <Button size="lg" className="gradient-primary" onClick={onNewReview}>
               Start New Review
             </Button>
           </div>
