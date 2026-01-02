@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Star, Smile, Meh, Frown, TrendingUp, MessageSquare, Package, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
+import { getProductByHandle, MockProduct } from "@/lib/mockProducts";
 
 const ProductInsights = () => {
   const { handle } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [product, setProduct] = useState<ShopifyProduct | null>(null);
+  const [product, setProduct] = useState<MockProduct | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
@@ -25,9 +25,8 @@ const ProductInsights = () => {
     try {
       setIsLoading(true);
       
-      // Fetch product from Shopify
-      const products = await fetchProducts(100);
-      const foundProduct = products.find(p => p.node.handle === handle);
+      // Get product from mock data
+      const foundProduct = handle ? getProductByHandle(handle) : undefined;
       
       if (!foundProduct) {
         toast({
