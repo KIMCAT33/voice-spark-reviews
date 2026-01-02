@@ -4,25 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/stores/cartStore";
-import { MockProduct, getProductByHandle } from "@/lib/mockProducts";
+import { ShopifyProduct, fetchProductByHandle } from "@/lib/shopify";
 import { toast } from "sonner";
-import { ShoppingCart, ArrowLeft, Package, Check } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Package, Check, Loader2 } from "lucide-react";
 import { CartDrawer } from "@/components/CartDrawer";
 
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<MockProduct['node'] | null>(null);
+  const [product, setProduct] = useState<ShopifyProduct['node'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
-    if (handle) {
-      const foundProduct = getProductByHandle(handle);
-      setProduct(foundProduct?.node || null);
-      setLoading(false);
-    }
+    const loadProduct = async () => {
+      if (handle) {
+        const data = await fetchProductByHandle(handle);
+        setProduct(data);
+        setLoading(false);
+      }
+    };
+    loadProduct();
   }, [handle]);
 
   const handleAddToCart = () => {
@@ -35,7 +38,7 @@ export default function ProductDetail() {
     }
 
     const cartItem = {
-      product: { node: product } as MockProduct,
+      product: { node: product } as ShopifyProduct,
       variantId: variant.id,
       variantTitle: variant.title,
       price: variant.price,
@@ -53,7 +56,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Package className="h-12 w-12 animate-pulse mx-auto mb-4 text-primary" />
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading product information...</p>
         </div>
       </div>

@@ -1,19 +1,29 @@
-import { useState } from "react";
-import { mockProducts, MockProduct } from "@/lib/mockProducts";
+import { useState, useEffect } from "react";
+import { ShopifyProduct, fetchShopifyProducts } from "@/lib/shopify";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/stores/cartStore";
 import { toast } from "sonner";
-import { ShoppingCart, Package } from "lucide-react";
+import { ShoppingCart, Package, Loader2 } from "lucide-react";
 import { CartDrawer } from "@/components/CartDrawer";
 import { useNavigate } from "react-router-dom";
 
 export default function Shop() {
-  const [products] = useState<MockProduct[]>(mockProducts);
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
   const navigate = useNavigate();
 
-  const handleAddToCart = (product: MockProduct) => {
+  useEffect(() => {
+    const loadProducts = async () => {
+      const data = await fetchShopifyProducts(20);
+      setProducts(data);
+      setLoading(false);
+    };
+    loadProducts();
+  }, []);
+
+  const handleAddToCart = (product: ShopifyProduct) => {
     const variant = product.node.variants.edges[0]?.node;
     if (!variant) {
       toast.error("This product is currently unavailable.");
@@ -34,6 +44,17 @@ export default function Shop() {
       position: "top-center",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

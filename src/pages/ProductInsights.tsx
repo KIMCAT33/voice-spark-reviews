@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Star, Smile, Meh, Frown, TrendingUp, MessageSquare, Package, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getProductByHandle, MockProduct } from "@/lib/mockProducts";
+import { ShopifyProduct, fetchProductByHandle } from "@/lib/shopify";
 
 const ProductInsights = () => {
   const { handle } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [product, setProduct] = useState<MockProduct | null>(null);
+  const [product, setProduct] = useState<ShopifyProduct | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<string | null>(null);
@@ -25,10 +25,10 @@ const ProductInsights = () => {
     try {
       setIsLoading(true);
       
-      // Get product from mock data
-      const foundProduct = handle ? getProductByHandle(handle) : undefined;
+      // Get product from Shopify API
+      const productData = handle ? await fetchProductByHandle(handle) : null;
       
-      if (!foundProduct) {
+      if (!productData) {
         toast({
           title: "Product not found",
           variant: "destructive",
@@ -37,13 +37,13 @@ const ProductInsights = () => {
         return;
       }
       
-      setProduct(foundProduct);
+      setProduct({ node: productData });
 
       // Fetch reviews for this product
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
-        .eq('product_name', foundProduct.node.title)
+        .eq('product_name', productData.title)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
