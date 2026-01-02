@@ -7,7 +7,7 @@ import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Pac
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { mockProducts, MockProduct } from "@/lib/mockProducts";
+import { ShopifyProduct, fetchShopifyProducts } from "@/lib/shopify";
 
 // Extended mock data - 10 Beauty products reviews
 const initialMockReviews = [
@@ -133,7 +133,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchExplanation, setSearchExplanation] = useState("");
-  const [products, setProducts] = useState<MockProduct[]>([]);
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -201,10 +201,10 @@ const Dashboard = () => {
     };
   }, []);
 
-  const loadProducts = () => {
+  const loadProducts = async () => {
     setIsLoadingProducts(true);
-    // Use mock products instead of Shopify API
-    setProducts(mockProducts);
+    const data = await fetchShopifyProducts(20);
+    setProducts(data);
     setIsLoadingProducts(false);
   };
 

@@ -9,35 +9,37 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, Loader2, ExternalLink } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
-import { CheckoutDialog } from "./CheckoutDialog";
 
 export const CartDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false);
   const { 
     items, 
+    isLoading,
     updateQuantity, 
-    removeItem
+    removeItem,
+    createCheckout
   } = useCartStore();
   
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
 
-  const handleCheckout = () => {
-    setIsOpen(false);
-    setCheckoutDialogOpen(true);
+  const handleCheckout = async () => {
+    try {
+      await createCheckout();
+      const checkoutUrl = useCartStore.getState().checkoutUrl;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error('Checkout failed:', error);
+    }
   };
 
   return (
-    <>
-      <CheckoutDialog 
-        open={checkoutDialogOpen} 
-        onOpenChange={setCheckoutDialogOpen}
-      />
-      
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
@@ -138,10 +140,19 @@ export const CartDrawer = () => {
                   onClick={handleCheckout}
                   className="w-full" 
                   size="lg"
-                  disabled={items.length === 0}
+                  disabled={items.length === 0 || isLoading}
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Checkout
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Checkout...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Checkout with Shopify
+                    </>
+                  )}
                 </Button>
               </div>
             </>
@@ -149,6 +160,5 @@ export const CartDrawer = () => {
         </div>
       </SheetContent>
     </Sheet>
-    </>
   );
 };

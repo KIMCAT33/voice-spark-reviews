@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { MockProduct } from '@/lib/mockProducts';
+import { ShopifyProduct, createStorefrontCheckout } from '@/lib/shopify';
 
 export interface CartItem {
-  product: MockProduct;
+  product: ShopifyProduct;
   variantId: string;
   variantTitle: string;
   price: {
@@ -19,17 +19,22 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
+  isLoading: boolean;
+  checkoutUrl: string | null;
   
   addItem: (item: CartItem) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   removeItem: (variantId: string) => void;
   clearCart: () => void;
+  createCheckout: () => Promise<void>;
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      isLoading: false,
+      checkoutUrl: null,
 
       addItem: (item) => {
         const { items } = get();
@@ -68,7 +73,27 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => {
-        set({ items: [] });
+        set({ items: [], checkoutUrl: null });
+      },
+
+      createCheckout: async () => {
+        const { items } = get();
+        if (items.length === 0) return;
+
+        set({ isLoading: true });
+        try {
+          const checkoutUrl = await createStorefrontCheckout(
+            items.map(item => ({
+              variantId: item.variantId,
+              quantity: item.quantity,
+            }))
+          );
+          set({ checkoutUrl });
+        } catch (error) {
+          console.error('Failed to create checkout:', error);
+        } finally {
+          set({ isLoading: false });
+        }
       },
     }),
     {
