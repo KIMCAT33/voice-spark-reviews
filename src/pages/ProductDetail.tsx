@@ -4,81 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/stores/cartStore";
-import { ShopifyProduct, storefrontApiRequest } from "@/lib/shopify";
+import { MockProduct, getProductByHandle } from "@/lib/mockProducts";
 import { toast } from "sonner";
 import { ShoppingCart, ArrowLeft, Package, Check } from "lucide-react";
 import { CartDrawer } from "@/components/CartDrawer";
 
-const PRODUCT_QUERY = `
-  query GetProductByHandle($handle: String!) {
-    product(handle: $handle) {
-      id
-      title
-      description
-      handle
-      priceRange {
-        minVariantPrice {
-          amount
-          currencyCode
-        }
-      }
-      images(first: 5) {
-        edges {
-          node {
-            url
-            altText
-          }
-        }
-      }
-      variants(first: 10) {
-        edges {
-          node {
-            id
-            title
-            price {
-              amount
-              currencyCode
-            }
-            availableForSale
-            selectedOptions {
-              name
-              value
-            }
-          }
-        }
-      }
-      options {
-        name
-        values
-      }
-    }
-  }
-`;
-
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<ShopifyProduct['node'] | null>(null);
+  const [product, setProduct] = useState<MockProduct['node'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
-    loadProduct();
-  }, [handle]);
-
-  const loadProduct = async () => {
-    try {
-      setLoading(true);
-      const data = await storefrontApiRequest(PRODUCT_QUERY, { handle });
-      setProduct(data.data.product);
-    } catch (error) {
-      console.error('Failed to load product:', error);
-      toast.error('Failed to load product.');
-    } finally {
+    if (handle) {
+      const foundProduct = getProductByHandle(handle);
+      setProduct(foundProduct?.node || null);
       setLoading(false);
     }
-  };
+  }, [handle]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -90,7 +35,7 @@ export default function ProductDetail() {
     }
 
     const cartItem = {
-      product: { node: product } as ShopifyProduct,
+      product: { node: product } as MockProduct,
       variantId: variant.id,
       variantTitle: variant.title,
       price: variant.price,

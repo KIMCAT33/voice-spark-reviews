@@ -7,7 +7,7 @@ import { ArrowLeft, TrendingUp, MessageSquare, Smile, Meh, Frown, Star, Mic, Pac
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
+import { mockProducts, MockProduct } from "@/lib/mockProducts";
 
 // Extended mock data - 10 Beauty products reviews
 const initialMockReviews = [
@@ -133,7 +133,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchExplanation, setSearchExplanation] = useState("");
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [products, setProducts] = useState<MockProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -201,30 +201,11 @@ const Dashboard = () => {
     };
   }, []);
 
-  const loadProducts = async () => {
-    try {
-      setIsLoadingProducts(true);
-      const productsData = await fetchProducts(100);
-      
-      // Remove duplicates by product title (what users see)
-      const uniqueProducts = productsData.filter((product, index, self) =>
-        index === self.findIndex((p) => p.node.title === product.node.title)
-      );
-      
-      console.log('Total products from Shopify:', productsData.length);
-      console.log('Unique products after filtering:', uniqueProducts.length);
-      
-      setProducts(uniqueProducts);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      toast({
-        title: "Error loading products",
-        description: "Failed to fetch products from Shopify.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingProducts(false);
-    }
+  const loadProducts = () => {
+    setIsLoadingProducts(true);
+    // Use mock products instead of Shopify API
+    setProducts(mockProducts);
+    setIsLoadingProducts(false);
   };
 
   const fetchReviews = async () => {

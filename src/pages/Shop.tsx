@@ -1,43 +1,19 @@
-import { useEffect, useState } from "react";
-import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
+import { useState } from "react";
+import { mockProducts, MockProduct } from "@/lib/mockProducts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/stores/cartStore";
 import { toast } from "sonner";
-import { ShoppingCart, Loader2, Package } from "lucide-react";
+import { ShoppingCart, Package } from "lucide-react";
 import { CartDrawer } from "@/components/CartDrawer";
 import { useNavigate } from "react-router-dom";
 
 export default function Shop() {
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products] = useState<MockProduct[]>(mockProducts);
   const addItem = useCartStore((state) => state.addItem);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchProducts(100);
-
-      // Remove duplicates by product title
-      const uniqueProducts = data.filter(
-        (product, index, self) => index === self.findIndex((p) => p.node.title === product.node.title),
-      );
-
-      setProducts(uniqueProducts);
-    } catch (error) {
-      console.error("Failed to load products:", error);
-      toast.error("Failed to load products.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddToCart = (product: ShopifyProduct) => {
+  const handleAddToCart = (product: MockProduct) => {
     const variant = product.node.variants.edges[0]?.node;
     if (!variant) {
       toast.error("This product is currently unavailable.");
@@ -59,17 +35,6 @@ export default function Shop() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading products...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
@@ -90,15 +55,8 @@ export default function Shop() {
             <Package className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
             <h2 className="text-3xl font-bold mb-4">No Products Available</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              No products have been added to the store yet. Tell us in the chat what products you'd like to sell and
-              we'll add them for you!
+              No products have been added to the store yet.
             </p>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Example:</p>
-              <p className="text-sm font-mono bg-secondary/20 inline-block px-4 py-2 rounded">
-                "Add red lipstick product for $29.99"
-              </p>
-            </div>
           </div>
         ) : (
           <>
